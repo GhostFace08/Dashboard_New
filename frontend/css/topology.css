@@ -1,0 +1,280 @@
+/**
+ * topology.css — Topology Map page (Phase 9)
+ *
+ * Page-scoped, purely additive: no edits to shared.css or dashboard.css.
+ * Reuses .modal-overlay/.modal-box/.modal-header/.modal-body/.modal-footer,
+ * .input, .toggle-switch, .segmented, .btn, .icon-badge, .banner from
+ * shared.css wherever they fit (same convention as capacity.css). Only new
+ * layout / component rules — the graph canvas, toolbar, legend, filter
+ * chips, and node detail panel — live here.
+ */
+
+/* ── Page header ───────────────────────────────────────────────────────── */
+.topo-page-header {
+  height: 56px;
+  flex-shrink: 0;
+}
+.topo-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+  margin: 0;
+}
+.topo-subtitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 2px 0 0;
+}
+
+/* ── Toolbar row ───────────────────────────────────────────────────────── */
+.topo-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.topo-toolbar .spacer { flex: 1 1 auto; }
+.topo-search-wrap {
+  position: relative;
+  min-width: 200px;
+}
+.topo-search-wrap .input { padding-left: 30px; }
+.topo-search-wrap svg {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+/* ── Filter chip toggles (Hosts / Services / Proc Groups) ────────────────── */
+.topo-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.topo-filter-chip .sw {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.topo-filter-chip.active {
+  background: rgba(99,102,241,0.14);
+  border-color: rgba(99,102,241,0.4);
+  color: var(--foreground);
+}
+.topo-filter-chip:hover:not(.active) { background: var(--secondary); color: var(--foreground); }
+
+/* ── Application picker ───────────────────────────────────────────────── */
+.topo-app-select {
+  min-width: 200px;
+}
+
+/* ── Canvas area ───────────────────────────────────────────────────────── */
+.topo-canvas-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background:
+    radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0/22px 22px,
+    var(--background);
+  overflow: hidden;
+}
+.topo-canvas-wrap svg { width: 100%; height: 100%; display: block; cursor: grab; }
+.topo-canvas-wrap svg:active { cursor: grabbing; }
+
+.topo-node circle {
+  stroke-width: 2px;
+  cursor: pointer;
+}
+.topo-node text {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  fill: var(--foreground);
+  pointer-events: none;
+  user-select: none;
+}
+.topo-node.selected circle { stroke: #fff; stroke-width: 3px; }
+.topo-link {
+  stroke-width: 1.5px;
+  fill: none;
+}
+.topo-link.problem { stroke-dasharray: 4 3; }
+
+/* ── Empty state (no topology added yet for this application) ───────────── */
+.topo-empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+}
+.topo-empty-state .icon-badge { width: 40px; height: 40px; border-radius: 10px; }
+.topo-empty-state .icon-badge svg { width: 18px; height: 18px; }
+.topo-empty-state h3 {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+.topo-empty-state p {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ── Floating canvas controls (Fit View, zoom) ────────────────────────────── */
+.topo-canvas-controls {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+.topo-canvas-controls .btn-icon {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-modal);
+}
+
+/* ── Legend ────────────────────────────────────────────────────────────── */
+.topo-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-modal);
+  z-index: 2;
+}
+.topo-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+.topo-legend-item .swatch { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.topo-legend-item .swatch.line { width: 14px; height: 0; border-top: 2px solid; border-radius: 0; }
+.topo-legend-item .swatch.line.dashed { border-top-style: dashed; }
+
+/* ── Node detail side panel ───────────────────────────────────────────── */
+.topo-detail-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 250px;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-modal);
+  padding: 14px;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.topo-detail-panel.open { display: flex; }
+.topo-detail-panel .detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.topo-detail-panel .detail-title {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.topo-detail-panel .detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.topo-detail-panel .detail-row .k { color: var(--muted-foreground); }
+.topo-detail-panel .detail-row .v { color: var(--foreground); font-family: var(--font-mono); text-align: right; }
+.topo-detail-panel .detail-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* ── Modal-body form rows (Add Topology / Connect Nodes) ──────────────── */
+.topo-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.topo-form-row:last-child { margin-bottom: 0; }
+.topo-form-row label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.topo-form-hint {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+.topo-existing-topo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.topo-existing-topo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--foreground);
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auto-Escalation — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Shared design tokens + atoms only — no page-specific CSS file needed,
+       everything here is built from existing shared.css components. -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <style>
+    /* The handful of layout rules this page needs are small enough to keep
+       inline rather than spin up a near-empty auto_escalation.css file. */
+    .ae-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .ae-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ae-checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .ae-checklist-item .icon-badge { flex-shrink: 0; margin-top: 1px; opacity: 0.6; }
+    .ae-checklist-item span {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--muted-foreground);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <div class="ae-wrap">
+          <div class="page-hero card-glow">
+            <div class="page-hero-eyebrow">ADMIN</div>
+            <div class="page-hero-title">Auto-Escalation</div>
+            <div class="page-hero-sub">This section is under development — real escalation-rule integration is a separate discussion, out of scope for now.</div>
+          </div>
+
+          <div class="ae-checklist">
+            <div class="ae-checklist-item">
+              <div class="icon-badge"><i data-lucide="git-branch"></i></div>
+              <span>Escalation rules (thresholds, severity mapping, target teams) — not yet designed.</span>
+            </div>
+            <div class="ae-checklist-item">
+              <div class="icon-badge"><i data-lucide="bell"></i></div>
+              <span>Notification channels (email, chat, on-call paging) — not yet designed.</span>
+            </div>
+            <div class="ae-checklist-item">
+              <div class="icon-badge"><i data-lucide="history"></i></div>
+              <span>Escalation history / audit trail — not yet designed.</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- ── Scripts ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/auto_escalation.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+/**
+ * main.css — Unified MCP Dashboard
+ *
+ * Entry-point stylesheet. Import order matters:
+ *   1. shared.css  — design tokens, reset, reusable atoms
+ *   2. Page CSS    — loaded per-page via individual <link> tags in each HTML file
+ *
+ * Each HTML page loads:
+ *   <link rel="stylesheet" href="../css/shared.css" />
+ *   <link rel="stylesheet" href="../css/<page>.css" />
+ *
+ * This file exists as a bundler hook for the future.
+ * If you switch to a bundler (Vite, Webpack, etc.), replace the per-page
+ * <link> tags with imports here and load only this file:
+ *
+ *   @import './shared.css';
+ *   @import './dashboard.css';       -- on dashboard.html only
+ *   @import './ai_monitoring.css';   -- on ai_monitoring.html only
+ *   @import './ai_chat.css';         -- on ai_chat.html only
+ *   @import './settings.css';        -- on settings.html only
+ *
+ * DO NOT add any rules here — all rules belong in shared.css or a page CSS.
+ */

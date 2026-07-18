@@ -1,0 +1,287 @@
+/**
+ * capacity.css — Capacity & Forecasting page (Phase 8)
+ *
+ * Page-scoped, purely additive: no edits to shared.css or dashboard.css.
+ * Reuses existing atoms (.stat-card, .select, .btn, .icon-badge,
+ * .status-badge, .banner) wherever they already fit; only new layout /
+ * component rules that don't exist elsewhere live here (source-tab strip,
+ * control bar, chart panels, algorithm comparison table, recommendations
+ * list). Same convention as infrastructure.css / services.css.
+ */
+
+/* ── Page header (mirrors infra-page-header / services-page-header) ──────── */
+.cap-page-header {
+  height: 56px;
+  flex-shrink: 0;
+}
+.cap-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+  margin: 0;
+}
+.cap-subtitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 2px 0 0;
+}
+
+/* ── Source tab strip ─────────────────────────────────────────────────────
+   "All" + one per TOOL. Deliberately its own small component — no existing
+   tab atom in shared.css to reuse — kept page-scoped per decision #8.
+──────────────────────────────────────────────────────────────────────────── */
+.cap-source-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cap-source-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+.cap-source-tab:hover { background: var(--secondary); color: var(--foreground); }
+.cap-source-tab.active {
+  background: rgba(99,102,241,0.14);
+  border-color: rgba(99,102,241,0.4);
+  color: var(--accent-indigo, #6366f1);
+}
+.cap-source-tab .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Control bar (History Window / Forecast Horizon / Algorithm) ─────────── */
+.cap-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cap-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+.cap-control-group label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* ── Stat card grid ────────────────────────────────────────────────────── */
+.cap-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .cap-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.cap-stat-grid .stat-card .stat-trend {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.cap-stat-grid .stat-trend.up   { color: var(--accent-red, #e5534b); }
+.cap-stat-grid .stat-trend.down { color: var(--accent-green, #10b981); }
+.cap-stat-grid .stat-trend svg { width: 11px; height: 11px; }
+
+/* ── Chart panels ──────────────────────────────────────────────────────── */
+.cap-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .cap-chart-grid { grid-template-columns: 1fr; }
+}
+.cap-chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cap-chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cap-chart-card-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cap-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.cap-chart-legend .swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cap-chart-legend .swatch::before {
+  content: "";
+  width: 10px;
+  height: 2px;
+  display: inline-block;
+  border-radius: 1px;
+}
+.cap-chart-legend .swatch.actual::before   { background: var(--accent-indigo, #6366f1); }
+.cap-chart-legend .swatch.forecast::before { background: var(--accent-teal, #14b8a6); }
+.cap-chart-canvas-wrap { position: relative; height: 220px; }
+.cap-chart-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+
+/* ── Algorithm comparison table ───────────────────────────────────────────
+   Plain table, not DataTables — this list is short (one row per algorithm)
+   and doesn't need pagination/search/export, so the jQuery/DataTables
+   dependency isn't pulled into this page at all.
+──────────────────────────────────────────────────────────────────────────── */
+.cap-compare-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.cap-compare-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cap-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+}
+.cap-compare-table th {
+  text-align: left;
+  padding: 8px 16px;
+  color: var(--muted-foreground);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.cap-compare-table td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  white-space: nowrap;
+}
+.cap-compare-table tbody tr:last-child td { border-bottom: none; }
+.cap-compare-table tbody tr.selected { background: rgba(99,102,241,0.08); }
+.cap-compare-table .algo-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cap-compare-table .algo-name .check {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-indigo, #6366f1);
+  visibility: hidden;
+}
+.cap-compare-table tr.selected .algo-name .check { visibility: visible; }
+.cap-confidence-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cap-confidence-bar {
+  width: 60px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.cap-confidence-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--gradient-teal, linear-gradient(90deg,#14b8a6,#0d9488));
+}
+
+/* ── Recommendations panel ────────────────────────────────────────────── */
+.cap-reco-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cap-reco-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cap-reco-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+}
+.cap-reco-item .icon-badge {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.cap-reco-item .reco-text {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--foreground);
+  line-height: 1.5;
+}
+.cap-reco-item .reco-text strong { color: var(--foreground); }
+.cap-reco-empty {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  padding: 8px 0;
+}

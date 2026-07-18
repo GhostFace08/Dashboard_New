@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capacity &amp; Forecasting — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Chart.js (vendored, offline) — this page's line charts -->
+  <script src="../vendor/chartjs/chart.umd.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/capacity.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+         (no-op inside the SPA shell iframe; renders the
+         standalone flat header only in dev mode)
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <!-- Page header row -->
+        <div class="cap-page-header flex items-center justify-between px-5 border-b">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <i data-lucide="trending-up"></i>
+            </div>
+            <div>
+              <h1 class="cap-title">CAPACITY &amp; FORECASTING</h1>
+              <p class="cap-subtitle">Projected CPU &amp; memory demand across connected sources</p>
+            </div>
+          </div>
+          <div id="cap-last-updated" class="cap-subtitle" style="margin:0"></div>
+        </div>
+
+        <!-- Error / mock-data notice banner -->
+        <div id="error-banner" class="banner banner-warn mx-5 mt-4 hidden" role="alert">
+          <i data-lucide="alert-triangle"></i>
+          <span class="banner-text" id="error-banner-text"></span>
+        </div>
+
+        <div class="px-5 py-4 flex flex-col gap-4">
+
+          <!-- ── Source tabs ── -->
+          <div class="cap-source-tabs" id="cap-source-tabs" role="tablist" aria-label="Source"></div>
+
+          <!-- ── Controls: History Window / Forecast Horizon / Algorithm ── -->
+          <div class="cap-controls">
+            <div class="cap-control-group">
+              <label for="cap-history-select">History Window</label>
+              <select id="cap-history-select" class="select">
+                <option value="7">Last 7 days</option>
+                <option value="14" selected>Last 14 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </div>
+            <div class="cap-control-group">
+              <label for="cap-horizon-select">Forecast Horizon</label>
+              <select id="cap-horizon-select" class="select">
+                <option value="7" selected>Next 7 days</option>
+                <option value="14">Next 14 days</option>
+                <option value="30">Next 30 days</option>
+                <option value="60">Next 60 days</option>
+              </select>
+            </div>
+            <div class="cap-control-group">
+              <label for="cap-algo-select">Algorithm</label>
+              <select id="cap-algo-select" class="select">
+                <option value="linear" selected>Linear Regression</option>
+                <option value="moving_avg">Moving Average</option>
+                <option value="exp_smoothing">Exponential Smoothing</option>
+                <option value="seasonal">Seasonal (7-day)</option>
+              </select>
+            </div>
+            <div class="cap-control-group" style="min-width:auto;margin-left:auto">
+              <label>&nbsp;</label>
+              <button id="cap-refresh-btn" class="btn btn-ghost" type="button">
+                <i data-lucide="refresh-cw"></i> Recompute
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Stat cards ── -->
+          <div class="cap-stat-grid" id="cap-stat-grid"><!-- populated by capacity.js --></div>
+
+          <!-- ── Charts ── -->
+          <div class="cap-chart-grid">
+            <div class="cap-chart-card">
+              <div class="cap-chart-card-header">
+                <span class="cap-chart-card-title">CPU Usage &amp; Forecast</span>
+                <div class="cap-chart-legend">
+                  <span class="swatch actual">Actual</span>
+                  <span class="swatch forecast">Forecast</span>
+                </div>
+              </div>
+              <div class="cap-chart-canvas-wrap">
+                <canvas id="cap-cpu-chart"></canvas>
+              </div>
+            </div>
+            <div class="cap-chart-card">
+              <div class="cap-chart-card-header">
+                <span class="cap-chart-card-title">Memory Usage &amp; Forecast</span>
+                <div class="cap-chart-legend">
+                  <span class="swatch actual">Actual</span>
+                  <span class="swatch forecast">Forecast</span>
+                </div>
+              </div>
+              <div class="cap-chart-canvas-wrap">
+                <canvas id="cap-mem-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Algorithm comparison ── -->
+          <div class="cap-compare-card">
+            <div class="cap-compare-card-header">Algorithm Comparison</div>
+            <table class="cap-compare-table">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Best For</th>
+                  <th>CPU Forecast</th>
+                  <th>Memory Forecast</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="cap-compare-tbody"><!-- populated by capacity.js --></tbody>
+            </table>
+          </div>
+
+          <!-- ── Recommendations ── -->
+          <div class="cap-reco-card">
+            <div class="cap-chart-card-title">Capacity Recommendations</div>
+            <div class="cap-reco-list" id="cap-reco-list"><!-- populated by capacity.js --></div>
+          </div>
+
+          <!-- bottom breathing room -->
+          <div style="height:24px;flex-shrink:0"></div>
+        </div>
+      </section><!-- /page-content -->
+    </main>
+  </div><!-- /#app -->
+
+  <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/capacity.js"></script>
+</body>
+</html>

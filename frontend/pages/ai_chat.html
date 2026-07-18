@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chat — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Chart.js (vendored, offline) — mounts table/scorecard viz blocks, see ai_chat.js -->
+  <script src="../vendor/chartjs/chart.umd.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/ai_chat.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+         FIX #2 #8: was <header id="site-header">, must be <div id="header-root">
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT: sidebar + chat area
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <!-- ── LEFT SIDEBAR: Chat history ── -->
+      <aside id="chat-sidebar" class="aic-sidebar flex flex-col border-r overflow-y-auto bg-sidebar">
+
+        <!-- Sidebar header -->
+        <div class="aic-sidebar-head px-3 pt-3 pb-2 border-b">
+          <p class="aic-label-caps mb-2">Chat History</p>
+          <button id="btn-new-chat" class="aic-new-chat-btn btn flex items-center gap-2 w-full">
+            <i data-lucide="plus" class="w-3h-3"></i>
+            New Chat
+          </button>
+        </div>
+
+        <!-- Session list -->
+        <div id="session-list" class="px-2 py-2 flex flex-col gap-1"></div>
+      </aside>
+
+      <!-- ── MAIN CHAT PANEL ── -->
+      <div id="chat-panel" class="flex flex-col flex-1 min-w-0">
+
+        <!-- Chat header (updated per-session) -->
+        <div id="chat-header" class="aic-chat-header flex items-center justify-between px-5 border-b shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="aic-ai-badge">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <div>
+              <p id="chat-title" class="aic-chat-title">Select a chat</p>
+              <p class="aic-chat-subtitle">&#9679; MCP Observability AI</p>
+            </div>
+          </div>
+          <button id="btn-header-new-chat" class="btn btn-ghost flex items-center gap-1" style="font-size:11px">
+            <i data-lucide="plus" style="width:12px;height:12px"></i>
+            New chat
+          </button>
+        </div>
+
+        <!-- Message list -->
+        <div id="message-list" class="aic-message-list flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4"></div>
+
+        <!-- Input area -->
+        <div class="aic-input-area px-4 pb-4 pt-2 shrink-0">
+
+          <!-- Attached file chips (hidden until files added) -->
+          <div id="file-preview" class="aic-file-preview hidden flex-wrap gap-2 mb-2 px-3 py-2 bg-card border rounded-sm"></div>
+
+          <!-- Composer bar -->
+          <div id="composer" class="aic-composer flex items-end gap-2 bg-card border rounded-sm px-3 py-2">
+
+            <!-- Left icon buttons -->
+            <div class="flex items-center gap-1 pb-1">
+              <button id="btn-attach" class="aic-icon-btn" title="Attach file" aria-label="Attach file">
+                <i data-lucide="paperclip"></i>
+              </button>
+              <button id="btn-mic" class="aic-icon-btn" title="Voice input (not connected)" aria-label="Voice input">
+                <i data-lucide="mic"></i>
+              </button>
+            </div>
+
+            <!-- Hidden file input -->
+            <input id="file-input" type="file" multiple class="hidden"
+              accept=".txt,.log,.json,.csv,.png,.jpg,.pdf" aria-label="File upload" />
+
+            <!-- Textarea (auto-grows) -->
+            <textarea
+              id="chat-input"
+              class="aic-textarea flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none py-1"
+              placeholder="Ask the MCP Observability AI… (Shift+Enter for newline)"
+              rows="1"
+              aria-label="Chat message"
+            ></textarea>
+
+            <!-- Send button -->
+            <button id="btn-send" class="aic-send-btn shrink-0 mb-1" aria-label="Send message" disabled>
+              <i data-lucide="send"></i>
+            </button>
+          </div><!-- /composer -->
+        </div><!-- /input-area -->
+      </div><!-- /chat-panel -->
+    </main><!-- /main-layout -->
+
+    <!-- ══════════════════════════════════════════════
+         SESSION CONTEXT MENU (shared, positioned via JS)
+    ══════════════════════════════════════════════ -->
+    <div id="session-menu" class="aic-session-menu hidden" role="menu" aria-label="Chat options">
+      <button data-action="pin" class="aic-menu-item" role="menuitem">
+        <i data-lucide="pin"></i>
+        <span id="menu-pin-label">Pin chat to top</span>
+      </button>
+      <button data-action="rename" class="aic-menu-item" role="menuitem">
+        <i data-lucide="pencil-line"></i>
+        <span>Rename chat</span>
+      </button>
+      <button data-action="delete" class="aic-menu-item danger" role="menuitem">
+        <i data-lucide="trash-2"></i>
+        <span>Delete chat</span>
+      </button>
+    </div>
+
+  </div><!-- /#app -->
+
+  <!-- ── Scripts — load order is mandatory ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/ai_chat.js"></script>
+</body>
+</html>

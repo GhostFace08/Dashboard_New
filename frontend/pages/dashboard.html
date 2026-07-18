@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    // Apply stored theme before first paint to prevent flash
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Observability</title>
+
+  <!-- Fonts (vendored) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Chart.js COMMENTED OUT — graph section removed -->
+  <!-- <script src="../vendor/chartjs/chart.umd.min.js"></script> -->
+
+  <!-- DataTables (vendored) — core must load before the styling-glue file -->
+  <link rel="stylesheet" href="../vendor/datatables/css/dataTables.dataTables.min.css" />
+  <script src="../vendor/jquery/jquery.min.js"></script>
+  <script src="../vendor/datatables/js/dataTables.min.js"></script>
+  <script src="../vendor/datatables/js/dataTables.dataTables.min.js"></script>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="../css/shared.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+
+  <!-- Config, API, Utils — must load before dashboard.js -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <!-- Header injected by common.js -->
+  <div id="header-root" style="flex-shrink:0"></div>
+
+  <!-- Main content -->
+  <main id="main" class="dashboard-main">
+
+    <!-- ── Error banner (hidden by default) ── -->
+    <div id="error-banner" class="error-banner hidden">
+      <i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0"></i>
+      <span id="error-msg"></span>
+    </div>
+
+    <!-- ── Title row ── -->
+    <div class="dash-title-row">
+      <div class="dash-title-left">
+        <div class="icon-badge" style="width:20px;height:20px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--primary-foreground)">M</span>
+        </div>
+        <h1 class="dash-h1">MCP OBSERVABILITY</h1>
+      </div>
+      <div class="dash-title-right">
+        <button id="btn-refresh" class="btn btn-outline-primary" title="Refresh data (preserves filters and timer)">
+          <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+          <span id="btn-refresh-label">Refresh</span>
+        </button>
+        <div class="ui-refresh-pill">
+          <span class="text-muted">UI Refresh</span>
+          <input id="ui-refresh-input" type="number" min="1" max="60" value="1" class="ui-refresh-num" />
+          <span class="text-muted">min</span>
+        </div>
+        <div class="search-box" style="width:220px">
+          <i data-lucide="search" style="width:14px;height:14px"></i>
+          <input id="global-search" type="text" placeholder="Search observability" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Status bar ── -->
+    <div class="status-bar">
+      <span id="status-left" class="status-text">Last Data Modified At: — &nbsp;|&nbsp; Last Data Updated At: —</span>
+      <span id="status-right" class="status-text">Last Data Checked At: — &nbsp;|&nbsp; <span id="countdown-label" style="color:var(--primary)">Next Refresh in: —</span></span>
+    </div>
+
+    <!-- ── Active filter bar (hidden when no filters) ── -->
+    <div id="filter-bar" class="filter-bar hidden">
+      <span class="filter-bar-label">ACTIVE FILTERS</span>
+      <div id="filter-tags" class="flex flex-wrap gap-1"></div>
+      <button id="btn-clear-filters" class="btn-clear-all">
+        <i data-lucide="x" style="width:12px;height:12px"></i> Clear all
+      </button>
+    </div>
+
+    <!-- ── Tools + Time range bar ── -->
+    <div class="tools-bar">
+      <div class="tools-left">
+        <span class="tools-label">TOOLS</span>
+        <div class="divider" style="height:16px;margin:0 4px"></div>
+        <button class="tool-btn active" data-tool="all" id="tool-all">
+          <i data-lucide="check" style="width:12px;height:12px" id="tool-all-check"></i>
+          All Tools
+        </button>
+        <!-- Tool buttons injected by dashboard.js -->
+        <div id="tool-btns"></div>
+      </div>
+      <div class="tools-right">
+        <i data-lucide="calendar" style="width:16px;height:16px;color:var(--muted-foreground)"></i>
+        <input id="custom-start" type="datetime-local" class="time-input" disabled />
+        <span class="text-muted" style="font-family:'JetBrains Mono',monospace;font-size:10px">TO</span>
+        <i data-lucide="calendar" style="width:16px;height:16px;color:var(--muted-foreground)"></i>
+        <input id="custom-end" type="datetime-local" class="time-input" disabled />
+        <select id="time-range-select" class="select" style="width:110px">
+          <!-- Options injected by dashboard.js -->
+        </select>
+      </div>
+    </div>
+
+    <!-- Custom range info/error -->
+    <div id="custom-range-info" class="custom-range-info hidden"></div>
+    <div id="custom-range-error" class="custom-range-error hidden"></div>
+
+    <!-- ── Scrollable content area ── -->
+    <div id="dash-scroll" class="dash-scroll">
+
+      <!-- ── 1. Issue Details ── -->
+      <section class="dash-section">
+        <button class="section-header" id="toggle-issue-details">
+          Issue Details
+          <i data-lucide="chevron-down" style="width:16px;height:16px"></i>
+        </button>
+        <div id="issue-details-body" class="section-body">
+          <div class="status-cards" id="status-cards">
+            <!-- Injected by JS: Total / Active / Resolved cards -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 2. KPIs ── -->
+      <section class="dash-section">
+        <button class="section-header" id="toggle-kpis">
+          KPIs
+          <i data-lucide="chevron-down" style="width:16px;height:16px"></i>
+        </button>
+        <div id="kpis-body" class="section-body">
+          <div class="kpi-row" id="kpi-cards">
+            <!-- Injected by JS: one card per category with count > 0 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 3. Graph — COMMENTED OUT ── -->
+      <!--
+      <section class="dash-section">
+        <button class="section-header" id="toggle-graph">
+          Total Issues Graph
+          <i data-lucide="chevron-down" style="width:16px;height:16px"></i>
+        </button>
+        <div id="graph-body" class="section-body">
+          <div class="graph-card">
+            <p class="graph-title">Total Issues</p>
+            <p id="graph-subtitle" class="graph-subtitle">All Sources · 15 min</p>
+            <div class="graph-wrap">
+              <canvas id="issues-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+      -->
+
+      <!-- ── 4. Evaluation Matrix ── -->
+      <section class="dash-section">
+        <div class="section-header-row">
+          <p class="section-plain-title">Evaluation Matrix</p>
+        </div>
+        <div class="matrix-card">
+          <div class="matrix-nav">
+            <button id="matrix-left"  class="btn btn-ghost matrix-nav-btn" title="Slide left">◀</button>
+            <span class="text-muted" style="font-family:'JetBrains Mono',monospace;font-size:12px">Matrix Columns</span>
+            <button id="matrix-right" class="btn btn-ghost matrix-nav-btn" title="Slide right" style="margin-left:auto">▶</button>
+          </div>
+          <div class="matrix-scroll">
+            <table id="matrix-table" class="matrix-table">
+              <!-- Injected by JS -->
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 5. All Issues Log ── -->
+      <section class="dash-section">
+        <div class="log-header-row">
+          <p class="section-plain-title">All Issues Log</p>
+          <div class="log-header-actions">
+            <!-- Export dropdown -->
+            <div class="relative" id="export-wrap">
+              <button id="btn-export" class="btn btn-ghost">
+                <i data-lucide="download" style="width:14px;height:14px"></i> EXPORT
+                <i data-lucide="chevron-down" style="width:12px;height:12px"></i>
+              </button>
+              <div id="export-menu" class="dropdown-menu hidden">
+                <button class="drop-item" id="export-csv">
+                  <i data-lucide="file-text" style="width:14px;height:14px"></i> Export CSV
+                </button>
+                <button class="drop-item" id="export-excel">
+                  <i data-lucide="table" style="width:14px;height:14px"></i> Export Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table controls: DataTables generates its own length/search but we keep the container -->
+        <div class="table-wrap">
+          <div class="overflow-x-auto">
+            <table id="issues-table" class="data-table display" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Sr. No.</th>
+                  <th>Source</th>
+                  <th>Issue ID</th>
+                  <th>Application</th>
+                  <th>Title</th>
+                  <th>Affected Entities</th>
+                  <th>Severity</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Duration</th>
+                  <th>Action</th>
+                  <!-- hidden data column for row id -->
+                  <th>_id</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div style="height:24px;flex-shrink:0"></div>
+    </div><!-- /dash-scroll -->
+
+  </main>
+</div>
+
+<!-- ── Issue Detail Modal ── -->
+<div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-box" style="width:100%;max-width:680px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-foreground)">Issue Details</p>
+        <h2 id="modal-title" style="font-size:16px;font-weight:600;margin-top:4px;color:var(--foreground)"></h2>
+      </div>
+      <button id="modal-close" class="btn-icon"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-fields" class="modal-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── KPI Popup Modal ── -->
+<div id="kpi-popup-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="kpi-popup-box" onclick="event.stopPropagation()">
+<div class="kpi-popup-header">
+
+    <span id="kpi-popup-title"
+          class="kpi-popup-title-text"></span>
+
+    <div class="kpi-popup-actions">
+
+        <div class="relative" id="kpi-export-wrap">
+
+            <button
+                id="btn-kpi-export"
+                class="btn btn-ghost">
+
+                <i data-lucide="download"></i>
+
+                EXPORT
+
+                <i data-lucide="chevron-down"></i>
+
+            </button>
+
+            <div
+                id="kpi-export-menu"
+                class="dropdown-menu hidden">
+
+                <button
+                    id="kpi-export-csv"
+                    class="drop-item">
+
+                    <i data-lucide="file-text"></i>
+
+                    Export CSV
+
+                </button>
+
+                <button
+                    id="kpi-export-excel"
+                    class="drop-item">
+
+                    <i data-lucide="table"></i>
+
+                    Export Excel
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <button
+            id="kpi-popup-close"
+            class="btn-icon">
+
+            <i data-lucide="x"></i>
+
+        </button>
+
+    </div>
+
+</div>
+    <div class="kpi-popup-table-wrap" id="kpi-popup-table-wrap">
+      <table id="kpi-popup-table" class="data-table display" style="width:100%">
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Source</th>
+            <th>Issue ID</th>
+            <th>Application</th>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Start Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Page JS -->
+<script src="../js/dashboard.js"></script>
+</body>
+</html>

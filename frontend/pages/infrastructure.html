@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infrastructure — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- DataTables (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/datatables/css/dataTables.dataTables.min.css" />
+  <script src="../vendor/jquery/jquery.min.js"></script>
+  <script src="../vendor/datatables/js/dataTables.min.js"></script>
+  <script src="../vendor/datatables/js/dataTables.dataTables.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/infrastructure.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+         (no-op when running inside the SPA shell iframe;
+         renders the standalone flat header in dev mode)
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <!-- Page header row -->
+        <div class="infra-page-header flex items-start justify-between px-5 border-b">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <i data-lucide="server"></i>
+            </div>
+            <div>
+              <h1 class="infra-title">INFRASTRUCTURE</h1>
+              <p class="infra-subtitle">Hosts discovered across all connected sources</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="error-banner" class="banner banner-warn mx-5 mt-4 hidden" role="alert">
+          <i data-lucide="alert-triangle"></i>
+          <span class="banner-text" id="error-banner-text"></span>
+        </div>
+
+        <!-- ── Table ── -->
+        <div class="px-5 py-4 flex flex-col gap-5">
+          <section class="infra-table-card" aria-labelledby="infra-table-heading">
+            <h2 id="infra-table-heading" class="sr-only">Infrastructure hosts</h2>
+            <table id="infrastructure-table" class="display" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Host Name</th>
+                  <th>OS Type</th>
+                  <th>Status</th>
+                  <th>Entity ID</th>
+                </tr>
+              </thead>
+              <tbody><!-- populated by infrastructure.js --></tbody>
+            </table>
+          </section>
+
+          <!-- bottom breathing room -->
+          <div style="height:24px;flex-shrink:0"></div>
+        </div>
+      </section><!-- /page-content -->
+    </main>
+  </div><!-- /#app -->
+
+  <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/infrastructure.js"></script>
+</body>
+</html>

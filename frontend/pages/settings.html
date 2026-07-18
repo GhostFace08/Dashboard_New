@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — MCP Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <link rel="stylesheet" href="../css/shared.css" />
+  <link rel="stylesheet" href="../css/settings.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- Header injected by common.js -->
+  <div id="header-root" style="flex-shrink:0"></div>
+
+  <!-- Main layout: left nav + content -->
+  <div id="settings-layout">
+
+    <!-- ── Left navigation sidebar ── -->
+    <aside id="settings-nav">
+      <div class="snav-head">
+        <p class="snav-label">Settings</p>
+        <div class="search-box">
+          <i data-lucide="search" style="width:14px;height:14px"></i>
+          <input id="nav-search" type="text" placeholder="Search settings…" />
+        </div>
+      </div>
+      <nav id="nav-list" class="snav-list">
+        <!-- Injected by JS -->
+      </nav>
+    </aside>
+
+    <!-- ── Right content column ── -->
+    <div id="settings-content">
+
+      <!-- Top bar -->
+      <div id="settings-topbar">
+        <div>
+          <p class="stb-eyebrow">Administration</p>
+          <h1 id="section-title" class="stb-title">Settings</h1>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div id="settings-body">
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: General
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-general" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">Application Configuration</h2>
+            <p class="sec-hint">Application-wide logging and runtime configuration.</p>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Logging</h3><p class="scard-desc">Where and how the agent writes diagnostic logs.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Log Level</span>
+                <select id="log-level" class="select">
+                  <option value="DEBUG">DEBUG</option>
+                  <option value="INFO" selected>INFO</option>
+                  <option value="WARNING">WARNING</option>
+                  <option value="ERROR">ERROR</option>
+                </select>
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Log File</span>
+                <input id="log-file" type="text" class="input input-mono" value="logs/agent.log" />
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Maximum Log Size (Bytes)</span>
+                <span class="sfield-hint">Default: 10485760 (10 MiB)</span>
+                <input id="log-max-size" type="number" class="input input-mono" value="10485760" />
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Backup Log Files</span>
+                <span class="sfield-hint">Number of rotated files to keep.</span>
+                <input id="log-backups" type="number" class="input input-mono" value="5" />
+              </label>
+            </div>
+          </div>
+
+          <!-- Phase 14 — Dashboard sub-tab merged in here, trimmed to just
+               the two fields that actually feed conf.ini's [dashboard]
+               block. Alert Visibility / Default Evaluation Matrix Options
+               were dropped entirely (display-only prefs, not backend
+               defaults). -->
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Dashboard Defaults</h3><p class="scard-desc">Applied when the dashboard is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <span class="sfield-hint">How often the dashboard backend asks the MCP Orchestrator for fresh logs.</span>
+                <select id="dash-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Periodic Data Check Time (s)</span>
+                <span class="sfield-hint">How often the dashboard backend checks File Storage for updates (default: 300 s / 5 min). Requires middleware restart to take effect.</span>
+                <input id="dash-check-time" type="number" class="input input-mono" value="300" />
+              </label>
+            </div>
+          </div>
+
+          <!-- Phase 14 — new: Infrastructure / Services / Topology Defaults,
+               each a single periodic-fetch field, mirroring Dashboard's. -->
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Infrastructure Defaults</h3><p class="scard-desc">Applied when the Infrastructure page is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <select id="infra-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Services Defaults</h3><p class="scard-desc">Applied when the Services page is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <select id="services-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Topology Defaults</h3><p class="scard-desc">Applied when the Topology page is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <select id="topology-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <!-- DISPLAY PREFERENCES — COMMENTED OUT (pending finalisation) — carried over unchanged from the old Dashboard section
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Display Preferences</h3><p class="scard-desc">Visual density and theme.</p></div>
+            <div class="scard-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Compact Mode</p>
+                  <p class="toggle-desc">Reduces padding across panels for high-density displays.</p>
+                </div>
+                <button class="toggle-switch" id="toggle-compact" data-on="false"><span class="toggle-thumb"></span></button>
+              </div>
+              <div class="grid-2">
+                <label class="sfield">
+                  <span class="sfield-label">Table Density</span>
+                  <div class="segmented" id="seg-density">
+                    <button class="seg-btn active" data-val="comfortable">Comfortable</button>
+                    <button class="seg-btn" data-val="compact">Compact</button>
+                  </div>
+                </label>
+                <label class="sfield">
+                  <span class="sfield-label">Theme Preference</span>
+                  <div class="segmented" id="seg-theme">
+                    <button class="seg-btn" data-val="system">System</button>
+                    <button class="seg-btn active" data-val="dark">Dark</button>
+                    <button class="seg-btn" data-val="light">Light</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <!-- NOTIFICATION PREFERENCES — COMMENTED OUT (pending finalisation) — carried over unchanged
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Notification Preferences</h3><p class="scard-desc">Where and when to surface dashboard alerts.</p></div>
+            <div class="scard-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Desktop Notifications</p>
+                  <p class="toggle-desc">Browser notifications for new alerts.</p>
+                </div>
+                <button class="toggle-switch on" id="toggle-notif-desktop" data-on="true"><span class="toggle-thumb"></span></button>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Sound Alerts</p>
+                  <p class="toggle-desc">Play a sound when a Critical alert is raised.</p>
+                </div>
+                <button class="toggle-switch" id="toggle-notif-sound" data-on="false"><span class="toggle-thumb"></span></button>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Critical Only</p>
+                  <p class="toggle-desc">Suppress notifications below Critical severity.</p>
+                </div>
+                <button class="toggle-switch on" id="toggle-notif-critical" data-on="true"><span class="toggle-thumb"></span></button>
+              </div>
+            </div>
+          </div>
+          -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: MCP Servers  (Phase 15)
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-monitoring" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">MCP Servers</h2>
+            <p class="sec-hint">Admin-defined monitoring servers. Add a server, then configure its field mapping, issue categorization keywords, and AI keywords from its Edit menu.</p>
+          </div>
+
+          <div class="scard">
+            <div class="scard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div>
+                <h3 class="scard-title">Servers</h3>
+                <p class="scard-desc">Data from a server is withheld from the dashboard until its required fields are filled in and saved.</p>
+              </div>
+              <button id="btn-add-mcp-server" class="btn btn-primary" style="font-size:12px;white-space:nowrap">
+                <i data-lucide="plus" style="width:14px;height:14px"></i> Add MCP Server
+              </button>
+            </div>
+            <div class="scard-body">
+              <div id="mcp-server-list" class="mcp-server-list">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Add MCP Server modal ── -->
+        <div id="mcp-add-modal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:540px">
+            <div class="modal-header">
+              <h3>Add MCP Server</h3>
+              <button class="btn-icon" id="mcp-add-close"><i data-lucide="x" style="width:14px;height:14px"></i></button>
+            </div>
+            <div class="modal-body">
+              <div class="grid-2">
+                <label class="sfield"><span class="sfield-label">Server Name</span><input id="mcp-add-name" type="text" class="input" placeholder="e.g. Prometheus" /></label>
+                <label class="sfield"><span class="sfield-label">Type / Vendor</span><input id="mcp-add-type" type="text" class="input" placeholder="e.g. prometheus" /></label>
+                <label class="sfield"><span class="sfield-label">Deployment</span>
+                  <div class="segmented" id="mcp-add-mode">
+                    <button class="seg-btn active" data-val="saas">SaaS</button>
+                    <button class="seg-btn" data-val="onprem">On-Prem</button>
+                  </div>
+                </label>
+                <label class="sfield"><span class="sfield-label">Base URL</span><input id="mcp-add-baseurl" type="text" class="input input-mono" placeholder="https://…" /></label>
+                <label class="sfield"><span class="sfield-label">Auth Token</span><input id="mcp-add-token" type="password" class="input input-mono" placeholder="••••••••" /></label>
+                <label class="sfield"><span class="sfield-label">Timeout (s)</span><input id="mcp-add-timeout" type="number" class="input input-mono" value="30" /></label>
+              </div>
+              <div class="sfield mt-2">
+                <span class="sfield-label">Security Certificate</span>
+                <span class="sfield-hint">Only needed if the server presents a self-signed / private CA certificate. Not stored yet — this just acknowledges one is on hand.</span>
+                <div class="flex gap-2 items-center mt-1">
+                  <input id="mcp-add-cert" type="file" class="input" style="max-width:260px" />
+                  <span id="mcp-add-cert-status" class="text-muted" style="font-size:11px"></span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" id="mcp-add-cancel">Cancel</button>
+              <button class="btn btn-primary" id="mcp-add-save">Save &amp; Add Server</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Edit MCP Server modal (multi-tab) ── -->
+        <div id="mcp-edit-modal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:780px">
+            <div class="modal-header">
+              <h3 id="mcp-edit-title">Edit Server</h3>
+              <button class="btn-icon" id="mcp-edit-close"><i data-lucide="x" style="width:14px;height:14px"></i></button>
+            </div>
+            <div class="tab-strip" id="mcp-edit-tabs">
+              <button class="tab active" data-edit-tab="details">Server Details</button>
+              <button class="tab" data-edit-tab="mapping">Mapping</button>
+              <button class="tab" data-edit-tab="categorization">Issue Categorization</button>
+              <button class="tab" data-edit-tab="time">Time Mapping</button>
+              <button class="tab" data-edit-tab="keywords">AI Keywords</button>
+            </div>
+            <div class="modal-body" id="mcp-edit-body" style="max-height:56vh;overflow-y:auto">
+              <!-- Injected per-tab by JS -->
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" id="mcp-edit-cancel">Close</button>
+              <button class="btn btn-primary" id="mcp-edit-save">Save Tab</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: AI & Models
+        ══════════════════════════════════════════════════════ -->
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: Capacity & Forecasting  (Phase 14 — blank placeholder)
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-capacity" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">Capacity &amp; Forecasting</h2>
+            <p class="sec-hint">Defaults for the Capacity page's forecasting engine.</p>
+          </div>
+          <div class="banner banner-info" style="max-width:640px">
+            <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
+            <span class="banner-text">Capacity forecasting defaults aren't configurable here yet — coming in a future release.</span>
+          </div>
+        </section>
+
+        <section id="sec-ai" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">AI &amp; Models</h2>
+            <p class="sec-hint">Local LLM and intent classification.</p>
+          </div>
+          <div class="scard">
+            <div class="scard-head">
+              <h3 class="scard-title">Local LLM</h3>
+              <p class="scard-desc">Provider used for chat completions and reasoning.</p>
+              <button class="btn btn-ghost" style="font-size:11px;margin-left:auto">Validate Model</button>
+            </div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Base URL</span>
+                <input id="llm-url" type="text" class="input input-mono" value="http://localhost:11434" />
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Model</span>
+                <select id="llm-model" class="select">
+                  <option>qwen3:0.6b</option>
+                  <option selected>qwen2.5</option>
+                  <option>llama3</option>
+                  <option>phi4</option>
+                  <option>mistral</option>
+                </select>
+              </label>
+              <label class="sfield">
+                <span class="sfield-label" id="temp-label">Temperature: 0.20</span>
+                <input id="llm-temp" type="range" min="0" max="2" step="0.05" value="0.2" class="srange" />
+              </label>
+              <label class="sfield">
+                <span class="sfield-label">Max Tokens</span>
+                <input id="llm-max-tokens" type="number" class="input input-mono" value="2048" />
+              </label>
+            </div>
+          </div>
+
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Intent Detection</h3><p class="scard-desc">How user queries are routed to retrieval or chat.</p></div>
+            <div class="scard-body">
+              <div class="grid-3">
+                <label class="sfield">
+                  <span class="sfield-label">Classifier Mode</span>
+                  <div class="segmented" id="seg-intent">
+                    <button class="seg-btn" data-val="keyword">Keyword</button>
+                    <button class="seg-btn" data-val="llm">LLM</button>
+                    <button class="seg-btn active" data-val="hybrid">Hybrid</button>
+                  </div>
+                </label>
+                <label class="sfield">
+                  <span class="sfield-label" id="conf-label">Confidence Threshold: 0.70</span>
+                  <input id="llm-confidence" type="range" min="0" max="1" step="0.01" value="0.7" class="srange" />
+                </label>
+                <label class="sfield">
+                  <span class="sfield-label">LLM Timeout (s)</span>
+                  <input id="llm-timeout" type="number" class="input input-mono" value="15" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: Retrieval (RAG)
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-rag" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">Retrieval (RAG)</h2>
+            <p class="sec-hint">Document ingestion, vector stores, and retrieval endpoints.</p>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Service</h3><p class="scard-desc">HTTP endpoints exposed by the retrieval service.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield"><span class="sfield-label">Base URL</span><input id="rag-base-url" type="text" class="input input-mono" value="http://localhost:8000" /></label>
+              <label class="sfield"><span class="sfield-label">Data Endpoint</span><input id="rag-data-ep" type="text" class="input input-mono" value="/data" /></label>
+              <label class="sfield"><span class="sfield-label">Ask Endpoint</span><input id="rag-ask-ep" type="text" class="input input-mono" value="/ask" /></label>
+              <label class="sfield"><span class="sfield-label">Metadata File</span><input id="rag-meta" type="text" class="input input-mono" value="metadata.json" /></label>
+              <label class="sfield"><span class="sfield-label">Timeout (s)</span><input id="rag-timeout" type="number" class="input input-mono" value="30" /></label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Storage</h3><p class="scard-desc">Where ingested documents and indices live on disk.</p></div>
+            <div class="scard-body grid-2">
+              <div class="sfield"><span class="sfield-label">Upload Folder</span><div class="path-row"><input id="rag-upload-folder" type="text" class="input input-mono" value="storage/uploads" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">Vector Store Folder</span><div class="path-row"><input id="rag-vector-store" type="text" class="input input-mono" value="storage/vectors" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">BM25 Store</span><div class="path-row"><input id="rag-bm25-store" type="text" class="input input-mono" value="storage/bm25" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">Instructions File</span><div class="path-row"><input id="rag-instructions-file" type="text" class="input input-mono" value="config/instructions.md" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">FAQ File</span><div class="path-row"><input id="rag-faq-file" type="text" class="input input-mono" value="config/faq.json" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">Settings File</span><div class="path-row"><input id="rag-settings-file" type="text" class="input input-mono" value="config/settings.yaml" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+            </div>
+          </div>
+                  <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Embeddings</h3><p class="scard-desc">Vector encoding parameters.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield"><span class="sfield-label">Embedding Model</span><input id="embed-model" type="text" class="input input-mono" value="bge-small-en-v1.5" /></label>
+              <label class="sfield"><span class="sfield-label">Top K</span><input id="top-k" type="number" class="input input-mono" value="8" /></label>
+              <label class="sfield"><span class="sfield-label">Chunk Size</span><input id="chunk-size" type="number" class="input input-mono" value="512" /></label>
+              <label class="sfield"><span class="sfield-label">Chunk Overlap</span><input id="chunk-overlap" type="number" class="input input-mono" value="64" /></label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Hybrid Search</h3><p class="scard-desc">Combine lexical and semantic relevance.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield"><span class="sfield-label" id="bm25-label">BM25 Weight: 0.40</span><input id="bm25-weight" type="range" min="0" max="1" step="0.05" value="0.4" class="srange" /></label>
+              <label class="sfield"><span class="sfield-label" id="sem-label">Semantic Weight: 0.60</span><input id="sem-weight" type="range" min="0" max="1" step="0.05" value="0.6" class="srange" /></label>
+            </div>
+            <div class="scard-body pt-0">
+              <div class="banner banner-info" id="weight-banner">
+                <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
+                <span class="banner-text">BM25 Weight + Semantic Weight should ideally equal 1. Current total: <strong id="weight-total">1.00</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Re-ranking</h3><p class="scard-desc">Second-pass relevance model.</p></div>
+            <div class="scard-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Enable Re-ranking</p>
+                  <p class="toggle-desc">Apply a cross-encoder to the top-K candidates.</p>
+                </div>
+                <button class="toggle-switch on" id="toggle-rerank" data-on="true"><span class="toggle-thumb"></span></button>
+              </div>
+              <div id="rerank-fields" class="grid-2">
+                <label class="sfield"><span class="sfield-label">Re-ranker Model</span><input id="rerank-model" type="text" class="input input-mono" value="bge-reranker-base" /></label>
+                <label class="sfield"><span class="sfield-label">Top N</span><input id="top-n" type="number" class="input input-mono" value="3" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Semantic Cache</h3><p class="scard-desc">Cache near-duplicate query responses.</p></div>
+            <div class="scard-body">
+              <div class="toggle-row">
+                <div class="toggle-info"><p class="toggle-label">Enable Cache</p></div>
+                <button class="toggle-switch on" id="toggle-cache" data-on="true"><span class="toggle-thumb"></span></button>
+              </div>
+              <div id="cache-fields" class="grid-3">
+                <label class="sfield"><span class="sfield-label" id="sim-label">Similarity Threshold: 0.92</span><input id="sim-threshold" type="range" min="0.5" max="1" step="0.01" value="0.92" class="srange" /></label>
+                <label class="sfield"><span class="sfield-label">Cache Size</span><input id="cache-size" type="number" class="input input-mono" value="1024" /></label>
+                <label class="sfield"><span class="sfield-label">TTL (s)</span><input id="cache-ttl" type="number" class="input input-mono" value="3600" /></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: Performance
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-performance" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">Performance</h2>
+            <p class="sec-hint">Hardware acceleration and resource thresholds.</p>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">GPU</h3><p class="scard-desc">Acceleration parameters for embedding and re-ranking workloads.</p></div>
+            <div class="scard-body grid-2">
+              <div class="sfield">
+                <span class="sfield-label">GPU Available</span>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="status-badge connected"><span class="dot"></span>Connected</span>
+                  <span class="text-muted" style="font-family:var(--font-mono);font-size:11px">NVIDIA A10G · 24 GiB</span>
+                </div>
+              </div>
+              <label class="sfield">
+                <span class="sfield-label" id="gpu-thresh-label">GPU Memory Threshold (%): 85</span>
+                <input id="gpu-threshold" type="range" min="50" max="100" value="85" class="srange" />
+              </label>
+            </div>
+            <div class="scard-body pt-0">
+              <p class="sfield-label mb-1">Current GPU Utilization</p>
+              <div class="meter-track">
+                <div class="meter-fill" id="gpu-util-fill" style="width:42%;background:var(--primary)"></div>
+              </div>
+              <div class="flex justify-between mt-1">
+                <span class="text-muted" style="font-family:var(--font-mono);font-size:10px">42% used</span>
+                <span class="text-muted" style="font-family:var(--font-mono);font-size:10px" id="gpu-thresh-display">Threshold 85%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION: Advanced
+        ══════════════════════════════════════════════════════ -->
+        <section id="sec-advanced" class="settings-section hidden">
+          <div class="sec-header">
+            <h2 class="sec-title">Advanced</h2>
+            <p class="sec-hint">Prompt templates and advanced overrides. Changes here affect agent behaviour.</p>
+          </div>
+          <div class="scard">
+            <div class="scard-head">
+              <h3 class="scard-title">Prompt Templates</h3>
+              <p class="scard-desc">File paths used by the agent at runtime.</p>
+              <i data-lucide="file-text" style="width:16px;height:16px;color:var(--muted-foreground);margin-left:auto"></i>
+            </div>
+            <div class="scard-body">
+              <div class="sfield"><span class="sfield-label">Main Prompt Path</span><div class="path-row"><input type="text" id="main-prompt" class="input input-mono" value="prompts/main.txt" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+              <div class="sfield"><span class="sfield-label">Visualization Prompt Path</span><div class="path-row"><input type="text" id="viz-prompt" class="input input-mono" value="prompts/visualization.txt" /><button class="path-btn" title="Browse"><i data-lucide="folder-open" style="width:14px;height:14px"></i></button><button class="path-btn" title="Edit"><i data-lucide="edit-3" style="width:14px;height:14px"></i></button><button class="path-btn" title="Open"><i data-lucide="external-link" style="width:14px;height:14px"></i></button></div></div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /settings-body -->
+
+      <!-- ── Sticky footer ── -->
+      <div id="settings-footer">
+        <div class="banner banner-warn" id="footer-warning-banner" style="margin-bottom:10px">
+          <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0"></i>
+          <span class="banner-text">Some backend configuration changes require restarting the monitoring services before they take effect.</span>
+        </div>
+        <div class="footer-row">
+          <div id="footer-status">
+            <span class="status-unsaved hidden" id="unsaved-badge">
+              <span class="dot-indicator dot-amber" style="animation:pulse 2s infinite"></span>
+              Unsaved changes
+            </span>
+            <span class="status-saved" id="saved-badge">
+              <i data-lucide="check-circle-2" style="width:14px;height:14px"></i>
+              All changes saved
+            </span>
+          </div>
+          <div class="footer-actions">
+            <button id="btn-reset" class="btn btn-ghost">
+              <i data-lucide="rotate-ccw" style="width:14px;height:14px"></i> Reset to Defaults
+            </button>
+            <button id="btn-cancel" class="btn btn-ghost">Cancel</button>
+            <button id="btn-save" class="btn btn-primary">
+              <i data-lucide="save" style="width:14px;height:14px"></i> Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /settings-content -->
+  </div><!-- /settings-layout -->
+</div><!-- /#app -->
+
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/settings.js"></script>
+</body>
+</html>

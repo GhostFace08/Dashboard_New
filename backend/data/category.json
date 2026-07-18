@@ -1,0 +1,130 @@
+[
+  {
+    "keyword": "latency",
+    "category": "Performance"
+  },
+  {
+    "keyword": "slow",
+    "category": "Performance"
+  },
+  {
+    "keyword": "response",
+    "category": "Performance"
+  },
+  {
+    "keyword": "throughput",
+    "category": "Performance"
+  },
+  {
+    "keyword": "timeouts",
+    "category": "Performance"
+  },
+  {
+    "keyword": "cpu",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "memory",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "disk",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "network",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "server",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "interface",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "process",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "kubernetes",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "k8s",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "cluster",
+    "category": "Infrastructure"
+  },
+  {
+    "keyword": "error",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "exception",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "5xx",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "fault",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "failure",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "crash",
+    "category": "Application Error"
+  },
+  {
+    "keyword": "ssl",
+    "category": "Security"
+  },
+  {
+    "keyword": "auth",
+    "category": "Security"
+  },
+  {
+    "keyword": "unauthorized",
+    "category": "Security"
+  },
+  {
+    "keyword": "intrusion",
+    "category": "Security"
+  },
+  {
+    "keyword": "certificate",
+    "category": "Security"
+  },
+  {
+    "keyword": "unavailable",
+    "category": "tesssss"
+  },
+  {
+    "keyword": "not available",
+    "category": "tesssss"
+  },
+  {
+    "keyword": "down",
+    "category": "tesssss"
+  },
+  {
+    "keyword": "outage",
+    "category": "tesssss"
+  },
+  {
+    "keyword": "unreachable",
+    "category": "tesssss"
+  },
+  {
+    "keyword": "timeout",
+    "category": "tesssss"
+  }
+]

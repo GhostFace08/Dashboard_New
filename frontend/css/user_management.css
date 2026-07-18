@@ -1,0 +1,192 @@
+/**
+ * user_management.css — User Management page (Phase 10)
+ *
+ * Page-scoped, purely additive: no edits to shared.css or dashboard.css.
+ * Reuses .modal-overlay/.modal-box/.modal-header/.modal-body/.modal-footer,
+ * .input, .btn, .icon-badge, .status-badge from shared.css. Only the user
+ * table, avatar chip, and tool-restriction checkbox list are new (no
+ * existing atom in shared.css covers either).
+ */
+
+/* ── Page header ───────────────────────────────────────────────────────── */
+.um-page-header {
+  height: 56px;
+  flex-shrink: 0;
+}
+.um-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+  margin: 0;
+}
+.um-subtitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 2px 0 0;
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────────── */
+.um-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.um-search-wrap { position: relative; min-width: 220px; }
+.um-search-wrap .input { padding-left: 30px; }
+.um-search-wrap svg {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--muted-foreground); pointer-events: none;
+}
+
+/* ── User table ────────────────────────────────────────────────────────── */
+.um-table-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+}
+.um-table th {
+  text-align: left;
+  padding: 9px 16px;
+  color: var(--muted-foreground);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.um-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  vertical-align: middle;
+}
+.um-table tbody tr:last-child td { border-bottom: none; }
+.um-table tbody tr:hover { background: var(--secondary); }
+.um-table .um-empty-row td {
+  text-align: center;
+  color: var(--muted-foreground);
+  padding: 32px 16px;
+}
+
+.um-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.um-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gradient-primary, linear-gradient(135deg,#6366f1,#8b5cf6));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.um-username { font-weight: 600; }
+
+.um-tool-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 260px; }
+.um-tool-chip {
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.um-tool-chip.all {
+  color: var(--accent-indigo, #6366f1);
+  border-color: rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.1);
+}
+
+.um-row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+/* ── Modal form ────────────────────────────────────────────────────────── */
+.um-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.um-form-row:last-child { margin-bottom: 0; }
+.um-form-row label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.um-form-hint {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+.um-password-wrap { position: relative; }
+.um-password-wrap .um-toggle-visibility {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.um-password-wrap .input { padding-right: 32px; }
+
+/* ── Tool-restriction checkbox list ───────────────────────────────────────
+   No existing checkbox atom in shared.css — small, page-scoped component.
+──────────────────────────────────────────────────────────────────────────── */
+.um-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--secondary);
+  max-height: 160px;
+  overflow-y: auto;
+}
+.um-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--foreground);
+  cursor: pointer;
+}
+.um-checkbox-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.um-checkbox-row .swatch {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.um-checkbox-row.all-row {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  font-weight: 600;
+}

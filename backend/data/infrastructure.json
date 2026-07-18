@@ -1,0 +1,14 @@
+{
+  "infrastructure": [
+    { "hostName": "web-prod-01",      "osType": "Linux (Ubuntu 22.04)",   "status": "Online",   "entityId": "HOST-7A61C3F0" },
+    { "hostName": "web-prod-02",      "osType": "Linux (Ubuntu 22.04)",   "status": "Online",   "entityId": "HOST-7A61C3F1" },
+    { "hostName": "db-primary-01",    "osType": "Linux (RHEL 9)",         "status": "Online",   "entityId": "HOST-3E29B7D2" },
+    { "hostName": "db-replica-01",    "osType": "Linux (RHEL 9)",         "status": "Degraded", "entityId": "HOST-3E29B7D3" },
+    { "hostName": "cache-redis-01",   "osType": "Linux (Amazon Linux 2)", "status": "Online",   "entityId": "HOST-9C10F4A8" },
+    { "hostName": "app-worker-01",    "osType": "Linux (Ubuntu 22.04)",   "status": "Online",   "entityId": "HOST-1D88E245" },
+    { "hostName": "app-worker-02",    "osType": "Linux (Ubuntu 22.04)",   "status": "Offline",  "entityId": "HOST-1D88E246" },
+    { "hostName": "lb-edge-01",       "osType": "Linux (Alpine 3.19)",    "status": "Online",   "entityId": "HOST-56F0A9BC" },
+    { "hostName": "win-app-01",       "osType": "Windows Server 2022",    "status": "Online",   "entityId": "HOST-EE41C0A7" },
+    { "hostName": "batch-runner-01",  "osType": "Linux (Ubuntu 20.04)",   "status": "Degraded", "entityId": "HOST-2B7790D1" }
+  ]
+}

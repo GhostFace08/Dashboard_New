@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Topology Map — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- D3 subset (vendored, offline) — load order matters: selection first,
+       then force/drag/zoom which extend it. -->
+  <script src="../vendor/d3/d3-selection.min.js"></script>
+  <script src="../vendor/d3/d3-force.min.js"></script>
+  <script src="../vendor/d3/d3-drag.min.js"></script>
+  <script src="../vendor/d3/d3-zoom.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/topology.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <section id="page-content" class="flex flex-col flex-1 overflow-hidden bg-background">
+
+        <!-- Page header row -->
+        <div class="topo-page-header flex items-center justify-between px-5 border-b">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <i data-lucide="share-2"></i>
+            </div>
+            <div>
+              <h1 class="topo-title">TOPOLOGY MAP</h1>
+              <p class="topo-subtitle">Manually composed application topology across connected sources</p>
+            </div>
+          </div>
+          <button id="topo-add-btn" class="btn btn-primary" type="button">
+            <i data-lucide="plus"></i> Add Topology
+          </button>
+        </div>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="error-banner" class="banner banner-warn mx-5 mt-3 hidden" role="alert">
+          <i data-lucide="alert-triangle"></i>
+          <span class="banner-text" id="error-banner-text"></span>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="topo-toolbar">
+          <select id="topo-app-select" class="select topo-app-select"></select>
+
+          <button id="topo-add-from-tool-btn" class="btn btn-ghost" type="button" title="Add topology from a different tool for the same application">
+            <i data-lucide="layers"></i> Add From Another Tool
+          </button>
+
+          <button id="topo-connect-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="git-commit-horizontal"></i> Connect Nodes
+          </button>
+
+          <button id="topo-refresh-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="refresh-cw"></i> Refresh from Sources
+          </button>
+
+          <span class="spacer"></span>
+
+          <div class="topo-search-wrap">
+            <i data-lucide="search"></i>
+            <input id="topo-search-input" class="input" type="text" placeholder="Find device or service…" />
+          </div>
+
+          <button type="button" class="topo-filter-chip active" data-filter="hosts">
+            <span class="sw" style="background:var(--accent-indigo,#6366f1)"></span>Hosts
+          </button>
+          <button type="button" class="topo-filter-chip active" data-filter="services">
+            <span class="sw" style="background:var(--accent-teal,#14b8a6)"></span>Services
+          </button>
+          <button type="button" class="topo-filter-chip active" data-filter="procgroups">
+            <span class="sw" style="background:var(--accent-amber,#e5a030)"></span>Proc Groups
+          </button>
+
+          <div class="segmented" id="topo-scope-segmented">
+            <span class="seg-btn active" data-scope="problem">Problem Focus</span>
+            <span class="seg-btn" data-scope="full">Full Estate</span>
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="topo-canvas-wrap" id="topo-canvas-wrap">
+          <svg id="topo-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+
+          <!-- Empty state, shown when the selected application has no topology yet -->
+          <div class="topo-empty-state hidden" id="topo-empty-state">
+            <div class="icon-badge"><i data-lucide="share-2"></i></div>
+            <h3>No topology for this application yet</h3>
+            <p>Add a topology to start manually composing hosts, services, and process groups for this application.</p>
+            <button class="btn btn-primary" type="button" id="topo-empty-add-btn">
+              <i data-lucide="plus"></i> Add Topology
+            </button>
+          </div>
+
+          <!-- Legend -->
+          <div class="topo-legend" id="topo-legend">
+            <div class="topo-legend-item"><span class="swatch" style="background:var(--accent-indigo,#6366f1)"></span>Discovered</div>
+            <div class="topo-legend-item"><span class="swatch" style="background:var(--accent-teal,#14b8a6)"></span>Manual</div>
+            <div class="topo-legend-item"><span class="swatch" style="background:var(--accent-red,#e5534b)"></span>Problem</div>
+            <div class="topo-legend-item"><span class="swatch" style="background:var(--muted-foreground)"></span>Disconnected</div>
+            <div class="topo-legend-item"><span class="swatch line dashed" style="border-color:var(--accent-red,#e5534b)"></span>Problem edge</div>
+          </div>
+
+          <!-- Floating controls -->
+          <div class="topo-canvas-controls">
+            <button class="btn-icon" type="button" id="topo-zoom-in-btn" title="Zoom in"><i data-lucide="plus"></i></button>
+            <button class="btn-icon" type="button" id="topo-zoom-out-btn" title="Zoom out"><i data-lucide="minus"></i></button>
+            <button class="btn-icon" type="button" id="topo-fit-btn" title="Fit view"><i data-lucide="maximize"></i></button>
+          </div>
+
+          <!-- Node detail panel -->
+          <div class="topo-detail-panel" id="topo-detail-panel">
+            <div class="detail-header">
+              <span class="detail-title" id="topo-detail-title">—</span>
+              <button class="btn-icon" type="button" id="topo-detail-close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="detail-row"><span class="k">Type</span><span class="v" id="topo-detail-type">—</span></div>
+            <div class="detail-row"><span class="k">Status</span><span class="v" id="topo-detail-status">—</span></div>
+            <div class="detail-row"><span class="k">Source</span><span class="v" id="topo-detail-source">—</span></div>
+            <div class="detail-row"><span class="k">Origin</span><span class="v" id="topo-detail-origin">—</span></div>
+            <div class="detail-row"><span class="k">Entity ID</span><span class="v" id="topo-detail-entity">—</span></div>
+            <div class="detail-actions">
+              <button class="btn btn-outline-primary" type="button" id="topo-detail-connect-btn" style="flex:1">
+                <i data-lucide="git-commit-horizontal"></i> Connect
+              </button>
+              <button class="btn btn-destructive" type="button" id="topo-detail-remove-btn">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section><!-- /page-content -->
+    </main>
+  </div><!-- /#app -->
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Add Topology
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-add-modal-overlay">
+    <div class="modal-box" style="width:440px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600" id="topo-add-modal-title">Add Topology</span>
+        <button class="btn-icon" type="button" id="topo-add-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-add-app-input">Application</label>
+          <input id="topo-add-app-input" class="input" type="text" placeholder="e.g. Payments Gateway" />
+          <span class="topo-form-hint" id="topo-add-app-hint">New application — a fresh topology will be created.</span>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-add-source-select">Source</label>
+          <select id="topo-add-source-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row" id="topo-add-existing-row" style="display:none">
+          <label>Existing topologies for this application</label>
+          <div class="topo-existing-topo-list" id="topo-existing-topo-list"></div>
+          <span class="topo-form-hint">Adding from a new source merges into the same application view — it doesn't replace what's already there.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-add-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="topo-add-modal-save-btn">
+          <i data-lucide="check"></i> Add
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Connect Nodes
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-connect-modal-overlay">
+    <div class="modal-box" style="width:420px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Connect Nodes</span>
+        <button class="btn-icon" type="button" id="topo-connect-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-connect-from-select">From</label>
+          <select id="topo-connect-from-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-connect-to-select">To</label>
+          <select id="topo-connect-to-select" class="select" style="width:100%"></select>
+        </div>
+        <span class="topo-form-hint">Manual edges are marked "Manual" and are never overwritten by Refresh from Sources.</span>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-connect-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="topo-connect-modal-save-btn">
+          <i data-lucide="check"></i> Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/topology.js"></script>
+</body>
+</html>

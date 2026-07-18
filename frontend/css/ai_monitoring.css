@@ -1,0 +1,115 @@
+/* =============================================================================
+   ai_monitoring.css — AI Monitoring page-specific styles
+   Depends on shared.css being loaded first.
+   ============================================================================= */
+
+/* ── Page header ─────────────────────────────────────────────────────────────── */
+.aim-page-header {
+  border-color: rgba(99, 102, 241, 0.15);
+  flex-shrink: 0;
+}
+
+.aim-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+/* ── Section titles ──────────────────────────────────────────────────────────── */
+.aim-section-title {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* ── Stat value colour helpers ───────────────────────────────────────────────── */
+.aim-green { color: #10b981; }
+.aim-amber { color: #e5a030; }
+.aim-red   { color: #e5534b; }
+
+/* ── Active Model card ────────────────────────────────────────────────────────── */
+.aim-model-card {
+  border-color: var(--border);
+}
+
+.aim-model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .aim-model-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.aim-model-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.aim-model-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.aim-model-icon.text-primary { color: var(--primary); }
+.aim-model-icon.text-muted   { color: var(--muted-foreground); }
+
+.aim-model-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-bottom: 2px;
+}
+
+.aim-model-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+.aim-mono-sm {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Status colours for model-status-value */
+.aim-model-status.healthy  { color: #10b981; }
+.aim-model-status.degraded { color: #e5a030; }
+.aim-model-status.offline  { color: #e5534b; }
+
+/* ── Status badge overrides for the header badge ─────────────────────────────── */
+/* shared.css already defines .status-badge + modifiers; we just ensure the
+   animated pulse dot is present inside it.                                      */
+#model-status-badge .dot {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── Accessibility ───────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Loading skeleton pulse ──────────────────────────────────────────────────── */
+.aim-skeleton {
+  background: var(--secondary);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease infinite;
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About &amp; FAQ — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Shared design tokens + atoms only — no page-specific CSS file needed,
+       same reasoning as auto_escalation.html (Phase 11). -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <style>
+    .af-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .af-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+    }
+    .af-section h2 {
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .af-section h2 svg { width: 15px; height: 15px; color: var(--primary); }
+    .af-section p {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--muted-foreground);
+      line-height: 1.6;
+      margin: 4px 0 0;
+    }
+    .af-faq-item { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+    .af-faq-item:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+    .af-faq-q {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 4px;
+    }
+    .af-faq-a {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--muted-foreground);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .af-version-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted-foreground);
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+    }
+    .af-version-row:first-child { border-top: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <div class="af-wrap">
+
+          <div class="page-hero card-glow">
+            <div class="page-hero-eyebrow">ADMIN</div>
+            <div class="page-hero-title">About &amp; FAQ</div>
+            <div class="page-hero-sub">What the Unified MCP Dashboard does, and answers to common questions.</div>
+          </div>
+
+          <div class="af-section">
+            <h2><i data-lucide="layout-dashboard"></i> About this dashboard</h2>
+            <p>The Unified MCP Dashboard brings observability, infrastructure, services, capacity forecasting, and topology data from your connected monitoring sources into a single view, instead of switching between each tool's own console.</p>
+          </div>
+
+          <div class="af-section">
+            <h2><i data-lucide="help-circle"></i> Frequently asked questions</h2>
+
+            <div class="af-faq-item">
+              <p class="af-faq-q">How often does data refresh?</p>
+              <p class="af-faq-a">Each page fetches its data once when you first open that tab in a session. Use a page's own refresh control (where available) to pull the latest data on demand.</p>
+            </div>
+
+            <div class="af-faq-item">
+              <p class="af-faq-q">Why is a section showing "Soon" in the sidebar?</p>
+              <p class="af-faq-a">That section is still under active development and isn't wired up yet. It'll become clickable as soon as it ships.</p>
+            </div>
+
+            <div class="af-faq-item">
+              <p class="af-faq-q">How do I add a new monitoring source?</p>
+              <p class="af-faq-a">Source management lives under Settings → MCP Servers, where you can register a new server, map its data fields, and configure how its issues are categorized.</p>
+            </div>
+
+            <div class="af-faq-item">
+              <p class="af-faq-q">Who can see what?</p>
+              <p class="af-faq-a">User Management lets you scope which sources' data each account can see. It's visibility bookkeeping only — it isn't a login or access-control system.</p>
+            </div>
+
+            <div class="af-faq-item">
+              <p class="af-faq-q">Something looks wrong or out of date — what do I do?</p>
+              <p class="af-faq-a">Try that page's refresh control first. If the issue persists, check the relevant source's connection status under Settings.</p>
+            </div>
+          </div>
+
+          <div class="af-section">
+            <h2><i data-lucide="info"></i> Version</h2>
+            <div class="af-version-row"><span>Dashboard UI</span><span>Unified MCP Dashboard</span></div>
+            <div class="af-version-row"><span>Build</span><span>Internal</span></div>
+          </div>
+
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- ── Scripts ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/about_faq.js"></script>
+</body>
+</html>

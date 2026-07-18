@@ -1,0 +1,6 @@
+{
+  "dynatrace":   ["SOP", "incident", "runbook", "playbook", "guide", "documentation", "report", "policy", "procedure", "postmortem"],
+  "opmanager":   ["SOP", "incident", "runbook", "playbook", "guide", "documentation", "report", "policy", "procedure", "postmortem"],
+  "appdynamics": ["SOP", "incident", "runbook", "playbook", "guide", "documentation", "report", "policy", "procedure", "postmortem"],
+  "heal":        ["SOP", "incident", "runbook", "playbook", "guide", "documentation", "report", "policy", "procedure", "postmortem"]
+}

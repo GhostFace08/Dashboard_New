@@ -1,0 +1,593 @@
+/* =============================================================================
+   settings.css — Settings page-specific styles
+   Depends on shared.css being loaded first.
+   ============================================================================= */
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+#settings-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 48px); /* subtract header height */
+}
+
+/* ── Left navigation sidebar ─────────────────────────────────────────────── */
+#settings-nav {
+  width: 256px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.snav-head {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.snav-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  margin-bottom: 8px;
+}
+
+.snav-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.snav-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--muted-foreground);
+  transition: background var(--transition), color var(--transition);
+  margin-bottom: 2px;
+}
+.snav-item:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+.snav-item.active {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+}
+.snav-item i { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.snav-item-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+}
+.snav-item.active .snav-item-label { font-weight: 600; }
+.snav-item-desc {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ── Right content column ────────────────────────────────────────────────── */
+#settings-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top bar */
+#settings-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--secondary);
+  flex-shrink: 0;
+}
+
+.stb-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+.stb-title {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+  margin-top: 1px;
+}
+
+/* Scrollable body */
+#settings-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 96px; /* extra bottom for sticky footer */
+}
+
+/* ── Section visibility ───────────────────────────────────────────────────── */
+.settings-section { display: none; max-width: 900px; }
+.settings-section.active { display: block; }
+.settings-section.hidden { display: none; }
+
+.sec-header { margin-bottom: 20px; }
+.sec-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.sec-hint {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+
+/* ── Setting cards ────────────────────────────────────────────────────────── */
+.scard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.scard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Split variant: left title/desc + right status controls */
+.scard-head.scard-head--split {
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.scard-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-right: 20px;
+}
+.scard-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  padding-left: 20px;
+  margin-left: auto;
+}
+.scard-conn-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.scard-head--split .monitor-inline-status-row {
+  margin-top: 0;
+}
+
+.scard-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  flex: 1;
+  min-width: 100%;
+}
+.scard-head--split .scard-title {
+  min-width: unset;
+  flex: unset;
+}
+
+.scard-desc {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.scard-body {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.scard-body.pt-0 { padding-top: 0; }
+
+/* ── Form field wrappers ─────────────────────────────────────────────────── */
+.sfield {
+  display: grid;
+  gap: 6px;
+}
+
+.sfield-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--foreground);
+  display: block;
+}
+
+.sfield-hint {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+/* ── Grid helpers ────────────────────────────────────────────────────────── */
+.grid-2 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 768px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Range slider ────────────────────────────────────────────────────────── */
+.srange {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+/* ── Severity toggle buttons ─────────────────────────────────────────────── */
+.sev-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.sev-btn.active {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+}
+
+/* ── Monitoring service summary cards ────────────────────────────────────── */
+.monitor-summary-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.monitor-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.monitor-summary-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.monitor-tool-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.monitor-tool-name {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.monitor-tool-desc {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.monitor-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.monitor-sync-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
+/* ── Per-tool panel ──────────────────────────────────────────────────────── */
+.monitor-panel { display: none; }
+.monitor-panel.active { display: block; }
+
+.monitor-tool-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Collection mode segmented + banner */
+.collection-mode-wrap { margin-bottom: 16px; display: grid; gap: 8px; }
+
+/* ── Category lock/unlock bar ────────────────────────────────────────────── */
+.cat-lock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+}
+.cat-lock-bar.hidden { display: none; }
+.cat-lock-info { display: flex; align-items: center; gap: 10px; }
+.cat-lock-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cat-lock-icon.locked {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+.cat-lock-icon.unlocked {
+  background: rgba(229, 83, 75, 0.15);
+  border: 1px solid rgba(229, 83, 75, 0.3);
+  color: #e5534b;
+}
+.cat-lock-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cat-lock-desc {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+.cat-lock-btns { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ── Category cards ──────────────────────────────────────────────────────── */
+.cat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cat-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.cat-card-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cat-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.cat-kw-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-right: 8px;
+}
+.cat-card-body { padding: 16px; display: grid; gap: 12px; }
+
+.cat-card.disabled { opacity: 0.6; pointer-events: none; }
+
+/* ── Sticky footer ───────────────────────────────────────────────────────── */
+#settings-footer {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(8px);
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: var(--z-header);
+}
+
+#footer-warning-banner { margin-bottom: 0 !important; }
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#footer-status { display: flex; align-items: center; gap: 8px; }
+
+.status-unsaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(229, 160, 48, 0.3);
+  background: rgba(229, 160, 48, 0.1);
+  color: #e5a030;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.status-unsaved.hidden { display: none; }
+
+.status-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.footer-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ── mt helpers ──────────────────────────────────────────────────────────── */
+.mt-3 { margin-top: 12px; }
+.mb-5 { margin-bottom: 20px; }
+.mb-1 { margin-bottom: 4px; }
+.pt-0 { padding-top: 0; }
+/* ── Changes 4b / 4c: Enable Service inline beside Test button ──────────── */
+.monitor-enable-test-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.monitor-inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+}
+.monitor-inline-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.monitor-inline-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Change 4d: Live Auth — always visible, locked when Periodic mode ────── */
+.live-auth-card[data-live-active="false"] {
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+.live-auth-card[data-live-active="false"] .scard-head::after {
+  content: " — disabled in Periodic mode";
+  font-size: 10px;
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+/* ── Phase 15 — MCP Servers admin (server list + categorization blocks) ─── */
+.mcp-server-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mcp-server-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card, transparent);
+}
+.mcp-server-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.mcp-server-info { flex: 1; min-width: 0; }
+.mcp-server-name {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.mcp-server-desc {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcp-server-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mcp-server-card.mcp-server-disabled { opacity: 0.55; }
+.mcp-server-actions .toggle-switch { flex-shrink: 0; }
+
+.mcp-cat-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.mcp-cat-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mcp-cat-priority {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  background: var(--muted, rgba(127,127,127,0.12));
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.mcp-cat-name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  flex: 1;
+}

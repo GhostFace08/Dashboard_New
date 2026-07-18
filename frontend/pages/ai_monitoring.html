@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Monitoring — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline — Phase 5) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline — Phase 5) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/ai_monitoring.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+         FIX #1 #8: was <header id="site-header">, must be <div id="header-root">
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <!-- ── Page content ── -->
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <!-- Page header row -->
+        <div class="aim-page-header page-hero flex items-start justify-between px-5 pt-4 pb-3 border-b">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <i data-lucide="brain"></i>
+            </div>
+            <h1 class="aim-title">AI MONITORING</h1>
+          </div>
+          <!-- Model status badge -->
+          <span id="model-status-badge" class="status-badge offline" aria-live="polite">
+            <span class="dot"></span>
+            <span id="model-status-text">Loading…</span>
+          </span>
+        </div>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="error-banner" class="banner banner-warn mx-5 mt-4 hidden" role="alert">
+          <i data-lucide="alert-triangle"></i>
+          <span class="banner-text" id="error-banner-text"></span>
+        </div>
+
+        <!-- ── Scrollable sections ── -->
+        <div class="px-5 py-4 flex flex-col gap-5">
+
+          <!-- ── USAGE SECTION ── -->
+          <section class="aim-section" aria-labelledby="usage-heading">
+            <h2 id="usage-heading" class="aim-section-title mb-3">Usage</h2>
+            <div class="stat-grid">
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Total Tokens Used</span>
+                  <i data-lucide="zap" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-totalTokens">0</p>
+                <p class="stat-sub">last 24h</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Questions Today</span>
+                  <i data-lucide="message-square" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-questionsToday">0</p>
+                <p class="stat-sub">+18% vs yesterday</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Requests Processed</span>
+                  <i data-lucide="send" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-requestsProcessed">0</p>
+                <p class="stat-sub">rolling 24h</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Total Conversations</span>
+                  <i data-lucide="message-square" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-totalConversations">0</p>
+                <p class="stat-sub">across all users</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Prompt Tokens</span>
+                  <i data-lucide="zap" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-promptTokens">0</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Completion Tokens</span>
+                  <i data-lucide="zap" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-completionTokens">0</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Avg Response Time</span>
+                  <i data-lucide="clock" class="stat-icon"></i>
+                </div>
+                <p class="stat-value aim-green" id="stat-avgResponseMs">0 ms</p>
+                <p class="stat-sub" id="stat-p95Ms">P95: 0 ms</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Cache Hit Rate</span>
+                  <i data-lucide="check-circle-2" class="stat-icon"></i>
+                </div>
+                <p class="stat-value aim-green" id="stat-cacheHitRatePct">0%</p>
+                <p class="stat-sub">last 1h</p>
+              </div>
+
+            </div><!-- /stat-grid -->
+          </section>
+
+          <!-- ── RESOURCES SECTION ── -->
+          <section class="aim-section" aria-labelledby="resources-heading">
+            <h2 id="resources-heading" class="aim-section-title mb-3">Resources</h2>
+            <div class="meter-grid">
+
+              <div class="meter-card">
+                <div class="meter-header">
+                  <span class="meter-label">Cache Usage</span>
+                  <span class="meter-pct" id="meter-cachePct-label" style="color:#6366f1">0%</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-fill" id="meter-cachePct" style="width:0%;background:#6366f1"></div>
+                </div>
+              </div>
+
+              <div class="meter-card">
+                <div class="meter-header">
+                  <span class="meter-label">Memory Usage</span>
+                  <span class="meter-pct" id="meter-memoryPct-label" style="color:#10b981">0%</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-fill" id="meter-memoryPct" style="width:0%;background:#10b981"></div>
+                </div>
+              </div>
+
+              <div class="meter-card">
+                <div class="meter-header">
+                  <span class="meter-label">GPU Usage</span>
+                  <span class="meter-pct" id="meter-gpuPct-label" style="color:#f59e0b">0%</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-fill" id="meter-gpuPct" style="width:0%;background:#f59e0b"></div>
+                </div>
+              </div>
+
+              <div class="meter-card">
+                <div class="meter-header">
+                  <span class="meter-label">CPU Usage</span>
+                  <span class="meter-pct" id="meter-cpuPct-label" style="color:#00e5c3">0%</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-fill" id="meter-cpuPct" style="width:0%;background:#00e5c3"></div>
+                </div>
+              </div>
+
+            </div><!-- /meter-grid -->
+          </section>
+
+          <!-- ── ACTIVE MODEL SECTION ── -->
+          <section class="aim-section" aria-labelledby="model-heading">
+            <h2 id="model-heading" class="aim-section-title mb-3">Active Model</h2>
+            <div class="aim-model-card card-glow bg-card border rounded-sm p-4">
+              <div class="aim-model-grid">
+
+                <div class="aim-model-field">
+                  <i data-lucide="brain" class="aim-model-icon text-primary"></i>
+                  <div>
+                    <p class="aim-model-label">Model</p>
+                    <p class="aim-model-value" id="model-name">—</p>
+                  </div>
+                </div>
+
+                <div class="aim-model-field">
+                  <i data-lucide="server" class="aim-model-icon text-muted"></i>
+                  <div>
+                    <p class="aim-model-label">Endpoint</p>
+                    <p class="aim-model-value aim-mono-sm" id="model-endpoint">—</p>
+                  </div>
+                </div>
+
+                <div class="aim-model-field">
+                  <i data-lucide="cpu" class="aim-model-icon text-muted"></i>
+                  <div>
+                    <p class="aim-model-label">Device</p>
+                    <p class="aim-model-value aim-mono-sm" id="model-device">—</p>
+                  </div>
+                </div>
+
+                <div class="aim-model-field">
+                  <i data-lucide="activity" class="aim-model-icon" id="model-status-icon"></i>
+                  <div>
+                    <p class="aim-model-label">Status</p>
+                    <p class="aim-model-value aim-model-status" id="model-status-value">Offline</p>
+                  </div>
+                </div>
+
+              </div><!-- /aim-model-grid -->
+            </div>
+          </section>
+
+          <!-- ── BOTTOM STATS SECTION ── -->
+          <section class="aim-section" aria-labelledby="infra-heading">
+            <h2 id="infra-heading" class="sr-only">Infrastructure Stats</h2>
+            <div class="stat-grid">
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Vector Store</span>
+                  <i data-lucide="database" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-vectorStoreDocs">0</p>
+                <p class="stat-sub">documents indexed</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Storage Used</span>
+                  <i data-lucide="hard-drive" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-storageUsed">0.0 GB</p>
+                <p class="stat-sub" id="stat-storageTotal">of 0 GB</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Throughput</span>
+                  <i data-lucide="gauge" class="stat-icon"></i>
+                </div>
+                <p class="stat-value" id="stat-throughput">0 t/s</p>
+                <p class="stat-sub">tokens/sec</p>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-label">Error Rate</span>
+                  <i data-lucide="bar-chart-3" class="stat-icon"></i>
+                </div>
+                <p class="stat-value aim-green" id="stat-errorRate">0%</p>
+                <p class="stat-sub">last 1h</p>
+              </div>
+
+            </div><!-- /stat-grid -->
+          </section>
+
+          <!-- bottom breathing room -->
+          <div style="height:24px;flex-shrink:0"></div>
+        </div><!-- /px-5 -->
+      </section><!-- /page-content -->
+    </main>
+  </div><!-- /#app -->
+
+  <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/ai_monitoring.js"></script>
+</body>
+</html>

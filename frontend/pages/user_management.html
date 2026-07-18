@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem("mcp-theme");if(t==="dark"||t===null){document.documentElement.classList.add("dark");}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management — MCP Dashboard</title>
+
+  <!-- Fonts (vendored, offline) -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored, offline) -->
+  <script src="../vendor/lucide/lucide.min.js"></script>
+
+  <!-- Shared design tokens + atoms -->
+  <link rel="stylesheet" href="../css/shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="../css/user_management.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER — injected by Utils.initHeader()
+    ══════════════════════════════════════════════ -->
+    <div id="header-root" style="flex-shrink:0"></div>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════════════ -->
+    <main id="main-layout" class="flex flex-1 overflow-hidden">
+
+      <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
+
+        <!-- Page header row -->
+        <div class="um-page-header flex items-center justify-between px-5 border-b">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <i data-lucide="users"></i>
+            </div>
+            <div>
+              <h1 class="um-title">USER MANAGEMENT</h1>
+              <p class="um-subtitle">Dashboard user accounts and per-tool visibility</p>
+            </div>
+          </div>
+          <button id="um-add-btn" class="btn btn-primary" type="button">
+            <i data-lucide="user-plus"></i> Add User
+          </button>
+        </div>
+
+        <!-- Note banner — no real auth enforcement (decision #4) -->
+        <div class="banner banner-info mx-5 mt-3" role="note">
+          <i data-lucide="info"></i>
+          <span class="banner-text">This is account bookkeeping only — there's no login/session enforcement behind it yet.</span>
+        </div>
+
+        <div class="px-5 py-4 flex flex-col gap-4">
+
+          <div class="um-toolbar">
+            <div class="um-search-wrap">
+              <i data-lucide="search"></i>
+              <input id="um-search-input" class="input" type="text" placeholder="Search users…" />
+            </div>
+          </div>
+
+          <div class="um-table-card">
+            <table class="um-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Tool Visibility</th>
+                  <th>Created</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="um-table-body"><!-- populated by user_management.js --></tbody>
+            </table>
+          </div>
+
+          <div style="height:24px;flex-shrink:0"></div>
+        </div>
+      </section><!-- /page-content -->
+    </main>
+  </div><!-- /#app -->
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Add / Edit User
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="um-modal-overlay">
+    <div class="modal-box" style="width:420px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600" id="um-modal-title">Add User</span>
+        <button class="btn-icon" type="button" id="um-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="um-form-row">
+          <label for="um-username-input">Username</label>
+          <input id="um-username-input" class="input" type="text" placeholder="e.g. jsmith" autocomplete="off" />
+        </div>
+        <div class="um-form-row">
+          <label for="um-password-input">Password</label>
+          <div class="um-password-wrap">
+            <input id="um-password-input" class="input" type="password" placeholder="••••••••" autocomplete="new-password" />
+            <button type="button" class="btn-icon um-toggle-visibility" id="um-password-toggle-btn" title="Show/hide">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+          <span class="um-form-hint" id="um-password-hint">Minimum 8 characters.</span>
+        </div>
+        <div class="um-form-row">
+          <label>Tool Visibility</label>
+          <div class="um-checkbox-list" id="um-tools-checkbox-list"><!-- populated by user_management.js --></div>
+          <span class="um-form-hint">Controls which sources' data this user can see on the dashboard — not an access-control enforcement layer.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="um-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="um-modal-save-btn">
+          <i data-lucide="check"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/user_management.js"></script>
+</body>
+</html>

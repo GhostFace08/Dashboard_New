@@ -1,0 +1,744 @@
+/* =============================================================================
+   ai_chat.css — AI Chat page-specific styles
+   Depends on shared.css being loaded first.
+   ============================================================================= */
+
+/* ─── Left sidebar ────────────────────────────────────────────────────────── */
+.aic-sidebar {
+  width: 256px;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.aic-sidebar-head {
+  border-color: var(--border);
+  flex-shrink: 0;
+}
+
+/* "CHAT HISTORY" caps label */
+.aic-label-caps {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+/* New Chat button */
+.aic-new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.aic-new-chat-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+.aic-new-chat-btn i { width: 14px; height: 14px; }
+
+/* ─── Session list items ──────────────────────────────────────────────────── */
+.aic-session-item {
+  position: relative;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: background var(--transition), transform var(--transition-slow), box-shadow var(--transition-slow), border-color var(--transition);
+}
+.aic-session-item:hover {
+  background: rgba(99, 102, 241, 0.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+.aic-session-item.active {
+  background: var(--secondary);
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.aic-session-btn {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 8px 36px 8px 8px; /* right padding leaves room for ⋮ */
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.aic-session-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.aic-session-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.aic-session-item.active .aic-session-title { font-weight: 500; }
+
+.aic-session-pin-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.aic-session-preview {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Three-dot menu trigger */
+.aic-session-more {
+  position: absolute;
+  right: 4px;
+  top: 6px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+.aic-session-more:hover {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.06);
+}
+.aic-session-more i { width: 14px; height: 14px; }
+
+/* ─── Floating session context menu ──────────────────────────────────────── */
+.aic-session-menu {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  width: 160px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 4px 0;
+  animation: fadeIn 0.1s ease forwards;
+}
+.aic-session-menu.hidden { display: none; }
+
+.aic-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background var(--transition);
+  text-align: left;
+}
+.aic-menu-item:hover { background: var(--secondary); }
+.aic-menu-item i { width: 14px; height: 14px; flex-shrink: 0; }
+.aic-menu-item.danger { color: #e5534b; }
+.aic-menu-item.danger:hover { background: rgba(229, 83, 75, 0.1); }
+
+/* ─── Chat panel header ───────────────────────────────────────────────────── */
+.aic-chat-header {
+  height: 56px;
+  border-color: var(--border);
+}
+
+.aic-ai-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.aic-ai-badge i { width: 14px; height: 14px; color: var(--primary); }
+
+.aic-chat-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+.aic-chat-subtitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--primary);
+  margin-top: 1px;
+}
+
+/* ─── Message list ────────────────────────────────────────────────────────── */
+.aic-message-list {
+  scroll-behavior: smooth;
+}
+
+/* Message row wrapper */
+.aic-msg-row {
+  display: flex;
+  gap: 12px;
+}
+.aic-msg-row.user { flex-direction: row-reverse; }
+
+/* Avatar */
+.aic-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.aic-avatar.ai   { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+.aic-avatar.user { background: var(--secondary);         color: var(--muted-foreground); }
+.aic-avatar i    { width: 14px; height: 14px; }
+.aic-avatar .aic-user-icon { font-family: var(--font-mono); font-size: 10px; }
+
+/* Bubble container */
+.aic-bubble-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 76%;
+}
+.aic-msg-row.user  .aic-bubble-col { align-items: flex-end; }
+.aic-msg-row.assistant .aic-bubble-col { align-items: flex-start; }
+
+/* Bubble itself */
+.aic-bubble {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+.aic-bubble.ai {
+  background: var(--card);
+  border-color: var(--border);
+}
+.aic-bubble.user {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Bubble text */
+.aic-bubble p {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--foreground);
+  margin-bottom: 2px;
+}
+.aic-bubble p:last-child { margin-bottom: 0; }
+
+/* Timestamp below bubble */
+.aic-timestamp {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+
+/* ─── Thinking dots ───────────────────────────────────────────────────────── */
+.aic-thinking {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.aic-thinking .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: bounce 0.8s infinite;
+}
+.aic-thinking .dot:nth-child(2) { animation-delay: 0.15s; }
+.aic-thinking .dot:nth-child(3) { animation-delay: 0.30s; }
+.aic-thinking .thinking-lbl {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-left: 4px;
+}
+
+/* ─── Collapsible "Thinking" panel (reasoning trace, Claude-style) ─────────── */
+.aic-think {
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--secondary);
+  overflow: hidden;
+}
+
+.aic-think-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  text-align: left;
+  transition: color var(--transition);
+}
+.aic-think-toggle:hover { color: var(--foreground); }
+
+.aic-think-icon { width: 13px; height: 13px; flex-shrink: 0; }
+.aic-think-icon.aic-spin { animation: aic-think-spin 1s linear infinite; }
+
+@keyframes aic-think-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.aic-think-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Task-progress log (Phase 5) ─────────────────────────────────────────── */
+.aic-tasklog {
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--secondary);
+  overflow: hidden;
+}
+
+.aic-tasklog-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  text-align: left;
+  transition: color var(--transition);
+}
+.aic-tasklog-toggle:hover { color: var(--foreground); }
+
+.aic-tasklog-icon { width: 13px; height: 13px; flex-shrink: 0; color: var(--primary); }
+.aic-tasklog-icon.aic-spin { animation: aic-think-spin 1s linear infinite; }
+
+.aic-tasklog-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aic-tasklog-chevron {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+.aic-tasklog.open .aic-tasklog-chevron { transform: rotate(180deg); }
+
+.aic-tasklog-body {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 10px 10px 10px;
+}
+.aic-tasklog.open .aic-tasklog-body { display: flex; }
+
+.aic-task-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.aic-task-item.done { color: var(--foreground); }
+.aic-task-item.current { color: var(--primary); }
+.aic-task-item .aic-task-icon { width: 12px; height: 12px; flex-shrink: 0; }
+.aic-task-item .aic-task-icon.aic-spin { animation: aic-think-spin 1s linear infinite; }
+
+.aic-think-chevron {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+.aic-think.open .aic-think-chevron { transform: rotate(180deg); }
+
+.aic-think-body {
+  display: none;
+  padding: 8px 10px 10px 31px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+  max-height: 320px;
+  overflow-y: auto;
+}
+.aic-think.open .aic-think-body { display: block; }
+.aic-think-body p { margin-bottom: 6px; }
+.aic-think-body p:last-child { margin-bottom: 0; }
+
+/* Headings/lists produced by renderMarkdown() inside bubbles */
+.aic-bubble .aic-md-heading {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 10px 0 4px 0;
+  line-height: 1.3;
+}
+.aic-bubble h1.aic-md-heading { font-size: 16px; }
+.aic-bubble h2.aic-md-heading { font-size: 14.5px; }
+.aic-bubble h3.aic-md-heading,
+.aic-bubble h4.aic-md-heading,
+.aic-bubble h5.aic-md-heading,
+.aic-bubble h6.aic-md-heading { font-size: 13px; }
+.aic-bubble p + .aic-md-heading,
+.aic-bubble .aic-md-heading:first-child { margin-top: 0; }
+
+.aic-bubble ul {
+  margin: 2px 0 6px 0;
+  padding-left: 18px;
+}
+.aic-bubble ul li {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+.aic-bubble code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--secondary);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ─── File chips (inside bubble or input preview) ────────────────────────── */
+.aic-file-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.aic-file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.aic-file-chip i { width: 12px; height: 12px; color: var(--primary); }
+.aic-file-chip .chip-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--foreground);
+}
+.aic-file-chip .chip-size {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.aic-file-chip .chip-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+}
+.aic-file-chip .chip-remove:hover { color: var(--foreground); }
+.aic-file-chip .chip-remove i { width: 12px; height: 12px; }
+
+/* File preview bar above composer */
+.aic-file-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.aic-file-preview.hidden { display: none; }
+
+/* ─── Composer (input bar) ────────────────────────────────────────────────── */
+.aic-composer {
+  transition: border-color var(--transition);
+}
+.aic-composer:focus-within {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.aic-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+.aic-icon-btn:hover {
+  color: var(--foreground);
+  background: var(--secondary);
+}
+.aic-icon-btn i { width: 14px; height: 14px; }
+
+.aic-textarea {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 36px;
+  max-height: 120px;
+  color: var(--foreground);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+}
+
+.aic-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition);
+  flex-shrink: 0;
+}
+.aic-send-btn:hover:not(:disabled) { opacity: 0.9; }
+.aic-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.aic-send-btn i { width: 14px; height: 14px; }
+
+/* Send button doubles as a Stop button while a response is streaming (Phase 6) */
+.aic-send-btn.stop-mode {
+  background: var(--destructive, #e84040);
+  color: #fff;
+}
+.aic-send-btn.stop-mode i { width: 12px; height: 12px; }
+
+/* ─── Message meta row: timestamp + hover action toolbar (Phase 7) ───────── */
+.aic-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 16px;
+}
+.aic-msg-row.user .aic-msg-meta { flex-direction: row-reverse; }
+
+.aic-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.aic-msg-row:hover .aic-msg-actions,
+.aic-msg-row:focus-within .aic-msg-actions {
+  opacity: 1;
+}
+
+.aic-msg-action {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+.aic-msg-action:hover {
+  color: var(--foreground);
+  background: var(--secondary);
+}
+.aic-msg-action i { width: 12px; height: 12px; }
+
+/* ─── Inline message edit (Phase 7) ───────────────────────────────────────── */
+.aic-edit-textarea {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  width: 100%;
+  min-height: 48px;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  resize: vertical;
+  outline: none;
+}
+
+.aic-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.aic-edit-btn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  transition: background var(--transition);
+}
+.aic-edit-btn:hover { background: var(--secondary); }
+.aic-edit-btn.save {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: transparent;
+}
+.aic-edit-btn.save:hover { opacity: 0.9; }
+
+/* ─── Empty state (no active session) ────────────────────────────────────── */
+.aic-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 12px;
+  color: var(--muted-foreground);
+  text-align: center;
+  padding: 32px;
+}
+.aic-empty-state i {
+  width: 40px;
+  height: 40px;
+  opacity: 0.3;
+}
+.aic-empty-state p {
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+/* ─── Tables (rendered once, on stream completion) ───────────────────────── */
+.aic-bubble .aic-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+}
+.aic-bubble .aic-table th,
+.aic-bubble .aic-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+.aic-bubble .aic-table th {
+  background: var(--secondary);
+  color: var(--foreground);
+  font-weight: 600;
+}
+.aic-bubble .aic-table td { color: var(--foreground); }
+
+/* ─── Charts / scorecards (mounted once, on stream completion) ──────────── */
+.aic-viz-block { margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+
+.aic-chart-wrap {
+  position: relative;
+  height: 240px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.aic-scorecard-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.aic-scorecard {
+  flex: 1 1 120px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.aic-sc-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+}
+.aic-sc-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+.aic-sc-blue   .aic-sc-value { color: #2d7ef5; }
+.aic-sc-green  .aic-sc-value { color: #0dbf7e; }
+.aic-sc-amber  .aic-sc-value { color: #f0a030; }
+.aic-sc-red    .aic-sc-value { color: #e84040; }
+.aic-sc-purple .aic-sc-value { color: #9060e8; }

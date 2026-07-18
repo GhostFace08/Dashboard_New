@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* Apply stored theme before first paint — prevents flash of wrong theme */
+    (function () {
+      try {
+        var t = localStorage.getItem("mcp-theme");
+        if (t === "dark" || t === null) document.documentElement.classList.add("dark");
+      } catch (e) {}
+    })();
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Dashboard</title>
+
+  <!-- Fonts (vendored — see frontend/vendor/README.txt for what this replaces) -->
+  <link rel="stylesheet" href="vendor/fonts/fonts.css" />
+
+  <!-- Lucide icons (vendored) -->
+  <script src="vendor/lucide/lucide.min.js"></script>
+
+  <!-- Shared design tokens and atoms -->
+  <link rel="stylesheet" href="css/shared.css" />
+
+  <!--
+    Config / API / common loaded in the shell so Utils.initHeader() is
+    available on DOMContentLoaded.  Each iframe also loads its own copies —
+    that is fine; each iframe is an isolated document.
+  -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;       /* shell never scrolls — pages scroll inside frames */
+      background: var(--background);
+    }
+
+    /* ── App shell ─────────────────────────────────────────────── */
+    /* Row layout: sidebar on the left, frame-container fills the rest.
+       (common.js's injected sidebar CSS also sets #app{flex-direction:row}
+       — kept here too so the shell still looks right before that CSS
+       finishes injecting on first paint.) */
+    #app {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar injected by common.js/Utils.initHeader() */
+    #sidebar-root {
+      flex-shrink: 0;
+      height: 100%;
+    }
+
+    /* Frame container fills remaining width */
+    #frame-container {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* ── Page iframes ──────────────────────────────────────────── */
+    /*
+     * Every iframe is loaded once at startup and kept alive forever.
+     * display:none still lets the document parse, execute scripts, and build
+     * its DOM — it just is not painted.  State is fully preserved across
+     * tab switches.  Only the active frame is display:block.
+     */
+    .page-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: var(--background);
+    }
+
+    .page-frame.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!--
+    Sidebar — common.js injects the collapsible grouped sidebar here.
+    Page iframes detect (window !== window.top) and skip rendering their own
+    header, so the shell's sidebar is always the single source of truth.
+  -->
+  <div id="sidebar-root"></div>
+
+  <!--
+    Persistent page iframes.
+    Populated by the script below from window.CFG.SIDEBAR_NAV (config.js) —
+    that array is the single source of truth for both the sidebar and this
+    registry. Items with ready:false get an inline "coming soon" placeholder
+    instead of `href` until their real pages/xxx.html file exists (Phases
+    6-12) — flip `ready` to true the same turn that file is delivered.
+  -->
+  <div id="frame-container"></div>
+
+</div><!-- /#app -->
+
+<script>
+(function () {
+  "use strict";
+
+  /* ─────────────────────────────────────────────────────────────────────
+     BUILD IFRAME REGISTRY FROM CFG.SIDEBAR_NAV
+     Flattens the grouped nav config into TAB_TO_FRAME + the actual
+     <iframe> elements, so adding a page later means editing SIDEBAR_NAV
+     in config.js only — no other file needs to change.
+  ───────────────────────────────────────────────────────────────────── */
+  var TAB_TO_FRAME = {};
+  var DEFAULT_TAB = "dashboard";
+
+  function buildFrames() {
+    var container = document.getElementById("frame-container");
+    var groups = (window.CFG && window.CFG.SIDEBAR_NAV) || [];
+
+    groups.forEach(function (group) {
+      group.items.forEach(function (item) {
+        var frameId = "frame-" + item.id;
+        TAB_TO_FRAME[item.id] = frameId;
+
+        var iframe = document.createElement("iframe");
+        iframe.id = frameId;
+        iframe.className = "page-frame";
+        iframe.title = item.label;
+
+        if (item.ready) {
+          iframe.src = item.href;
+        } else if (window.Utils && typeof window.Utils.buildComingSoonSrcdoc === "function") {
+          iframe.src = window.Utils.buildComingSoonSrcdoc(item.label);
+        }
+
+        container.appendChild(iframe);
+      });
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────────────────────────────────── */
+  var activeTabId     = null;
+
+  /*
+   * Track which tabs have ever been activated.
+   * The shell passes isFirstActivation=true on the very first showTab()
+   * call for each tab.  Page scripts (e.g. ai_monitoring.js) use this to
+   * decide whether to fetch data (only on first activation, never again).
+   */
+  var activatedOnce = {};
+
+  /* ─────────────────────────────────────────────────────────────────────
+     showTab(tabId)
+
+     1. Swap which iframe is visible (CSS class toggle)
+     2. Update active highlight on sidebar nav items
+     3. Call frame's window.onTabActivated(isFirstActivation) if present
+  ───────────────────────────────────────────────────────────────────── */
+  function showTab(tabId) {
+    if (!TAB_TO_FRAME[tabId]) {
+      console.warn("[Shell] Unknown tab id:", tabId);
+      return;
+    }
+
+    /* 1 — Swap frame visibility */
+    Object.keys(TAB_TO_FRAME).forEach(function (id) {
+      var frame = document.getElementById(TAB_TO_FRAME[id]);
+      if (!frame) return;
+      frame.classList.toggle("active", id === tabId);
+    });
+
+    /* 2 — Update sidebar nav active state */
+    document.querySelectorAll(".sidebar-nav-item").forEach(function (link) {
+      var isActive = (link.dataset.tab === tabId);
+      link.classList.toggle("active", isActive);
+      link.setAttribute("aria-current", isActive ? "page" : "false");
+    });
+
+    activeTabId = tabId;
+
+    /* 3 — Notify the frame it is now visible */
+    var frameEl = document.getElementById(TAB_TO_FRAME[tabId]);
+    if (frameEl && frameEl.contentWindow) {
+      try {
+        var cw = frameEl.contentWindow;
+        if (typeof cw.onTabActivated === "function") {
+          var isFirst = !activatedOnce[tabId];
+          activatedOnce[tabId] = true;
+          cw.onTabActivated(isFirst);
+        }
+      } catch (e) {
+        console.warn("[Shell] onTabActivated error for tab", tabId, e);
+      }
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     THEME PROPAGATION
+
+     When the user toggles the theme from the sidebar, push the new
+     class into every frame document immediately, even hidden ones.
+     common.js's toggleTheme() calls window.Shell.propagateTheme(theme).
+  ───────────────────────────────────────────────────────────────────── */
+  function propagateThemeToFrames(theme) {
+    Object.values(TAB_TO_FRAME).forEach(function (frameId) {
+      var frame = document.getElementById(frameId);
+      if (!frame) return;
+      try {
+        var htmlEl = frame.contentDocument && frame.contentDocument.documentElement;
+        if (!htmlEl) return;
+        if (theme === "dark") {
+          htmlEl.classList.add("dark");
+        } else {
+          htmlEl.classList.remove("dark");
+        }
+      } catch (e) { /* cross-origin guard — safe to ignore for same-origin pages */ }
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     PUBLIC SURFACE
+     Exposed so common.js and page scripts can call shell functions.
+  ───────────────────────────────────────────────────────────────────── */
+  window.Shell = {
+    showTab:        showTab,
+    getActiveTab:   function () { return activeTabId; },
+    propagateTheme: propagateThemeToFrames
+  };
+
+  /* ─────────────────────────────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────────────────────────────── */
+  document.addEventListener("DOMContentLoaded", function () {
+
+    /* Build every iframe from CFG.SIDEBAR_NAV before the sidebar renders,
+       so TAB_TO_FRAME is populated before the first showTab() call. */
+    buildFrames();
+
+    /* Render the sidebar into #sidebar-root.
+       Pass DEFAULT_TAB so the initial active highlight is correct before
+       any tab switch.  The shell's click handler then owns updates. */
+    if (window.Utils && typeof Utils.initHeader === "function") {
+      Utils.initHeader(DEFAULT_TAB);
+    } else {
+      console.error("[Shell] Utils.initHeader not found — ensure common.js loaded before this script.");
+    }
+
+    /* Intercept sidebar nav clicks — prevent navigation, call showTab() */
+    var sidebarRoot = document.getElementById("sidebar-root");
+    if (sidebarRoot) {
+      sidebarRoot.addEventListener("click", function (e) {
+        var link = e.target.closest(".sidebar-nav-item");
+        if (!link) return;
+        e.preventDefault();
+        var tabId = link.dataset.tab;
+        if (tabId && tabId !== activeTabId) {
+          showTab(tabId);
+        }
+      });
+    }
+
+    /* Show default tab on first load */
+    showTab(DEFAULT_TAB);
+  });
+
+})();
+</script>
+</body>
+</html>
