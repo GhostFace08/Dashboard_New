@@ -142,6 +142,18 @@
             </div>
           </div>
           <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Network Devices Defaults</h3><p class="scard-desc">Applied when the Network Devices page is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <select id="network-devices-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="scard">
             <div class="scard-head"><h3 class="scard-title">Topology Defaults</h3><p class="scard-desc">Applied when the Topology page is first opened.</p></div>
             <div class="scard-body grid-2">
               <label class="sfield">
@@ -253,7 +265,16 @@
             <div class="modal-body">
               <div class="grid-2">
                 <label class="sfield"><span class="sfield-label">Server Name</span><input id="mcp-add-name" type="text" class="input" placeholder="e.g. Prometheus" /></label>
-                <label class="sfield"><span class="sfield-label">Type / Vendor</span><input id="mcp-add-type" type="text" class="input" placeholder="e.g. prometheus" /></label>
+                <label class="sfield"><span class="sfield-label">Type / Vendor</span>
+                  <select id="mcp-add-vendor" class="select">
+                    <option value="dynatrace">DynaTrace</option>
+                    <option value="opmanager">OPManager</option>
+                    <option value="appdynamics">AppDynamics</option>
+                    <option value="heal">HEAL</option>
+                    <option value="custom">Custom Tool</option>
+                  </select>
+                </label>
+                <label class="sfield hidden" id="mcp-add-custom-type-wrap"><span class="sfield-label">Custom Tool Name</span><input id="mcp-add-type" type="text" class="input" placeholder="e.g. prometheus" /></label>
                 <label class="sfield"><span class="sfield-label">Deployment</span>
                   <div class="segmented" id="mcp-add-mode">
                     <button class="seg-btn active" data-val="saas">SaaS</button>
@@ -272,6 +293,21 @@
                   <span id="mcp-add-cert-status" class="text-muted" style="font-size:11px"></span>
                 </div>
               </div>
+              <div class="sfield mt-2">
+                <span class="sfield-label">Tool Registry</span>
+                <span class="sfield-hint">Upload the tool's issue registry (a file listing its available issue paths). Once uploaded, pick which path this server fetches issues from.</span>
+                <div class="flex gap-2 items-center mt-1">
+                  <input id="mcp-add-registry" type="file" class="input" style="max-width:260px" />
+                  <span id="mcp-add-registry-status" class="text-muted" style="font-size:11px"></span>
+                </div>
+              </div>
+              <label class="sfield mt-2">
+                <span class="sfield-label">Registry Path for Fetching Issues <span style="color:var(--accent-red)">*</span></span>
+                <span class="sfield-hint">Required once a Tool Registry is uploaded.</span>
+                <select id="mcp-add-registry-path" class="select" disabled>
+                  <option value="">Upload a Tool Registry first…</option>
+                </select>
+              </label>
             </div>
             <div class="modal-footer">
               <button class="btn btn-ghost" id="mcp-add-cancel">Cancel</button>
@@ -293,6 +329,7 @@
               <button class="tab" data-edit-tab="categorization">Issue Categorization</button>
               <button class="tab" data-edit-tab="time">Time Mapping</button>
               <button class="tab" data-edit-tab="keywords">AI Keywords</button>
+              <button class="tab" data-edit-tab="dashboards">Dashboards</button>
             </div>
             <div class="modal-body" id="mcp-edit-body" style="max-height:56vh;overflow-y:auto">
               <!-- Injected per-tab by JS -->

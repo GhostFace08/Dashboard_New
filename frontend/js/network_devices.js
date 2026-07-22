@@ -1,24 +1,25 @@
 /**
- * infrastructure.js — Infrastructure page logic (Phase 6)
+ * network_devices.js — Network Devices page logic
  *
- * Data table only: Host Name, OS Type, Status, Entity ID.
- * No filters, no KPIs, no detail modal — this page is deliberately simple.
+ * Data table only: Source, Application, Device Name, Device Type,
+ * Devices Connected, Services Connected, Status, ID.
+ * No filters, no KPIs, no detail modal — same deliberately simple shape as
+ * infrastructure.js / services.js.
  *
- * Follows the same lazy-load convention introduced for AI Monitoring
- * (ai_monitoring.js, Change 7): data is fetched exactly once, the first time
- * the SPA shell activates this tab — not on every tab switch, and not on a
- * poll/interval. window.onTabActivated(isFirstActivation) is the hook the
- * shell (index.html / Shell.showTab) calls.
+ * Follows the same lazy-load convention as Infrastructure/Services/AI
+ * Monitoring: data is fetched exactly once, the first time the SPA shell
+ * activates this tab. window.onTabActivated(isFirstActivation) is the hook
+ * the shell (index.html / Shell.showTab) calls.
  *
  * DATA SOURCE:
- *   GET /api/infrastructure via API.getInfrastructure() (api.js).
- *   Fallback: { infrastructure: [] } → table renders its own empty state.
+ *   GET /api/network-devices via API.getNetworkDevices() (api.js).
+ *   Fallback: { networkDevices: [] } → table renders its own empty state.
  *
  * DEPENDENCIES (must load before this file):
  *   config.js  → window.CFG
  *   api.js     → window.API
  *   common.js  → window.Utils
- *   jQuery + DataTables (vendored, loaded in infrastructure.html <head>)
+ *   jQuery + DataTables (vendored, loaded in network_devices.html <head>)
  */
 
 (function (global) {
@@ -26,23 +27,23 @@
 
   /* ─── Guard ─────────────────────────────────────────────────────────────── */
   if (!global.CFG) {
-    console.error("[infrastructure.js] CFG not found — did config.js load?");
+    console.error("[network_devices.js] CFG not found — did config.js load?");
     return;
   }
   if (!global.API) {
-    console.error("[infrastructure.js] API not found — did api.js load?");
+    console.error("[network_devices.js] API not found — did api.js load?");
     return;
   }
 
   // jQuery $ and local $ must not conflict — keep jQ alias for DataTables
-  // (same convention as dashboard.js)
+  // (same convention as dashboard.js / infrastructure.js / services.js)
   const jQ = global.jQuery || global.$;
 
   let dtInstance = null;
 
   /* ─── Status → tone mapping ──────────────────────────────────────────────
      Reuses shared.css's .status-badge tone classes (healthy/degraded/offline)
-     — the same component already used on the AI Monitoring page header.
+     — same component used on Infrastructure's / Services' Status column.
   ──────────────────────────────────────────────────────────────────────── */
   function statusTone(status) {
     const s = (status || "").toLowerCase();
@@ -62,7 +63,7 @@
     const text   = document.getElementById("error-banner-text");
     if (!banner) return;
     if (message) {
-      if (text) text.textContent = `Falling back to empty infrastructure list: ${message}`;
+      if (text) text.textContent = `Falling back to empty network devices list: ${message}`;
       banner.classList.remove("hidden");
     } else {
       banner.classList.add("hidden");
@@ -70,19 +71,21 @@
   }
 
   /* ─── Render ─────────────────────────────────────────────────────────────── */
-  function buildRowData(hosts) {
-    return hosts.map(h => [
-      `<span style="font-size:12px">${Utils.escapeHtml(h.source)}</span>`,
-      `<span style="font-size:12px">${Utils.escapeHtml(h.application)}</span>`,
-      `<span style="font-family:var(--font-mono);font-size:11px;white-space:nowrap">${Utils.escapeHtml(h.hostName)}</span>`,
-      `<span style="font-size:12px">${Utils.escapeHtml(h.osType)}</span>`,
-      statusChipHtml(h.status),
-      `<span style="font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);white-space:nowrap">${Utils.escapeHtml(h.entityId)}</span>`,
+  function buildRowData(devices) {
+    return devices.map(d => [
+      `<span style="font-size:12px">${Utils.escapeHtml(d.source)}</span>`,
+      `<span style="font-size:12px">${Utils.escapeHtml(d.application)}</span>`,
+      `<span style="font-family:var(--font-mono);font-size:11px;white-space:nowrap">${Utils.escapeHtml(d.deviceName)}</span>`,
+      `<span style="font-size:12px">${Utils.escapeHtml(d.deviceType)}</span>`,
+      `<span style="font-family:var(--font-mono);font-size:11px">${Utils.escapeHtml(d.devicesConnected)}</span>`,
+      `<span style="font-family:var(--font-mono);font-size:11px">${Utils.escapeHtml(d.servicesConnected)}</span>`,
+      statusChipHtml(d.status),
+      `<span style="font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);white-space:nowrap">${Utils.escapeHtml(d.id)}</span>`,
     ]);
   }
 
-  function renderTable(hosts) {
-    const rowData = buildRowData(hosts);
+  function renderTable(devices) {
+    const rowData = buildRowData(devices);
 
     if (dtInstance) {
       dtInstance.clear().rows.add(rowData).draw(false);
@@ -90,15 +93,17 @@
       return;
     }
 
-    dtInstance = jQ("#infrastructure-table").DataTable({
+    dtInstance = jQ("#network-devices-table").DataTable({
       data: rowData,
       columns: [
-        { title: "Source"      },
-        { title: "Application" },
-        { title: "Host Name" },
-        { title: "OS Type"   },
-        { title: "Status"    },
-        { title: "Entity ID" },
+        { title: "Source"              },
+        { title: "Application"         },
+        { title: "Device Name"         },
+        { title: "Device Type"         },
+        { title: "Devices Connected"   },
+        { title: "Services Connected"  },
+        { title: "Status"              },
+        { title: "ID"                  },
       ],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
@@ -106,7 +111,7 @@
       scrollX: true,
       autoWidth: false,
       language: {
-        emptyTable:   "No Infrastructure found.",
+        emptyTable:   "No network devices found.",
         info:         "Showing _START_ to _END_ of _TOTAL_ entries",
         infoEmpty:    "No entries",
         infoFiltered: "(filtered from _MAX_ total)",
@@ -121,15 +126,15 @@
   }
 
   /* ─── Data fetch ─────────────────────────────────────────────────────────── */
-  async function loadInfrastructure() {
+  async function loadNetworkDevices() {
     try {
-      const data  = await API.getInfrastructure();
-      const hosts = Array.isArray(data.infrastructure) ? data.infrastructure : [];
+      const data    = await API.getNetworkDevices();
+      const devices = Array.isArray(data.networkDevices) ? data.networkDevices : [];
       setError(null);
-      renderTable(hosts);
+      renderTable(devices);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[infrastructure] getInfrastructure error:", msg);
+      console.warn("[network_devices] getNetworkDevices error:", msg);
       setError(msg);
       renderTable([]);
     }
@@ -152,7 +157,7 @@
     }
 
     /*
-     * No initial loadInfrastructure() call here, no polling — data is
+     * No initial loadNetworkDevices() call here, no polling — data is
      * fetched exactly once, when onTabActivated(true) fires. See below.
      */
   });
@@ -161,7 +166,7 @@
      onTabActivated(isFirstActivation)
 
      Called by the SPA shell (index.html / Shell.showTab) each time the
-     Infrastructure tab becomes visible.
+     Network Devices tab becomes visible.
 
      isFirstActivation === true  → tab has never been shown before this
        session. Fetch data now (the only fetch that will ever happen).
@@ -170,18 +175,18 @@
 
      Standalone / dev mode: if the page is opened directly (no shell),
      onTabActivated() is never called automatically — trigger it manually via
-     INFRA.reload() or window.onTabActivated(true) from the console.
+     NETDEV.reload() or window.onTabActivated(true) from the console.
   ═══════════════════════════════════════════════════════════════════════════ */
   global.onTabActivated = function onTabActivated(isFirstActivation) {
     if (isFirstActivation) {
-      loadInfrastructure();
+      loadNetworkDevices();
     }
     /* On subsequent activations: nothing to do — rendered data stays visible */
   };
 
   /* ─── Public surface ─────────────────────────────────────────────────────── */
-  global.INFRA = {
-    reload: loadInfrastructure,
+  global.NETDEV = {
+    reload: loadNetworkDevices,
   };
 
 })(window);

@@ -6,7 +6,7 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Services — MCP Dashboard</title>
+  <title>Network Devices — MCP Dashboard</title>
 
   <!-- Fonts (vendored, offline) -->
   <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="../css/shared.css" />
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="../css/services.css" />
+  <link rel="stylesheet" href="../css/network_devices.css" />
 </head>
 <body>
   <div id="app">
@@ -44,14 +44,14 @@
       <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
 
         <!-- Page header row -->
-        <div class="svc-page-header flex items-start justify-between px-5 border-b">
+        <div class="nd-page-header flex items-start justify-between px-5 border-b">
           <div class="flex items-center gap-2">
             <div class="icon-badge">
-              <i data-lucide="layers"></i>
+              <i data-lucide="router"></i>
             </div>
             <div>
-              <h1 class="svc-title">SERVICES</h1>
-              <p class="svc-subtitle">Services discovered across all connected sources</p>
+              <h1 class="nd-title">NETWORK DEVICES</h1>
+              <p class="nd-subtitle">Network devices discovered across all connected sources</p>
             </div>
           </div>
         </div>
@@ -64,21 +64,22 @@
 
         <!-- ── Table ── -->
         <div class="px-5 py-4 flex flex-col gap-5">
-          <section class="svc-table-card" aria-labelledby="svc-table-heading">
-            <h2 id="svc-table-heading" class="sr-only">Services</h2>
-            <table id="services-table" class="display" style="width:100%">
+          <section class="nd-table-card" aria-labelledby="nd-table-heading">
+            <h2 id="nd-table-heading" class="sr-only">Network devices</h2>
+            <table id="network-devices-table" class="display" style="width:100%">
               <thead>
                 <tr>
                   <th>Source</th>
                   <th>Application</th>
-                  <th>Service Name</th>
-                  <th>Type</th>
+                  <th>Device Name</th>
+                  <th>Device Type</th>
+                  <th>Devices Connected</th>
+                  <th>Services Connected</th>
                   <th>Status</th>
-                  <th>Tags</th>
-                  <th>Entity ID</th>
+                  <th>ID</th>
                 </tr>
               </thead>
-              <tbody><!-- populated by services.js --></tbody>
+              <tbody><!-- populated by network_devices.js --></tbody>
             </table>
           </section>
 
@@ -93,6 +94,6 @@
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/services.js"></script>
+  <script src="../js/network_devices.js"></script>
 </body>
 </html>

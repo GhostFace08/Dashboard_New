@@ -15,6 +15,7 @@
  *   POST /api/chat                  → postChat(payload)       (future)
  *   GET  /api/infrastructure        → getInfrastructure()     (Phase 6)
  *   GET  /api/services              → getServices()           (Phase 7)
+ *   GET  /api/network-devices       → getNetworkDevices()
  */
 
 (function (global) {
@@ -51,6 +52,7 @@
     refresh:      "/api/refresh",         // POST — trigger Java fetch service
     infrastructure: "/api/infrastructure",// GET  — Phase 6
     services:       "/api/services",      // GET  — Phase 7
+    networkDevices: "/api/network-devices",// GET — Network Devices page
     mcpSample:      "/api/mcp-sample",    // GET ?source= — Phase 15 mapping wizard
 
     // Settings middleware (5200)
@@ -152,6 +154,23 @@
     if (!data || typeof data !== "object") return fallback;
     if (!Array.isArray(data.services)) {
       if (Array.isArray(data)) return { services: data };
+      return fallback;
+    }
+    return data;
+  }
+
+  /**
+   * getNetworkDevices()
+   * GET /api/network-devices
+   * Fallback: { networkDevices: [] }
+   */
+  async function getNetworkDevices() {
+    const url = `${DASHBOARD_URL}${ENDPOINTS.networkDevices}`;
+    const fallback = { networkDevices: [] };
+    const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
+    if (!data || typeof data !== "object") return fallback;
+    if (!Array.isArray(data.networkDevices)) {
+      if (Array.isArray(data)) return { networkDevices: data };
       return fallback;
     }
     return data;
@@ -542,6 +561,7 @@
     getChatStats,
     getInfrastructure,
     getServices,
+    getNetworkDevices,
     getMcpSample,
 
     // Settings (5200)

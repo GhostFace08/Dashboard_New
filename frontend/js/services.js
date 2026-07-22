@@ -83,6 +83,8 @@
   /* ─── Render ─────────────────────────────────────────────────────────────── */
   function buildRowData(services) {
     return services.map(s => [
+      `<span style="font-size:12px">${Utils.escapeHtml(s.source)}</span>`,
+      `<span style="font-size:12px">${Utils.escapeHtml(s.application)}</span>`,
       `<span style="font-family:var(--font-mono);font-size:11px;white-space:nowrap">${Utils.escapeHtml(s.serviceName)}</span>`,
       `<span style="font-size:12px">${Utils.escapeHtml(s.type)}</span>`,
       statusChipHtml(s.status),
@@ -103,6 +105,8 @@
     dtInstance = jQ("#services-table").DataTable({
       data: rowData,
       columns: [
+        { title: "Source"      },
+        { title: "Application" },
         { title: "Service Name" },
         { title: "Type"         },
         { title: "Status"       },
@@ -111,7 +115,7 @@
       ],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
-      order: [[0, "asc"]],
+      order: [[2, "asc"]],
       scrollX: true,
       autoWidth: false,
       language: {

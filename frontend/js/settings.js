@@ -71,6 +71,17 @@
     { key: "description",      label: "Description"       },
   ];
 
+  // Fixed vendor list for the Type/Vendor dropdown — matches CFG.TOOLS'
+  // four hardcoded tools, plus a 5th "Custom Tool" escape hatch that reveals
+  // a free-text name input.
+  const VENDOR_OPTIONS = [
+    { id: "dynatrace",    label: "DynaTrace"    },
+    { id: "opmanager",    label: "OPManager"    },
+    { id: "appdynamics",  label: "AppDynamics"  },
+    { id: "heal",         label: "HEAL"         },
+    { id: "custom",       label: "Custom Tool"  },
+  ];
+
   // ── Phase 15 — MCP Servers state ────────────────────────────────────────
   let mcpServers       = [];          // [{ id, name, mode, baseUrl, mapping, sample, ... }]
   let mcpCategorization = { unknownLabel: "Unknown", categories: [] };
@@ -81,6 +92,28 @@
   let editingTab       = "details";
   let addCertAcked     = false;
   let editCertAcked    = false;
+
+  // Tool Registry state — a registry is a plain file the admin uploads
+  // (one path per line); we parse it client-side into a flat list of path
+  // strings and use that to populate the "Registry Path for Fetching
+  // Issues" dropdown, plus the 5 Dashboards-tab dropdowns.
+  let addRegistryPaths  = [];   // parsed from the Add-modal's uploaded file
+  let editRegistryPaths = {};   // { [serverId]: [path, ...] } parsed on edit-modal upload
+
+  function parseRegistryFile(text) {
+    return String(text || "")
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith("#"));
+  }
+
+  function registryPathOptionsHtml(paths, selected) {
+    if (!paths || paths.length === 0) {
+      return `<option value="">Upload a Tool Registry first…</option>`;
+    }
+    return `<option value="">Select a path…</option>` +
+      paths.map(p => `<option value="${esc(p)}"${p === selected ? " selected" : ""}>${esc(p)}</option>`).join("");
+  }
 
   /* ═══════════════════════════════════════════════════════════════════════════
      2. HELPERS
@@ -310,9 +343,16 @@
 
   function openAddModal() {
     addCertAcked = false;
+    addRegistryPaths = [];
     ["mcp-add-name","mcp-add-type","mcp-add-baseurl","mcp-add-token"].forEach(id => { const el = $(id); if (el) el.value = ""; });
     const timeoutEl = $("mcp-add-timeout"); if (timeoutEl) timeoutEl.value = "30";
     const certStatus = $("mcp-add-cert-status"); if (certStatus) certStatus.textContent = "";
+    const registryInput = $("mcp-add-registry"); if (registryInput) registryInput.value = "";
+    const registryStatus = $("mcp-add-registry-status"); if (registryStatus) registryStatus.textContent = "";
+    const vendorSel = $("mcp-add-vendor"); if (vendorSel) vendorSel.value = "dynatrace";
+    $("mcp-add-custom-type-wrap")?.classList.add("hidden");
+    const pathSel = $("mcp-add-registry-path");
+    if (pathSel) { pathSel.innerHTML = registryPathOptionsHtml([], null); pathSel.disabled = true; }
     const modeSeg = $("mcp-add-mode");
     if (modeSeg) modeSeg.querySelectorAll(".seg-btn").forEach((b,i) => b.classList.toggle("active", i === 0));
     $("mcp-add-modal")?.classList.remove("hidden");
@@ -325,6 +365,16 @@
     if (!name) { alert("Server Name is required."); return; }
     if (baseUrl && !/^https?:\/\/.+/.test(baseUrl)) { alert("Base URL must start with http:// or https://"); return; }
 
+    const vendor = val("mcp-add-vendor", "dynatrace");
+    const customType = val("mcp-add-type", "").trim();
+    if (vendor === "custom" && !customType) { alert("Custom Tool Name is required when Type/Vendor is Custom Tool."); return; }
+    const type = vendor === "custom" ? customType : vendor;
+
+    if (addRegistryPaths.length > 0) {
+      const chosenPath = val("mcp-add-registry-path", "");
+      if (!chosenPath) { alert("Registry Path for Fetching Issues is required once a Tool Registry is uploaded."); return; }
+    }
+
     let id = slugify(name);
     if (mcpServers.some(s => s.id === id)) id = `${id}-${Date.now().toString().slice(-4)}`;
 
@@ -336,7 +386,8 @@
       name,
       shortName: name.slice(0, 2).toUpperCase(),
       color: "#6366f1",
-      type: val("mcp-add-type", "").trim() || id,
+      type,
+      vendor,
       mode: activeSegValue("mcp-add-mode") || "saas",
       baseUrl,
       endpoint: "",
@@ -349,8 +400,19 @@
       description: "",
       url: baseUrl,
       certUploaded: addCertAcked,
+      registry: addRegistryPaths.length > 0
+        ? { fileName: $("mcp-add-registry")?.files?.[0]?.name || "", paths: addRegistryPaths.slice() }
+        : null,
+      issuesRegistryPath: addRegistryPaths.length > 0 ? val("mcp-add-registry-path", "") : null,
       mapping,
       timeMapping: {},
+      dashboards: {
+        issuesPath: addRegistryPaths.length > 0 ? val("mcp-add-registry-path", "") : null,
+        infrastructure: null,
+        networkDevices: null,
+        services: null,
+        topology: null,
+      },
       sample: null,
     };
 
@@ -401,15 +463,23 @@
     else if (editingTab === "categorization") body.innerHTML = categorizationTabHtml(s);
     else if (editingTab === "time")       body.innerHTML = timeTabHtml(s);
     else if (editingTab === "keywords")   body.innerHTML = keywordsTabHtml(s);
+    else if (editingTab === "dashboards") body.innerHTML = dashboardsTabHtml(s);
     wireEditTabBody(s);
     refreshIcons();
   }
 
   function detailsTabHtml(s) {
+    const vendor = s.vendor || (VENDOR_OPTIONS.some(v => v.id === s.type) ? s.type : "custom");
+    const paths = editRegistryPaths[s.id] || (s.registry?.paths || []);
     return `
       <div class="grid-2">
         <label class="sfield"><span class="sfield-label">Server Name</span><input id="edit-name" type="text" class="input" value="${esc(s.name)}" /></label>
-        <label class="sfield"><span class="sfield-label">Type / Vendor</span><input id="edit-type" type="text" class="input" value="${esc(s.type || "")}" /></label>
+        <label class="sfield"><span class="sfield-label">Type / Vendor</span>
+          <select id="edit-vendor" class="select">
+            ${VENDOR_OPTIONS.map(v => `<option value="${v.id}"${v.id === vendor ? " selected" : ""}>${esc(v.label)}</option>`).join("")}
+          </select>
+        </label>
+        <label class="sfield${vendor === "custom" ? "" : " hidden"}" id="edit-custom-type-wrap"><span class="sfield-label">Custom Tool Name</span><input id="edit-type" type="text" class="input" value="${esc(s.type || "")}" /></label>
         <label class="sfield"><span class="sfield-label">Deployment</span>
           <div class="segmented" id="edit-mode">
             <button class="seg-btn${s.mode !== "onprem" ? " active" : ""}" data-val="saas">SaaS</button>
@@ -428,6 +498,21 @@
           <span id="edit-cert-status" class="text-muted" style="font-size:11px"></span>
         </div>
       </div>
+      <div class="sfield mt-2">
+        <span class="sfield-label">Tool Registry</span>
+        <span class="sfield-hint">${s.registry?.fileName ? `On file: <strong>${esc(s.registry.fileName)}</strong> (${paths.length} path${paths.length === 1 ? "" : "s"}). Upload a new file to replace it.` : "Upload the tool's issue registry (a file listing its available issue paths)."}</span>
+        <div class="flex gap-2 items-center mt-1">
+          <input id="edit-registry" type="file" class="input" style="max-width:260px" />
+          <span id="edit-registry-status" class="text-muted" style="font-size:11px"></span>
+        </div>
+      </div>
+      <label class="sfield mt-2">
+        <span class="sfield-label">Registry Path for Fetching Issues <span style="color:var(--accent-red)">*</span></span>
+        <span class="sfield-hint">Required once a Tool Registry is uploaded.</span>
+        <select id="edit-registry-path" class="select"${paths.length === 0 ? " disabled" : ""}>
+          ${registryPathOptionsHtml(paths, s.issuesRegistryPath)}
+        </select>
+      </label>
     `;
   }
 
@@ -437,22 +522,29 @@
     return `
       <div class="banner banner-info mb-3">
         <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
-        <span class="banner-text">Fetch a sample issue to see this server's raw field names, then map each canonical field below. Leave a field blank if this server doesn't provide it.</span>
+        <span class="banner-text">Fetch a sample issue to see this server's raw field names, then map each canonical field below. Leave a field unmapped if this server doesn't provide it.</span>
       </div>
       <div class="flex gap-2 items-center mb-3">
         <button class="btn btn-ghost" id="btn-fetch-sample" style="font-size:11px"><i data-lucide="download" style="width:12px;height:12px"></i> Fetch Sample Issue</button>
         <span class="text-muted" style="font-size:11px">${flat ? `${keys.length} fields found in last sample` : "No sample fetched yet"}</span>
       </div>
-      ${keys.length ? `<datalist id="mcp-sample-keys">${keys.map(k => `<option value="${esc(k)}">`).join("")}</datalist>` : ""}
       <div class="grid-2">
-        ${CANONICAL_FIELDS.map(f => `
+        ${CANONICAL_FIELDS.map(f => {
+          const current = s.mapping?.[f.key] ?? "";
+          const options = keys.length
+            ? keys.map(k => `<option value="${esc(k)}"${k === current ? " selected" : ""}>${esc(k)}</option>`).join("")
+            : (current ? `<option value="${esc(current)}" selected>${esc(current)}</option>` : "");
+          return `
           <label class="sfield">
             <span class="sfield-label">${esc(f.label)}</span>
             <span class="sfield-hint" style="font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground)">canonical: <strong>${f.key}</strong></span>
-            <input type="text" class="input input-mono" id="map-${f.key}" list="${keys.length ? "mcp-sample-keys" : ""}"
-              value="${esc(s.mapping?.[f.key] ?? "")}" placeholder="raw field path or blank" />
+            <select class="select" id="map-${f.key}"${keys.length === 0 && !current ? " disabled" : ""}>
+              <option value="">— Not mapped —</option>
+              ${options}
+            </select>
           </label>
-        `).join("")}
+        `;
+        }).join("")}
       </div>
     `;
   }
@@ -521,6 +613,39 @@
     `;
   }
 
+  // Fields on the Dashboards tab: which of this server's registry paths
+  // feeds each dashboard page. Issues Path/Registry / Infrastructure /
+  // Network Devices / Services are required; Topology is optional.
+  const DASHBOARD_FIELDS = [
+    { key: "issuesPath",      label: "Issues Path / Registry", required: true  },
+    { key: "infrastructure",  label: "Infrastructure",         required: true  },
+    { key: "networkDevices",  label: "Network Devices",        required: true  },
+    { key: "services",        label: "Services",                required: true  },
+    { key: "topology",        label: "Topology",                required: false },
+  ];
+
+  function dashboardsTabHtml(s) {
+    const paths = editRegistryPaths[s.id] || (s.registry?.paths || []);
+    s.dashboards = s.dashboards || {};
+    return `
+      <div class="banner banner-info mb-3">
+        <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
+        <span class="banner-text">Pick which registry path (from this server's Tool Registry, set on the Server Details tab) feeds each dashboard page. All but Topology are required.</span>
+      </div>
+      <div class="grid-2">
+        ${DASHBOARD_FIELDS.map(f => `
+          <label class="sfield">
+            <span class="sfield-label">${esc(f.label)}${f.required ? ` <span style="color:var(--accent-red)">*</span>` : " (optional)"}</span>
+            <select class="select" id="dash-${f.key}"${paths.length === 0 ? " disabled" : ""}>
+              ${registryPathOptionsHtml(paths, s.dashboards[f.key])}
+            </select>
+          </label>
+        `).join("")}
+      </div>
+      ${paths.length === 0 ? `<div class="banner banner-warn mt-3"><i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0"></i><span class="banner-text">Upload a Tool Registry on the Server Details tab first — these dropdowns populate from it.</span></div>` : ""}
+    `;
+  }
+
   function wireEditTabBody(s) {
     if (editingTab === "details") {
       const certInput = $("edit-cert");
@@ -528,6 +653,27 @@
         editCertAcked = certInput.files && certInput.files.length > 0;
         const status = $("edit-cert-status");
         if (status) status.textContent = editCertAcked ? "Certificate added ✓ (saved with this server on Save)" : "";
+      });
+      const vendorSel = $("edit-vendor");
+      if (vendorSel) vendorSel.addEventListener("change", () => {
+        $("edit-custom-type-wrap")?.classList.toggle("hidden", vendorSel.value !== "custom");
+      });
+      const registryInput = $("edit-registry");
+      if (registryInput) registryInput.addEventListener("change", async () => {
+        const file = registryInput.files && registryInput.files[0];
+        const status = $("edit-registry-status");
+        if (!file) return;
+        const text = await file.text();
+        editRegistryPaths[s.id] = parseRegistryFile(text);
+        if (status) status.textContent = `Registry parsed ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
+        // Update the Registry Path select in place — avoid a full
+        // renderEditTabBody() here, which would discard any unsaved edits
+        // the user has already typed into this tab's other fields.
+        const pathSel = $("edit-registry-path");
+        if (pathSel) {
+          pathSel.innerHTML = registryPathOptionsHtml(editRegistryPaths[s.id], null);
+          pathSel.disabled = editRegistryPaths[s.id].length === 0;
+        }
       });
     } else if (editingTab === "mapping") {
       $("btn-fetch-sample")?.addEventListener("click", async () => {
@@ -587,11 +733,24 @@
 
     if (editingTab === "details") {
       s.name     = val("edit-name", s.name).trim() || s.name;
-      s.type     = val("edit-type", s.type).trim();
+      const vendor = val("edit-vendor", s.vendor || "custom");
+      s.vendor   = vendor;
+      s.type     = vendor === "custom" ? val("edit-type", s.type).trim() : vendor;
       s.mode     = activeSegValue("edit-mode") || s.mode;
       s.baseUrl  = val("edit-baseurl", s.baseUrl).trim();
       s.timeout  = parseInt(val("edit-timeout", s.timeout), 10) || s.timeout;
       if (editCertAcked) s.certUploaded = true;
+      if (editRegistryPaths[s.id]) {
+        s.registry = { fileName: $("edit-registry")?.files?.[0]?.name || s.registry?.fileName || "", paths: editRegistryPaths[s.id].slice() };
+      }
+      const paths = editRegistryPaths[s.id] || (s.registry?.paths || []);
+      if (paths.length > 0) {
+        const chosenPath = val("edit-registry-path", "");
+        if (!chosenPath) { alert("Registry Path for Fetching Issues is required once a Tool Registry is uploaded."); if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; } return; }
+        s.issuesRegistryPath = chosenPath;
+        s.dashboards = s.dashboards || {};
+        s.dashboards.issuesPath = chosenPath;
+      }
       await persistServers();
     } else if (editingTab === "mapping") {
       CANONICAL_FIELDS.forEach(f => {
@@ -603,6 +762,20 @@
       await persistCategorization();
     } else if (editingTab === "keywords") {
       await persistKeywords();
+    } else if (editingTab === "dashboards") {
+      s.dashboards = s.dashboards || {};
+      const missing = [];
+      DASHBOARD_FIELDS.forEach(f => {
+        const v = val(`dash-${f.key}`, "");
+        if (f.required && !v) missing.push(f.label);
+        s.dashboards[f.key] = v || null;
+      });
+      if (missing.length > 0) {
+        alert(`These Dashboards-tab fields are required: ${missing.join(", ")}`);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; }
+        return;
+      }
+      await persistServers();
     }
     // Time tab has nothing to persist.
 
@@ -636,6 +809,24 @@
       addCertAcked = input.files && input.files.length > 0;
       const status = $("mcp-add-cert-status");
       if (status) status.textContent = addCertAcked ? "Certificate added ✓" : "";
+    });
+    $("mcp-add-vendor")?.addEventListener("change", () => {
+      const vendorSel = $("mcp-add-vendor");
+      $("mcp-add-custom-type-wrap")?.classList.toggle("hidden", vendorSel.value !== "custom");
+    });
+    $("mcp-add-registry")?.addEventListener("change", async () => {
+      const input = $("mcp-add-registry");
+      const file = input.files && input.files[0];
+      const status = $("mcp-add-registry-status");
+      const pathSel = $("mcp-add-registry-path");
+      if (!file) return;
+      const text = await file.text();
+      addRegistryPaths = parseRegistryFile(text);
+      if (status) status.textContent = `Registry parsed ✓ (${addRegistryPaths.length} paths found)`;
+      if (pathSel) {
+        pathSel.innerHTML = registryPathOptionsHtml(addRegistryPaths, null);
+        pathSel.disabled = addRegistryPaths.length === 0;
+      }
     });
 
     $("mcp-edit-close")?.addEventListener("click", closeEditModal);
@@ -713,6 +904,9 @@
       "",
       "[services]",
       `periodic_fetch_time = ${val("services-fetch-time", "15 min")}`,
+      "",
+      "[network_devices]",
+      `periodic_fetch_time = ${val("network-devices-fetch-time", "15 min")}`,
       "",
       "[topology]",
       `periodic_fetch_time = ${val("topology-fetch-time", "15 min")}`,
