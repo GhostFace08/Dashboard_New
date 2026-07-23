@@ -195,15 +195,9 @@
         </div>
 
         <div class="topo-form-row">
-          <label for="topo-add-app-input">Application</label>
-          <input id="topo-add-app-input" class="input" type="text" list="topo-add-app-datalist" placeholder="e.g. Payments Gateway" />
-          <datalist id="topo-add-app-datalist"></datalist>
-          <span class="topo-form-hint" id="topo-add-app-hint">New application — a fresh topology will be created.</span>
-        </div>
-        <div class="topo-form-row" id="topo-add-existing-row" style="display:none">
-          <label>Existing topologies for this application</label>
-          <div class="topo-existing-topo-list" id="topo-existing-topo-list"></div>
-          <span class="topo-form-hint">Adding another topology merges into the same application view — it doesn't replace what's already there.</span>
+          <label for="topo-add-app-select">Application</label>
+          <select id="topo-add-app-select" class="select" style="width:100%"></select>
+          <span class="topo-form-hint" id="topo-add-app-hint">The new topology will be added to this application.</span>
         </div>
 
         <!-- MCP fields -->
@@ -393,10 +387,6 @@
         <div class="topo-form-row">
           <label for="topo-add-node-topo-select">Topology</label>
           <select id="topo-add-node-topo-select" class="select" style="width:100%"></select>
-        </div>
-        <div class="topo-form-row">
-          <label for="topo-add-node-mcp-select">MCP Server</label>
-          <select id="topo-add-node-mcp-select" class="select" style="width:100%"></select>
         </div>
         <div class="topo-form-row">
           <label for="topo-add-node-kind-select">Node Type</label>

@@ -562,42 +562,28 @@
 
   function openAddModal(prefillApp) {
     const overlay = document.getElementById("topo-add-modal-overlay");
-    const appInput = document.getElementById("topo-add-app-input");
-    const existingRow = document.getElementById("topo-add-existing-row");
-    const existingList = document.getElementById("topo-existing-topo-list");
+    const appSel = document.getElementById("topo-add-app-select");
     const hint = document.getElementById("topo-add-app-hint");
     const title = document.getElementById("topo-add-modal-title");
-    const datalist = document.getElementById("topo-add-app-datalist");
 
-    datalist.innerHTML = state.apps.map(a => `<option value="${Utils.escapeHtml(a)}">`).join("");
+    title.textContent = "Add Topology";
     document.getElementById("topo-add-mcp-server-select").innerHTML = mcpServerOptionsHtml(null);
     updateMcpRegistrySelect();
     document.getElementById("topo-add-api-tool-select").innerHTML = mcpServerOptionsHtml(null);
     document.getElementById("topo-add-blank-mcp-select").innerHTML = mcpServerOptionsHtml(null);
 
     setAddTopoKind("mcp");
-    appInput.value = prefillApp || "";
 
-    function refreshExistingPreview() {
-      const name = appInput.value.trim();
-      const store = loadStore();
-      const topos = name ? topologyList(store, name) : [];
-      if (topos.length) {
-        title.textContent = "Add Topology";
-        hint.textContent = "This application already has topology — the new one will be added alongside it.";
-        existingRow.style.display = "";
-        existingList.innerHTML = topos.map(t => `
-          <div class="topo-existing-topo-item"><span>${Utils.escapeHtml(t.label)}</span><span class="topo-subtitle" style="margin:0">${t.nodes.length} nodes</span></div>
-        `).join("");
-      } else {
-        title.textContent = "Add Topology";
-        hint.textContent = name ? "New application — a fresh topology will be created." : "Enter an application name to continue.";
-        existingRow.style.display = "none";
-        existingList.innerHTML = "";
-      }
+    if (!state.apps.length) {
+      appSel.innerHTML = `<option value="">(no applications yet — add one first)</option>`;
+      hint.textContent = "No applications yet — use \"Add Application\" first.";
+    } else {
+      const selected = prefillApp && state.apps.includes(prefillApp) ? prefillApp : state.currentApp;
+      appSel.innerHTML = state.apps.map(a =>
+        `<option value="${Utils.escapeHtml(a)}"${a === selected ? " selected" : ""}>${Utils.escapeHtml(a)}</option>`
+      ).join("");
+      hint.textContent = "The new topology will be added to this application.";
     }
-    appInput.oninput = refreshExistingPreview;
-    refreshExistingPreview();
 
     overlay.classList.remove("hidden");
   }
@@ -627,7 +613,7 @@
   }
 
   function saveAddModal() {
-    const appName = document.getElementById("topo-add-app-input").value.trim();
+    const appName = document.getElementById("topo-add-app-select").value;
     if (!appName) return;
 
     const store = loadStore();
@@ -843,7 +829,6 @@
   function openAddNodeModal() {
     const appSel = document.getElementById("topo-add-node-app-select");
     appSel.innerHTML = state.apps.map(a => `<option value="${Utils.escapeHtml(a)}"${a === state.currentApp ? " selected" : ""}>${Utils.escapeHtml(a)}</option>`).join("");
-    document.getElementById("topo-add-node-mcp-select").innerHTML = mcpServerOptionsHtml(null);
     refreshAddNodeTopoSelect();
     refreshAddNodePool();
     appSel.onchange = () => { refreshAddNodeTopoSelect(); };

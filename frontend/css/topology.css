@@ -259,26 +259,6 @@
   color: var(--muted-foreground);
   margin-top: 2px;
 }
-.topo-existing-topo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 140px;
-  overflow-y: auto;
-}
-.topo-existing-topo-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--secondary);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--foreground);
-}
-
 /* ── Multi-row toolbar (views / app row / topology row) ──────────────────
    Added for the Estate/Application/Focused view rework. Each row reuses
    .topo-toolbar's existing flex/gap rules; this just stacks them and adds
