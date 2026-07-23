@@ -53,6 +53,7 @@
     infrastructure: "/api/infrastructure",// GET  — Phase 6
     services:       "/api/services",      // GET  — Phase 7
     networkDevices: "/api/network-devices",// GET — Network Devices page
+    processes:      "/api/processes",     // GET — Processes page
     mcpSample:      "/api/mcp-sample",    // GET ?source= — Phase 15 mapping wizard
 
     // Settings middleware (5200)
@@ -131,7 +132,7 @@
    */
   async function getInfrastructure() {
     const url = `${DASHBOARD_URL}${ENDPOINTS.infrastructure}`;
-    const fallback = { infrastructure: [] };
+    const fallback = { infrastructure: (global.DEMO_DATA && global.DEMO_DATA.infrastructure) || [] };
     const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
     if (!data || typeof data !== "object") return fallback;
     if (!Array.isArray(data.infrastructure)) {
@@ -149,7 +150,7 @@
    */
   async function getServices() {
     const url = `${DASHBOARD_URL}${ENDPOINTS.services}`;
-    const fallback = { services: [] };
+    const fallback = { services: (global.DEMO_DATA && global.DEMO_DATA.services) || [] };
     const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
     if (!data || typeof data !== "object") return fallback;
     if (!Array.isArray(data.services)) {
@@ -166,11 +167,28 @@
    */
   async function getNetworkDevices() {
     const url = `${DASHBOARD_URL}${ENDPOINTS.networkDevices}`;
-    const fallback = { networkDevices: [] };
+    const fallback = { networkDevices: (global.DEMO_DATA && global.DEMO_DATA.networkDevices) || [] };
     const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
     if (!data || typeof data !== "object") return fallback;
     if (!Array.isArray(data.networkDevices)) {
       if (Array.isArray(data)) return { networkDevices: data };
+      return fallback;
+    }
+    return data;
+  }
+
+  /**
+   * getProcesses()
+   * GET /api/processes
+   * Fallback: { processes: [] }
+   */
+  async function getProcesses() {
+    const url = `${DASHBOARD_URL}${ENDPOINTS.processes}`;
+    const fallback = { processes: (global.DEMO_DATA && global.DEMO_DATA.processes) || [] };
+    const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
+    if (!data || typeof data !== "object") return fallback;
+    if (!Array.isArray(data.processes)) {
+      if (Array.isArray(data)) return { processes: data };
       return fallback;
     }
     return data;
@@ -581,6 +599,7 @@
     getInfrastructure,
     getServices,
     getNetworkDevices,
+    getProcesses,
     getMcpServers,
     getMcpSample,
 

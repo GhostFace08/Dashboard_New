@@ -278,3 +278,61 @@
   font-size: 11px;
   color: var(--foreground);
 }
+
+/* ── Multi-row toolbar (views / app row / topology row) ──────────────────
+   Added for the Estate/Application/Focused view rework. Each row reuses
+   .topo-toolbar's existing flex/gap rules; this just stacks them and adds
+   a thin separator so the row grouping reads clearly. ─────────────────── */
+.topo-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.topo-toolbar-row:last-of-type { border-bottom: 1px solid var(--border); }
+.topo-toolbar-row.hidden { display: none; }
+
+.topo-view-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Manual connect mode — armed state on the toolbar button + hint cursor
+   on the canvas so it's clear a click will pick the first endpoint. */
+.topo-connect-armed { background: var(--accent-teal, #14b8a6) !important; color: #04211c !important; }
+#topo-canvas-wrap.topo-connect-picking .topo-node circle { cursor: crosshair; }
+
+/* Reconciliation / Add Node / Delete pop-ups reuse .topo-form-row; a small
+   diff-list style for the Refresh reconciliation modal. */
+.topo-diff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.topo-diff-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--foreground);
+}
+.topo-diff-item.added   { border-left: 3px solid var(--accent-teal, #14b8a6); }
+.topo-diff-item.removed { border-left: 3px solid var(--accent-red, #e5534b); }
+.topo-diff-item .tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}

@@ -54,7 +54,7 @@
      1. STATE
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  let activeSection = "monitoring";
+  let activeSection = "general";
   let dirty         = false;
 
   // Canonical fields every server's Mapping tab lets you set.
@@ -100,11 +100,43 @@
   let addRegistryPaths  = [];   // parsed from the Add-modal's uploaded file
   let editRegistryPaths = {};   // { [serverId]: [path, ...] } parsed on edit-modal upload
 
+  // Time Mapping tab — per-server map of generalized-timestamp component
+  // (token, e.g. "YYYY") → how this server's own timestamp supplies it.
+  // { [serverId]: { format: "<general format string this was built from>",
+  //                 tokens: { [token]: value } } }
+  let editTimeMapping = {};
+
   function parseRegistryFile(text) {
     return String(text || "")
       .split(/\r?\n/)
       .map(line => line.trim())
       .filter(line => line.length > 0 && !line.startsWith("#"));
+  }
+
+  // Show the "uploaded document is payload" toggle only once BOTH a
+  // URL/API value and an uploaded file are present — otherwise there's
+  // nothing to disambiguate.
+  function updateRegistryPayloadToggleVisibility(urlInputId, fileInputId, rowId) {
+    const urlVal  = ($(urlInputId)?.value || "").trim();
+    const hasFile = !!($(fileInputId)?.files && $(fileInputId).files.length > 0);
+    $(rowId)?.classList.toggle("hidden", !(urlVal && hasFile));
+  }
+
+  // Fetch a tool registry from a URL/API endpoint. Tries JSON first
+  // (array of paths, or { paths: [...] }), falls back to parsing the
+  // response body as newline-separated paths (same shape as an uploaded
+  // registry document).
+  async function fetchRegistryFromUrl(url, authToken) {
+    const opts = authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : {};
+    const res = await fetch(url, opts);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text);
+      if (Array.isArray(json)) return json.map(String);
+      if (json && Array.isArray(json.paths)) return json.paths.map(String);
+    } catch (_) { /* not JSON — fall through to line parsing */ }
+    return parseRegistryFile(text);
   }
 
   function registryPathOptionsHtml(paths, selected) {
@@ -499,16 +531,34 @@
         </div>
       </div>
       <div class="sfield mt-2">
-        <span class="sfield-label">Tool Registry</span>
+        <span class="sfield-label">Tool Registry — URL / API</span>
+        <span class="sfield-hint">${s.registry?.url ? `On file: <strong>${esc(s.registry.url)}</strong>. Change to replace it.` : "Point at the endpoint that serves this tool's registry, and/or upload a registry document below."}</span>
+        <input id="edit-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" value="${esc(s.registry?.url || "")}" />
+      </div>
+      <div class="sfield mt-2">
+        <span class="sfield-label">Tool Registry — Upload Document</span>
         <span class="sfield-hint">${s.registry?.fileName ? `On file: <strong>${esc(s.registry.fileName)}</strong> (${paths.length} path${paths.length === 1 ? "" : "s"}). Upload a new file to replace it.` : "Upload the tool's issue registry (a file listing its available issue paths)."}</span>
         <div class="flex gap-2 items-center mt-1">
           <input id="edit-registry" type="file" class="input" style="max-width:260px" />
           <span id="edit-registry-status" class="text-muted" style="font-size:11px"></span>
         </div>
       </div>
+      <div class="toggle-row hidden" id="edit-registry-payload-row">
+        <div class="toggle-info">
+          <p class="toggle-label">Uploaded document is the payload</p>
+          <p class="toggle-desc">On: the uploaded file itself is parsed as the registry. Off: the URL/API is fetched and the uploaded file is ignored for parsing.</p>
+        </div>
+        <button class="toggle-switch${s.registry?.payloadIsUpload ? " on" : ""}" id="edit-registry-payload-toggle" data-on="${s.registry?.payloadIsUpload ? "true" : "false"}"><span class="toggle-thumb"></span></button>
+      </div>
+      <div class="flex gap-2 items-center mt-2">
+        <button class="btn btn-ghost" id="edit-registry-fetch" type="button" style="font-size:11px">
+          <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
+        </button>
+        <span id="edit-registry-fetch-status" class="text-muted" style="font-size:11px"></span>
+      </div>
       <label class="sfield mt-2">
         <span class="sfield-label">Registry Path for Fetching Issues <span style="color:var(--accent-red)">*</span></span>
-        <span class="sfield-hint">Required once a Tool Registry is uploaded.</span>
+        <span class="sfield-hint">Required once a Tool Registry is uploaded or fetched.</span>
         <select id="edit-registry-path" class="select"${paths.length === 0 ? " disabled" : ""}>
           ${registryPathOptionsHtml(paths, s.issuesRegistryPath)}
         </select>
@@ -585,11 +635,98 @@
     `;
   }
 
-  function timeTabHtml() {
+  // ── Time Mapping helpers ──────────────────────────────────────────────
+  // Splits a generalized timestamp format (from Settings ▸ General ▸
+  // Dashboard Defaults ▸ Generalized Timestamp Format) into its ordered
+  // component tokens, e.g. "YYYY-MM-DD HH:mm:ss" → ["YYYY","MM","DD","HH","mm","ss"].
+  // Epoch formats are treated as a single token.
+  const TIME_TOKEN_REGEX = /YYYY|YY|MM|DD|HH|hh|mm|ss|A|Z|T/g;
+
+  const TIME_TOKEN_META = {
+    YYYY: { label: "Year (4-digit)",   isTime: false },
+    YY:   { label: "Year (2-digit)",   isTime: false },
+    MM:   { label: "Month",            isTime: false },
+    DD:   { label: "Day",              isTime: false },
+    HH:   { label: "Hour (24h)",       isTime: true  },
+    hh:   { label: "Hour (12h)",       isTime: true  },
+    mm:   { label: "Minute",           isTime: true  },
+    ss:   { label: "Second",           isTime: true  },
+    A:    { label: "AM/PM",            isTime: true  },
+    Z:    { label: "Timezone offset",  isTime: false },
+    T:    { label: "Date/time separator", isTime: false },
+  };
+
+  // Options offered in each mapping dropdown: the server's own raw
+  // timestamp component types it could supply for this generalized slot,
+  // plus the two hard defaults.
+  const SERVER_TOKEN_OPTIONS = [
+    { value: "server_YYYY", label: "Server field: Year (4-digit)" },
+    { value: "server_YY",   label: "Server field: Year (2-digit)" },
+    { value: "server_MM",   label: "Server field: Month (numeric)" },
+    { value: "server_MMM",  label: "Server field: Month (name)" },
+    { value: "server_DD",   label: "Server field: Day" },
+    { value: "server_HH",   label: "Server field: Hour (24h)" },
+    { value: "server_hh",   label: "Server field: Hour (12h)" },
+    { value: "server_A",    label: "Server field: AM/PM" },
+    { value: "server_mm",   label: "Server field: Minute" },
+    { value: "server_ss",   label: "Server field: Second" },
+    { value: "server_epoch_s",  label: "Server field: Epoch seconds" },
+    { value: "server_epoch_ms", label: "Server field: Epoch milliseconds" },
+    { value: "default_00",  label: "00 (default)" },
+    { value: "default_now", label: "System/Server current (default)" },
+  ];
+
+  function generalizedTimestampFormat() {
+    return ($("dash-timestamp-format")?.value || "YYYY-MM-DD HH:mm:ss").trim();
+  }
+
+  function timestampTokens(format) {
+    if (format === "epoch_s")  return ["epoch_s"];
+    if (format === "epoch_ms") return ["epoch_ms"];
+    const found = format.match(TIME_TOKEN_REGEX) || [];
+    // De-dupe while preserving first-seen order (e.g. "YYYY" appearing once).
+    const seen = new Set();
+    return found.filter(t => (seen.has(t) ? false : (seen.add(t), true)));
+  }
+
+  function defaultTokenMapping(tokens) {
+    const map = {};
+    tokens.forEach(t => {
+      if (t === "epoch_s" || t === "epoch_ms") { map[t] = "default_now"; return; }
+      const meta = TIME_TOKEN_META[t];
+      map[t] = meta && meta.isTime ? "default_00" : "default_now";
+    });
+    return map;
+  }
+
+  function timeTabHtml(s) {
+    const format = generalizedTimestampFormat();
+    const tokens = timestampTokens(format);
+    if (!editTimeMapping[s.id] || editTimeMapping[s.id].format !== format) {
+      editTimeMapping[s.id] = {
+        format,
+        tokens: { ...defaultTokenMapping(tokens), ...(editTimeMapping[s.id]?.tokens || {}) },
+      };
+    }
+    const mapping = editTimeMapping[s.id].tokens;
     return `
-      <div class="banner banner-info">
+      <div class="banner banner-info mb-3">
         <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
-        <span class="banner-text">Time Mapping isn't configurable yet for individual servers — issues currently use each field's default time parsing. This tab is a placeholder for a future release.</span>
+        <span class="banner-text">
+          Generalized timestamp: <strong>${esc(format)}</strong> (set in General ▸ Dashboard Defaults).
+          Map each part below onto what <strong>${esc(s.name)}</strong> actually provides. Time parts default to
+          <strong>00</strong>; date parts default to <strong>System/Server current</strong>.
+        </span>
+      </div>
+      <div class="grid-2">
+        ${tokens.map(t => `
+          <label class="sfield">
+            <span class="sfield-label">${esc(t)}${TIME_TOKEN_META[t] ? ` — ${esc(TIME_TOKEN_META[t].label)}` : ""}</span>
+            <select class="select time-map-select" data-token="${esc(t)}">
+              ${SERVER_TOKEN_OPTIONS.map(o => `<option value="${o.value}"${o.value === mapping[t] ? " selected" : ""}>${esc(o.label)}</option>`).join("")}
+            </select>
+          </label>
+        `).join("")}
       </div>
     `;
   }
@@ -621,6 +758,7 @@
     { key: "infrastructure",  label: "Infrastructure",         required: true  },
     { key: "networkDevices",  label: "Network Devices",        required: true  },
     { key: "services",        label: "Services",                required: true  },
+    { key: "processes",       label: "Processes",               required: true  },
     { key: "topology",        label: "Topology",                required: false },
   ];
 
@@ -659,10 +797,15 @@
         $("edit-custom-type-wrap")?.classList.toggle("hidden", vendorSel.value !== "custom");
       });
       const registryInput = $("edit-registry");
+      updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
       if (registryInput) registryInput.addEventListener("change", async () => {
         const file = registryInput.files && registryInput.files[0];
         const status = $("edit-registry-status");
+        updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
         if (!file) return;
+        const payloadToggle = $("edit-registry-payload-toggle");
+        const isPayload = !payloadToggle || payloadToggle.dataset.on !== "false" || !$("edit-registry-url")?.value.trim();
+        if (!isPayload) return;
         const text = await file.text();
         editRegistryPaths[s.id] = parseRegistryFile(text);
         if (status) status.textContent = `Registry parsed ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
@@ -674,6 +817,54 @@
           pathSel.innerHTML = registryPathOptionsHtml(editRegistryPaths[s.id], null);
           pathSel.disabled = editRegistryPaths[s.id].length === 0;
         }
+      });
+      $("edit-registry-url")?.addEventListener("input", () => {
+        updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
+      });
+      $("edit-registry-payload-toggle")?.addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        const on = btn.dataset.on !== "true";
+        btn.dataset.on = String(on);
+        btn.classList.toggle("on", on);
+      });
+      $("edit-registry-fetch")?.addEventListener("click", async () => {
+        const btn = $("edit-registry-fetch");
+        const status = $("edit-registry-fetch-status");
+        const url = ($("edit-registry-url")?.value || "").trim();
+        const payloadToggle = $("edit-registry-payload-toggle");
+        const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
+        if (usePayload) {
+          const file = $("edit-registry")?.files?.[0];
+          if (!file) { if (status) status.textContent = "No uploaded document to use as payload."; return; }
+          if (btn) btn.disabled = true;
+          try {
+            editRegistryPaths[s.id] = parseRegistryFile(await file.text());
+            if (status) status.textContent = `Registry parsed ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
+          } finally { if (btn) btn.disabled = false; }
+        } else {
+          if (!url) { if (status) status.textContent = "Enter a URL/API endpoint first."; return; }
+          if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+          try {
+            editRegistryPaths[s.id] = await fetchRegistryFromUrl(url, val("edit-token", ""));
+            if (status) status.textContent = `Registry fetched ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
+          } catch (err) {
+            if (status) status.textContent = `Fetch failed: ${err.message || err}`;
+          } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
+          }
+        }
+        const pathSel = $("edit-registry-path");
+        if (pathSel) {
+          pathSel.innerHTML = registryPathOptionsHtml(editRegistryPaths[s.id] || [], null);
+          pathSel.disabled = !editRegistryPaths[s.id] || editRegistryPaths[s.id].length === 0;
+        }
+      });
+    } else if (editingTab === "time") {
+      $("mcp-edit-body").querySelectorAll(".time-map-select").forEach(sel => {
+        sel.addEventListener("change", () => {
+          editTimeMapping[s.id] = editTimeMapping[s.id] || { format: generalizedTimestampFormat(), tokens: {} };
+          editTimeMapping[s.id].tokens[sel.dataset.token] = sel.value;
+        });
       });
     } else if (editingTab === "mapping") {
       $("btn-fetch-sample")?.addEventListener("click", async () => {
@@ -740,8 +931,14 @@
       s.baseUrl  = val("edit-baseurl", s.baseUrl).trim();
       s.timeout  = parseInt(val("edit-timeout", s.timeout), 10) || s.timeout;
       if (editCertAcked) s.certUploaded = true;
+      const editRegistryPayloadToggle = $("edit-registry-payload-toggle");
       if (editRegistryPaths[s.id]) {
-        s.registry = { fileName: $("edit-registry")?.files?.[0]?.name || s.registry?.fileName || "", paths: editRegistryPaths[s.id].slice() };
+        s.registry = {
+          fileName: $("edit-registry")?.files?.[0]?.name || s.registry?.fileName || "",
+          url: val("edit-registry-url", s.registry?.url || "").trim(),
+          payloadIsUpload: editRegistryPayloadToggle ? editRegistryPayloadToggle.dataset.on === "true" : !!s.registry?.payloadIsUpload,
+          paths: editRegistryPaths[s.id].slice(),
+        };
       }
       const paths = editRegistryPaths[s.id] || (s.registry?.paths || []);
       if (paths.length > 0) {
@@ -751,6 +948,12 @@
         s.dashboards = s.dashboards || {};
         s.dashboards.issuesPath = chosenPath;
       }
+      await persistServers();
+    } else if (editingTab === "time") {
+      s.timeMapping = {
+        format: editTimeMapping[s.id]?.format || generalizedTimestampFormat(),
+        tokens: { ...(editTimeMapping[s.id]?.tokens || {}) },
+      };
       await persistServers();
     } else if (editingTab === "mapping") {
       CANONICAL_FIELDS.forEach(f => {
@@ -818,11 +1021,56 @@
       const input = $("mcp-add-registry");
       const file = input.files && input.files[0];
       const status = $("mcp-add-registry-status");
-      const pathSel = $("mcp-add-registry-path");
+      updateRegistryPayloadToggleVisibility("mcp-add-registry-url", "mcp-add-registry", "mcp-add-registry-payload-row");
       if (!file) return;
+      const payloadToggle = $("mcp-add-registry-payload-toggle");
+      const isPayload = !payloadToggle || payloadToggle.dataset.on !== "false" || !$("mcp-add-registry-url")?.value.trim();
+      if (!isPayload) return; // toggle says the URL/API is authoritative — don't parse the file
       const text = await file.text();
       addRegistryPaths = parseRegistryFile(text);
       if (status) status.textContent = `Registry parsed ✓ (${addRegistryPaths.length} paths found)`;
+      const pathSel = $("mcp-add-registry-path");
+      if (pathSel) {
+        pathSel.innerHTML = registryPathOptionsHtml(addRegistryPaths, null);
+        pathSel.disabled = addRegistryPaths.length === 0;
+      }
+    });
+    $("mcp-add-registry-url")?.addEventListener("input", () => {
+      updateRegistryPayloadToggleVisibility("mcp-add-registry-url", "mcp-add-registry", "mcp-add-registry-payload-row");
+    });
+    $("mcp-add-registry-payload-toggle")?.addEventListener("click", (e) => {
+      const btn = e.currentTarget;
+      const on = btn.dataset.on !== "true";
+      btn.dataset.on = String(on);
+      btn.classList.toggle("on", on);
+    });
+    $("mcp-add-registry-fetch")?.addEventListener("click", async () => {
+      const btn = $("mcp-add-registry-fetch");
+      const status = $("mcp-add-registry-fetch-status");
+      const url = ($("mcp-add-registry-url")?.value || "").trim();
+      const payloadToggle = $("mcp-add-registry-payload-toggle");
+      const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
+      if (usePayload) {
+        const file = $("mcp-add-registry")?.files?.[0];
+        if (!file) { if (status) status.textContent = "No uploaded document to use as payload."; return; }
+        if (btn) btn.disabled = true;
+        try {
+          addRegistryPaths = parseRegistryFile(await file.text());
+          if (status) status.textContent = `Registry parsed ✓ (${addRegistryPaths.length} paths found)`;
+        } finally { if (btn) btn.disabled = false; }
+      } else {
+        if (!url) { if (status) status.textContent = "Enter a URL/API endpoint first."; return; }
+        if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+        try {
+          addRegistryPaths = await fetchRegistryFromUrl(url, val("mcp-add-token", ""));
+          if (status) status.textContent = `Registry fetched ✓ (${addRegistryPaths.length} paths found)`;
+        } catch (err) {
+          if (status) status.textContent = `Fetch failed: ${err.message || err}`;
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
+        }
+      }
+      const pathSel = $("mcp-add-registry-path");
       if (pathSel) {
         pathSel.innerHTML = registryPathOptionsHtml(addRegistryPaths, null);
         pathSel.disabled = addRegistryPaths.length === 0;
@@ -898,6 +1146,7 @@
       "[dashboard]",
       `periodic_fetch_time = ${val("dash-fetch-time",  "15 min")}`,
       `periodic_check_time = ${val("dash-check-time",  "300")}`,
+      `timestamp_format    = ${val("dash-timestamp-format", "YYYY-MM-DD HH:mm:ss")}`,
       "",
       "[infrastructure]",
       `periodic_fetch_time = ${val("infra-fetch-time", "15 min")}`,
@@ -907,6 +1156,9 @@
       "",
       "[network_devices]",
       `periodic_fetch_time = ${val("network-devices-fetch-time", "15 min")}`,
+      "",
+      "[processes]",
+      `periodic_fetch_time = ${val("processes-fetch-time", "15 min")}`,
       "",
       "[topology]",
       `periodic_fetch_time = ${val("topology-fetch-time", "15 min")}`,

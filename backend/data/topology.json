@@ -1,0 +1,60 @@
+{
+  "topology": {
+    "Payments Gateway": {
+      "topologies": {
+        "topo-pg-dt": {
+          "id": "topo-pg-dt", "label": "DynaTrace", "kind": "mcp", "sourceLabel": "DynaTrace", "mcpServerId": "dynatrace",
+          "nodes": [
+            { "id": "pg-host-1", "label": "web-prod-01",   "kind": "host",      "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "HOST-7A61C3F0" },
+            { "id": "pg-host-2", "label": "web-prod-02",   "kind": "host",      "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "HOST-7A61C3F1" },
+            { "id": "pg-host-3", "label": "db-primary-01", "kind": "host",      "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "HOST-3E29B7D2" },
+            { "id": "pg-pg-1",   "label": "proc-group-1",  "kind": "procgroup", "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "PG-1001" },
+            { "id": "pg-pg-2",   "label": "proc-group-2",  "kind": "procgroup", "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "PG-1002" },
+            { "id": "pg-svc-1",  "label": "checkout-api",  "kind": "service",   "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "SVC-9A1D2E40" },
+            { "id": "pg-svc-2",  "label": "auth-service",  "kind": "service",   "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "SVC-9A1D2E41" }
+          ],
+          "edges": [
+            { "from": "pg-host-1", "to": "pg-pg-1",  "origin": "discovered", "problem": true,  "type": "hosts" },
+            { "from": "pg-host-2", "to": "pg-pg-2",  "origin": "discovered", "problem": false, "type": "hosts" },
+            { "from": "pg-pg-1",   "to": "pg-svc-1", "origin": "discovered", "problem": true,  "type": "runs" },
+            { "from": "pg-pg-2",   "to": "pg-svc-2", "origin": "discovered", "problem": false, "type": "runs" },
+            { "from": "pg-svc-2",  "to": "pg-svc-1", "origin": "manual",     "problem": false, "type": "depends-on" }
+          ]
+        }
+      }
+    },
+    "Customer Portal": {
+      "topologies": {
+        "topo-cp-apd": {
+          "id": "topo-cp-apd", "label": "AppDynamics", "kind": "mcp", "sourceLabel": "AppDynamics", "mcpServerId": "appdynamics",
+          "nodes": [
+            { "id": "cp-host-1", "label": "app-worker-01",    "kind": "host",    "origin": "discovered", "status": "healthy",     "source": "AppDynamics", "entityId": "HOST-1D88E245" },
+            { "id": "cp-host-2", "label": "app-worker-02",    "kind": "host",    "origin": "discovered", "status": "disconnected","source": "AppDynamics", "entityId": "HOST-1D88E246" },
+            { "id": "cp-svc-1",  "label": "inventory-worker", "kind": "service", "origin": "discovered", "status": "problem",     "source": "AppDynamics", "entityId": "SVC-4C77B310" },
+            { "id": "cp-svc-2",  "label": "notification-svc", "kind": "service", "origin": "discovered", "status": "healthy",     "source": "AppDynamics", "entityId": "SVC-4C77B311" }
+          ],
+          "edges": [
+            { "from": "cp-host-1", "to": "cp-svc-2", "origin": "discovered", "problem": false, "type": "hosts" },
+            { "from": "cp-host-2", "to": "cp-svc-1", "origin": "discovered", "problem": true,  "type": "hosts" }
+          ]
+        }
+      }
+    },
+    "Order Fulfillment": {
+      "topologies": {
+        "topo-of-blank": {
+          "id": "topo-of-blank", "label": "Blank", "kind": "blank", "sourceLabel": "Manual", "mcpServerId": null,
+          "nodes": [],
+          "edges": []
+        }
+      }
+    }
+  },
+  "topologyNodePool": {
+    "host":      [ { "label": "cache-redis-01", "entityId": "HOST-9C10F4A8", "source": "AppDynamics" }, { "label": "lb-edge-01", "entityId": "HOST-56F0A9BC", "source": "OPManager" }, { "label": "win-app-01", "entityId": "HOST-EE41C0A7", "source": "OPManager" }, { "label": "batch-runner-01", "entityId": "HOST-2B7790D1", "source": "HEAL" } ],
+    "service":   [ { "label": "search-indexer", "entityId": "SVC-1F60D922", "source": "OPManager" }, { "label": "recommendation-api", "entityId": "SVC-1F60D923", "source": "HEAL" } ],
+    "device":    [ { "label": "core-switch-01", "entityId": "NET-3AB10F01", "source": "OPManager" }, { "label": "edge-router-01", "entityId": "NET-3AB10F02", "source": "OPManager" }, { "label": "fw-perimeter-01", "entityId": "NET-3AB10F03", "source": "OPManager" }, { "label": "lb-appliance-01", "entityId": "NET-6C21E907", "source": "DynaTrace" } ],
+    "process":   [ { "label": "postgres", "entityId": "PROC-7710A3", "source": "DynaTrace" }, { "label": "search-indexer.py", "entityId": "PROC-1F33C1", "source": "OPManager" }, { "label": "nginx", "entityId": "PROC-1F33C2", "source": "OPManager" }, { "label": "batch-runner.sh", "entityId": "PROC-2B44D2", "source": "HEAL" } ],
+    "procgroup": [ { "label": "proc-group-3", "entityId": "PG-2001", "source": "AppDynamics" }, { "label": "proc-group-4", "entityId": "PG-2002", "source": "OPManager" } ]
+  }
+}

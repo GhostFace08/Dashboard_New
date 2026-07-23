@@ -1,0 +1,13 @@
+{
+  "processes": [
+    { "source": "dynatrace",   "application": "Payments Gateway",   "processName": "checkout-api.jar",         "processType": "Java Process",   "hostingService": "checkout-api",       "status": "Online",   "id": "PROC-7710A1" },
+    { "source": "dynatrace",   "application": "Payments Gateway",   "processName": "auth-service.jar",         "processType": "Java Process",   "hostingService": "auth-service",       "status": "Online",   "id": "PROC-7710A2" },
+    { "source": "dynatrace",   "application": "Payments Gateway",   "processName": "postgres",                 "processType": "Database Engine","hostingService": "db-primary-01",      "status": "Online",   "id": "PROC-7710A3" },
+    { "source": "appdynamics", "application": "Customer Portal",    "processName": "inventory-worker.py",      "processType": "Python Process", "hostingService": "inventory-worker",   "status": "Degraded", "id": "PROC-4C22B1" },
+    { "source": "appdynamics", "application": "Customer Portal",    "processName": "notification-svc.node",    "processType": "Node.js Process","hostingService": "notification-svc",   "status": "Online",   "id": "PROC-4C22B2" },
+    { "source": "opmanager",   "application": "Order Fulfillment",  "processName": "search-indexer.py",        "processType": "Python Process", "hostingService": "search-indexer",     "status": "Offline",  "id": "PROC-1F33C1" },
+    { "source": "opmanager",   "application": "Order Fulfillment",  "processName": "nginx",                    "processType": "Web Server",     "hostingService": "lb-edge-01",         "status": "Online",   "id": "PROC-1F33C2" },
+    { "source": "heal",        "application": "Internal Analytics", "processName": "recommendation-api.jar",   "processType": "Java Process",   "hostingService": "recommendation-api", "status": "Online",   "id": "PROC-2B44D1" },
+    { "source": "heal",        "application": "Internal Analytics", "processName": "batch-runner.sh",          "processType": "Shell Process",  "hostingService": "batch-runner-01",    "status": "Degraded", "id": "PROC-2B44D2" }
+  ]
+}

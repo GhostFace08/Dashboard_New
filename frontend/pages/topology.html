@@ -64,19 +64,31 @@
           <span class="banner-text" id="error-banner-text"></span>
         </div>
 
-        <!-- Toolbar -->
-        <div class="topo-toolbar">
-          <select id="topo-app-select" class="select topo-app-select"></select>
+        <!-- Toolbar — Row 1: views + tool actions + search -->
+        <div class="topo-toolbar-row">
+          <div class="segmented" id="topo-view-segmented">
+            <span class="seg-btn active" data-view="all">All (Estate)</span>
+            <span class="seg-btn" data-view="application">Application</span>
+            <span class="seg-btn" data-view="focused">Focused</span>
+          </div>
 
-          <button id="topo-add-from-tool-btn" class="btn btn-ghost" type="button" title="Add topology from a different tool for the same application">
-            <i data-lucide="layers"></i> Add From Another Tool
+          <button id="topo-add-from-tool-btn" class="btn btn-ghost" type="button" title="Add a topology (MCP, API, or blank)">
+            <i data-lucide="layers"></i> Add Topology
           </button>
 
-          <button id="topo-connect-btn" class="btn btn-ghost" type="button">
-            <i data-lucide="git-commit-horizontal"></i> Connect Nodes
+          <button id="topo-connect-btn" class="btn btn-ghost" type="button" title="Connect two nodes via pop-up">
+            <i data-lucide="git-commit-horizontal"></i> Connect Nodes (Pop-up)
           </button>
 
-          <button id="topo-refresh-btn" class="btn btn-ghost" type="button">
+          <button id="topo-connect-manual-btn" class="btn btn-ghost" type="button" title="Click two nodes on the canvas to connect them">
+            <i data-lucide="mouse-pointer-click"></i> Connect Nodes (Manual)
+          </button>
+
+          <button id="topo-add-node-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="plus-circle"></i> Add Node
+          </button>
+
+          <button id="topo-refresh-btn" class="btn btn-ghost" type="button" disabled title="Only available in Focused view">
             <i data-lucide="refresh-cw"></i> Refresh from Sources
           </button>
 
@@ -86,21 +98,25 @@
             <i data-lucide="search"></i>
             <input id="topo-search-input" class="input" type="text" placeholder="Find device or service…" />
           </div>
+        </div>
 
-          <button type="button" class="topo-filter-chip active" data-filter="hosts">
-            <span class="sw" style="background:var(--accent-indigo,#6366f1)"></span>Hosts
+        <!-- Toolbar — Row 2: application (Application + Focused views) -->
+        <div class="topo-toolbar-row" id="topo-app-row">
+          <select id="topo-app-select" class="select topo-app-select"></select>
+          <button id="topo-add-app-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="plus"></i> Add Application
           </button>
-          <button type="button" class="topo-filter-chip active" data-filter="services">
-            <span class="sw" style="background:var(--accent-teal,#14b8a6)"></span>Services
+          <button id="topo-delete-app-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="trash-2"></i> Delete Application
           </button>
-          <button type="button" class="topo-filter-chip active" data-filter="procgroups">
-            <span class="sw" style="background:var(--accent-amber,#e5a030)"></span>Proc Groups
-          </button>
+        </div>
 
-          <div class="segmented" id="topo-scope-segmented">
-            <span class="seg-btn active" data-scope="problem">Problem Focus</span>
-            <span class="seg-btn" data-scope="full">Full Estate</span>
-          </div>
+        <!-- Toolbar — Row 3: topology (Focused view only) -->
+        <div class="topo-toolbar-row" id="topo-topo-row">
+          <select id="topo-topology-select" class="select topo-app-select"></select>
+          <button id="topo-delete-topo-btn" class="btn btn-ghost" type="button">
+            <i data-lucide="trash-2"></i> Delete Topology
+          </button>
         </div>
 
         <!-- Canvas -->
@@ -163,25 +179,67 @@
        MODAL — Add Topology
   ══════════════════════════════════════════════ -->
   <div class="modal-overlay hidden" id="topo-add-modal-overlay">
-    <div class="modal-box" style="width:440px">
+    <div class="modal-box" style="width:460px">
       <div class="modal-header">
         <span style="font-family:var(--font-sans);font-size:13px;font-weight:600" id="topo-add-modal-title">Add Topology</span>
         <button class="btn-icon" type="button" id="topo-add-modal-close-btn"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body">
         <div class="topo-form-row">
-          <label for="topo-add-app-input">Application</label>
-          <input id="topo-add-app-input" class="input" type="text" placeholder="e.g. Payments Gateway" />
-          <span class="topo-form-hint" id="topo-add-app-hint">New application — a fresh topology will be created.</span>
+          <label>Source Type</label>
+          <div class="segmented" id="topo-add-kind-segmented">
+            <span class="seg-btn active" data-kind="mcp">MCP</span>
+            <span class="seg-btn" data-kind="api">API</span>
+            <span class="seg-btn" data-kind="blank">Blank</span>
+          </div>
         </div>
+
         <div class="topo-form-row">
-          <label for="topo-add-source-select">Source</label>
-          <select id="topo-add-source-select" class="select" style="width:100%"></select>
+          <label for="topo-add-app-input">Application</label>
+          <input id="topo-add-app-input" class="input" type="text" list="topo-add-app-datalist" placeholder="e.g. Payments Gateway" />
+          <datalist id="topo-add-app-datalist"></datalist>
+          <span class="topo-form-hint" id="topo-add-app-hint">New application — a fresh topology will be created.</span>
         </div>
         <div class="topo-form-row" id="topo-add-existing-row" style="display:none">
           <label>Existing topologies for this application</label>
           <div class="topo-existing-topo-list" id="topo-existing-topo-list"></div>
-          <span class="topo-form-hint">Adding from a new source merges into the same application view — it doesn't replace what's already there.</span>
+          <span class="topo-form-hint">Adding another topology merges into the same application view — it doesn't replace what's already there.</span>
+        </div>
+
+        <!-- MCP fields -->
+        <div id="topo-add-mcp-fields">
+          <div class="topo-form-row">
+            <label for="topo-add-mcp-server-select">MCP Server</label>
+            <select id="topo-add-mcp-server-select" class="select" style="width:100%"></select>
+          </div>
+          <div class="topo-form-row">
+            <label for="topo-add-mcp-registry-select">Tool Registry</label>
+            <select id="topo-add-mcp-registry-select" class="select" style="width:100%"></select>
+          </div>
+        </div>
+
+        <!-- API fields -->
+        <div id="topo-add-api-fields" class="hidden">
+          <div class="topo-form-row">
+            <label for="topo-add-api-endpoint">API Endpoint</label>
+            <input id="topo-add-api-endpoint" class="input input-mono" type="text" placeholder="https://…" />
+          </div>
+          <div class="topo-form-row">
+            <label for="topo-add-api-token">Auth Token (optional)</label>
+            <input id="topo-add-api-token" class="input input-mono" type="password" placeholder="••••••••" />
+          </div>
+          <div class="topo-form-row">
+            <label for="topo-add-api-tool-select">Tool / Server</label>
+            <select id="topo-add-api-tool-select" class="select" style="width:100%"></select>
+          </div>
+        </div>
+
+        <!-- Blank fields -->
+        <div id="topo-add-blank-fields" class="hidden">
+          <div class="topo-form-row">
+            <label for="topo-add-blank-mcp-select">MCP Server</label>
+            <select id="topo-add-blank-mcp-select" class="select" style="width:100%"></select>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -197,19 +255,42 @@
        MODAL — Connect Nodes
   ══════════════════════════════════════════════ -->
   <div class="modal-overlay hidden" id="topo-connect-modal-overlay">
-    <div class="modal-box" style="width:420px">
+    <div class="modal-box" style="width:440px">
       <div class="modal-header">
-        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Connect Nodes</span>
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600" id="topo-connect-modal-title">Connect Nodes</span>
         <button class="btn-icon" type="button" id="topo-connect-modal-close-btn"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body">
         <div class="topo-form-row">
-          <label for="topo-connect-from-select">From</label>
+          <label for="topo-connect-from-app-select">From — Application</label>
+          <select id="topo-connect-from-app-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-connect-from-select">From — Node</label>
           <select id="topo-connect-from-select" class="select" style="width:100%"></select>
         </div>
         <div class="topo-form-row">
-          <label for="topo-connect-to-select">To</label>
+          <label for="topo-connect-to-app-select">To — Application</label>
+          <select id="topo-connect-to-app-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-connect-to-select">To — Node</label>
           <select id="topo-connect-to-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-connect-type-select">Connection Type</label>
+          <select id="topo-connect-type-select" class="select" style="width:100%">
+            <option value="hosts">Hosts</option>
+            <option value="runs">Runs</option>
+            <option value="depends-on">Depends On</option>
+            <option value="calls">Calls</option>
+            <option value="network">Network Link</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div class="topo-form-row hidden" id="topo-connect-custom-type-row">
+          <label for="topo-connect-custom-type-input">Custom Type</label>
+          <input id="topo-connect-custom-type-input" class="input" type="text" placeholder="e.g. replicates-to" />
         </div>
         <span class="topo-form-hint">Manual edges are marked "Manual" and are never overwritten by Refresh from Sources.</span>
       </div>
@@ -222,7 +303,172 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════
+       MODAL — Add Application
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-add-app-modal-overlay">
+    <div class="modal-box" style="width:380px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Add Application</span>
+        <button class="btn-icon" type="button" id="topo-add-app-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-add-app-modal-input">Application</label>
+          <input id="topo-add-app-modal-input" class="input" type="text" placeholder="e.g. Fraud Detection" />
+          <span class="topo-form-hint">Creates an application with no topology yet — add one afterward from Row 1's "Add Topology".</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-add-app-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="topo-add-app-modal-save-btn"><i data-lucide="check"></i> Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Delete Application
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-delete-app-modal-overlay">
+    <div class="modal-box" style="width:380px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Delete Application</span>
+        <button class="btn-icon" type="button" id="topo-delete-app-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-delete-app-select">Application</label>
+          <select id="topo-delete-app-select" class="select" style="width:100%"></select>
+        </div>
+        <span class="topo-form-hint">Deletes the application and every topology under it. This can't be undone.</span>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-delete-app-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-destructive" type="button" id="topo-delete-app-modal-confirm-btn"><i data-lucide="trash-2"></i> Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Delete Topology
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-delete-topo-modal-overlay">
+    <div class="modal-box" style="width:380px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Delete Topology</span>
+        <button class="btn-icon" type="button" id="topo-delete-topo-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-delete-topo-app-select">Application</label>
+          <select id="topo-delete-topo-app-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-delete-topo-select">Topology</label>
+          <select id="topo-delete-topo-select" class="select" style="width:100%"></select>
+        </div>
+        <span class="topo-form-hint">Deletes just this one topology; other topologies for the application are unaffected.</span>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-delete-topo-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-destructive" type="button" id="topo-delete-topo-modal-confirm-btn"><i data-lucide="trash-2"></i> Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Add Node
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-add-node-modal-overlay">
+    <div class="modal-box" style="width:420px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Add Node</span>
+        <button class="btn-icon" type="button" id="topo-add-node-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="topo-form-row">
+          <label for="topo-add-node-app-select">Application</label>
+          <select id="topo-add-node-app-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-add-node-topo-select">Topology</label>
+          <select id="topo-add-node-topo-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-add-node-mcp-select">MCP Server</label>
+          <select id="topo-add-node-mcp-select" class="select" style="width:100%"></select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-add-node-kind-select">Node Type</label>
+          <select id="topo-add-node-kind-select" class="select" style="width:100%">
+            <option value="host">Host</option>
+            <option value="service">Service</option>
+            <option value="procgroup">Process Group</option>
+            <option value="device">Network Device</option>
+            <option value="process">Process</option>
+          </select>
+        </div>
+        <div class="topo-form-row">
+          <label for="topo-add-node-select">Node</label>
+          <select id="topo-add-node-select" class="select" style="width:100%"></select>
+          <span class="topo-form-hint">Populated from the imported Infrastructure / Services / Network Devices / Processes data.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-add-node-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="topo-add-node-modal-save-btn"><i data-lucide="check"></i> Add Node</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Edge / Connection Detail
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-edge-modal-overlay">
+    <div class="modal-box" style="width:400px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Connection</span>
+        <button class="btn-icon" type="button" id="topo-edge-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><span class="k">From Application</span><span class="v" id="topo-edge-from-app">—</span></div>
+        <div class="detail-row"><span class="k">From Node</span><span class="v" id="topo-edge-from-node">—</span></div>
+        <div class="detail-row"><span class="k">To Application</span><span class="v" id="topo-edge-to-app">—</span></div>
+        <div class="detail-row"><span class="k">To Node</span><span class="v" id="topo-edge-to-node">—</span></div>
+        <div class="detail-row"><span class="k">Type</span><span class="v" id="topo-edge-type">—</span></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-edge-modal-close-btn2">Close</button>
+        <button class="btn btn-destructive" type="button" id="topo-edge-delete-btn"><i data-lucide="trash-2"></i> Delete Connection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL — Refresh Reconciliation (Focused view only)
+  ══════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="topo-reconcile-modal-overlay">
+    <div class="modal-box" style="width:480px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Reconcile Topology Changes</span>
+        <button class="btn-icon" type="button" id="topo-reconcile-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="banner banner-info mb-3">
+          <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
+          <span class="banner-text">The freshly-fetched topology differs from what's displayed. Uncheck anything you don't want applied — accepted removals drop the connection if it can no longer persist; unaccepted changes leave the current topology untouched.</span>
+        </div>
+        <div class="topo-diff-list" id="topo-reconcile-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-reconcile-modal-cancel-btn">Discard All</button>
+        <button class="btn btn-primary" type="button" id="topo-reconcile-modal-apply-btn"><i data-lucide="check"></i> Apply Selected</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Scripts (load order matters) ── -->
+  <script src="../js/demo_data.js"></script>
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/common.js"></script>

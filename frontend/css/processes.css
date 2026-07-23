@@ -1,0 +1,163 @@
+/* =============================================================================
+   processes.css — Processes page-specific styles
+   Depends on shared.css being loaded first.
+   Cloned from network_devices.css to match its look and structure.
+   ============================================================================= */
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.proc-page-header {
+  border-color: rgba(99, 102, 241, 0.15);
+  flex-shrink: 0;
+  padding-top: 16px;
+  padding-bottom: 12px;
+}
+
+.proc-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.proc-subtitle {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+
+/* ── Table card wrapper ──────────────────────────────────────────────────── */
+.proc-table-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+/* ── Status chip (reuses shared.css .status-badge tones) ────────────────── */
+.proc-status-cell { display: inline-flex; align-items: center; justify-content: center; }
+
+/* ── Accessibility ────────────────────────────────────────────────────────
+   .sr-only is page-local, matching the pattern already established in
+   infrastructure.css / services.css (each page defines its own copy rather
+   than adding a cross-page dependency). ─────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── DataTables dark-theme overrides ─────────────────────────────────────
+   Identical to the block duplicated across dashboard.css / infrastructure.css
+   / services.css — kept in lockstep with those copies. ─────────────────── */
+table.dataTable thead th,
+table.dataTable thead td {
+  text-align: center !important;
+  vertical-align: middle;
+  background: var(--secondary) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+table.dataTable tbody tr {
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+table.dataTable tbody tr:hover {
+  background: var(--secondary) !important;
+}
+
+table.dataTable tbody td {
+  color: var(--foreground);
+  padding: 9px 12px;
+  vertical-align: middle;
+  font-size: 12px;
+  text-align: center !important;
+}
+
+div.dt-container {
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+div.dt-container .dt-length,
+div.dt-container .dt-search {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+div.dt-container .dt-search input,
+div.dt-container .dt-length select {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  outline: none;
+  margin: 0 4px;
+}
+
+div.dt-container .dt-search input:focus,
+div.dt-container .dt-length select:focus {
+  border-color: rgba(99,102,241,.5);
+}
+
+div.dt-container .dt-info {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground) !important;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin: 0 2px;
+  transition: all var(--transition);
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover {
+  background: var(--card);
+  border-color: rgba(99,102,241,.5);
+}
+
+div.dt-container .dt-paging .dt-paging-button.current {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground) !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+table.dataTable.no-footer { border-bottom: 1px solid var(--border); }
+
+table.dataTable thead th.dt-ordering-asc .dt-column-order::before,
+table.dataTable thead th.dt-ordering-desc .dt-column-order::after {
+  opacity: 1;
+  color: var(--primary);
+}

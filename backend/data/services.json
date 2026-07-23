@@ -1,14 +1,10 @@
 {
   "services": [
-    { "serviceName": "checkout-api",       "type": "REST API",       "status": "Online",   "tags": ["payments", "customer-facing"],   "entityId": "SVC-9A1D2E40" },
-    { "serviceName": "auth-service",       "type": "gRPC",           "status": "Online",   "tags": ["identity", "internal"],          "entityId": "SVC-9A1D2E41" },
-    { "serviceName": "inventory-worker",   "type": "Background Job", "status": "Degraded", "tags": ["fulfillment", "batch"],          "entityId": "SVC-4C77B310" },
-    { "serviceName": "notification-svc",   "type": "Message Queue",  "status": "Online",   "tags": ["email", "sms", "internal"],      "entityId": "SVC-4C77B311" },
-    { "serviceName": "search-indexer",     "type": "Background Job", "status": "Offline",  "tags": ["search", "batch"],               "entityId": "SVC-1F60D922" },
-    { "serviceName": "recommendation-api", "type": "REST API",       "status": "Online",   "tags": ["ml", "customer-facing"],         "entityId": "SVC-1F60D923" },
-    { "serviceName": "billing-service",    "type": "REST API",       "status": "Online",   "tags": ["payments", "internal"],          "entityId": "SVC-77E0A5B4" },
-    { "serviceName": "reporting-svc",      "type": "Scheduled Job",  "status": "Degraded", "tags": ["analytics", "internal"],         "entityId": "SVC-77E0A5B5" },
-    { "serviceName": "gateway-edge",       "type": "Reverse Proxy",  "status": "Online",   "tags": ["networking", "customer-facing"], "entityId": "SVC-C3298E16" },
-    { "serviceName": "legacy-sync-job",    "type": "Background Job", "status": "Offline",  "tags": ["legacy", "batch"],               "entityId": "SVC-C3298E17" }
+    { "source": "dynatrace",   "application": "Payments Gateway",   "serviceName": "checkout-api",       "type": "REST API",       "status": "Online",   "tags": ["payments", "customer-facing"], "entityId": "SVC-9A1D2E40" },
+    { "source": "dynatrace",   "application": "Payments Gateway",   "serviceName": "auth-service",       "type": "gRPC",           "status": "Online",   "tags": ["identity", "internal"],        "entityId": "SVC-9A1D2E41" },
+    { "source": "appdynamics", "application": "Customer Portal",    "serviceName": "inventory-worker",   "type": "Background Job", "status": "Degraded", "tags": ["fulfillment", "batch"],         "entityId": "SVC-4C77B310" },
+    { "source": "appdynamics", "application": "Customer Portal",    "serviceName": "notification-svc",   "type": "Message Queue",  "status": "Online",   "tags": ["email", "sms", "internal"],     "entityId": "SVC-4C77B311" },
+    { "source": "opmanager",   "application": "Order Fulfillment",  "serviceName": "search-indexer",     "type": "Background Job", "status": "Offline",  "tags": ["search", "batch"],              "entityId": "SVC-1F60D922" },
+    { "source": "heal",        "application": "Internal Analytics", "serviceName": "recommendation-api", "type": "REST API",       "status": "Online",   "tags": ["ml", "customer-facing"],        "entityId": "SVC-1F60D923" }
   ]
 }

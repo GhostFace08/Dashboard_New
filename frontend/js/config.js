@@ -45,6 +45,7 @@ const SIDEBAR_NAV = [
       { id: "infrastructure",  label: "Infrastructure",  icon: "server",           href: "pages/infrastructure.html",  ready: true },
       { id: "services",        label: "Services",        icon: "boxes",            href: "pages/services.html",        ready: true },
       { id: "network-devices", label: "Network Devices", icon: "router",           href: "pages/network_devices.html", ready: true },
+      { id: "processes",       label: "Processes",       icon: "cpu",              href: "pages/processes.html",       ready: true },
       { id: "capacity",        label: "Capacity",        icon: "trending-up",      href: "pages/capacity.html",        ready: true },
       { id: "topology",        label: "Topology",        icon: "share-2",          href: "pages/topology.html",        ready: true },
     ],

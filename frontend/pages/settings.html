@@ -112,6 +112,19 @@
                 <span class="sfield-hint">How often the dashboard backend checks File Storage for updates (default: 300 s / 5 min). Requires middleware restart to take effect.</span>
                 <input id="dash-check-time" type="number" class="input input-mono" value="300" />
               </label>
+              <label class="sfield">
+                <span class="sfield-label">Generalized Timestamp Format</span>
+                <span class="sfield-hint">The canonical timestamp shape all servers get mapped onto (set per-server on the Time Mapping tab of Edit Server).</span>
+                <select id="dash-timestamp-format" class="select">
+                  <option value="YYYY-MM-DD HH:mm:ss" selected>YYYY-MM-DD HH:mm:ss (e.g. 2026-07-23 14:05:00)</option>
+                  <option value="YYYY-MM-DDTHH:mm:ssZ">ISO 8601 — YYYY-MM-DDTHH:mm:ssZ</option>
+                  <option value="MM/DD/YYYY hh:mm A">MM/DD/YYYY hh:mm A (e.g. 07/23/2026 02:05 PM)</option>
+                  <option value="DD-MM-YYYY HH:mm">DD-MM-YYYY HH:mm (e.g. 23-07-2026 14:05)</option>
+                  <option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>
+                  <option value="epoch_s">Epoch seconds</option>
+                  <option value="epoch_ms">Epoch milliseconds</option>
+                </select>
+              </label>
             </div>
           </div>
 
@@ -147,6 +160,18 @@
               <label class="sfield">
                 <span class="sfield-label">Periodic Fetch Time</span>
                 <select id="network-devices-fetch-time" class="select">
+                  <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
+                  <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head"><h3 class="scard-title">Processes Defaults</h3><p class="scard-desc">Applied when the Processes page is first opened.</p></div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Periodic Fetch Time</span>
+                <select id="processes-fetch-time" class="select">
                   <option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option>
                   <option>1 hr</option><option>6 hr</option><option>24 hr</option><option>7 days</option><option>30 days</option>
                 </select>
@@ -294,18 +319,36 @@
                 </div>
               </div>
               <div class="sfield mt-2">
-                <span class="sfield-label">Tool Registry</span>
-                <span class="sfield-hint">Upload the tool's issue registry (a file listing its available issue paths). Once uploaded, pick which path this server fetches issues from.</span>
+                <span class="sfield-label">Tool Registry — URL / API</span>
+                <span class="sfield-hint">Point at the endpoint that serves this tool's registry, and/or upload a registry document below.</span>
+                <input id="mcp-add-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" />
+              </div>
+              <div class="sfield mt-2">
+                <span class="sfield-label">Tool Registry — Upload Document</span>
+                <span class="sfield-hint">Upload the tool's issue registry (a file listing its available issue paths).</span>
                 <div class="flex gap-2 items-center mt-1">
                   <input id="mcp-add-registry" type="file" class="input" style="max-width:260px" />
                   <span id="mcp-add-registry-status" class="text-muted" style="font-size:11px"></span>
                 </div>
               </div>
+              <div class="toggle-row hidden" id="mcp-add-registry-payload-row">
+                <div class="toggle-info">
+                  <p class="toggle-label">Uploaded document is the payload</p>
+                  <p class="toggle-desc">On: the uploaded file itself is parsed as the registry. Off: the URL/API is fetched and the uploaded file is ignored for parsing.</p>
+                </div>
+                <button class="toggle-switch" id="mcp-add-registry-payload-toggle" data-on="false"><span class="toggle-thumb"></span></button>
+              </div>
+              <div class="flex gap-2 items-center mt-2">
+                <button class="btn btn-ghost" id="mcp-add-registry-fetch" type="button" style="font-size:11px">
+                  <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
+                </button>
+                <span id="mcp-add-registry-fetch-status" class="text-muted" style="font-size:11px"></span>
+              </div>
               <label class="sfield mt-2">
                 <span class="sfield-label">Registry Path for Fetching Issues <span style="color:var(--accent-red)">*</span></span>
-                <span class="sfield-hint">Required once a Tool Registry is uploaded.</span>
+                <span class="sfield-hint">Required once a Tool Registry is uploaded or fetched.</span>
                 <select id="mcp-add-registry-path" class="select" disabled>
-                  <option value="">Upload a Tool Registry first…</option>
+                  <option value="">Upload or fetch a Tool Registry first…</option>
                 </select>
               </label>
             </div>

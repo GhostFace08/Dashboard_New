@@ -1,0 +1,10 @@
+{
+  "networkDevices": [
+    { "source": "opmanager",   "application": "Order Fulfillment",  "deviceName": "core-switch-01", "deviceType": "Switch",  "devicesConnected": 24, "servicesConnected": 6, "status": "Online",   "id": "NET-3AB10F01" },
+    { "source": "opmanager",   "application": "Order Fulfillment",  "deviceName": "edge-router-01", "deviceType": "Router",  "devicesConnected": 4,  "servicesConnected": 3, "status": "Online",   "id": "NET-3AB10F02" },
+    { "source": "opmanager",   "application": "Order Fulfillment",  "deviceName": "fw-perimeter-01","deviceType": "Firewall","devicesConnected": 12, "servicesConnected": 8, "status": "Online",   "id": "NET-3AB10F03" },
+    { "source": "dynatrace",   "application": "Payments Gateway",   "deviceName": "lb-appliance-01","deviceType": "Load Balancer", "devicesConnected": 8, "servicesConnected": 5, "status": "Degraded", "id": "NET-6C21E907" },
+    { "source": "appdynamics", "application": "Customer Portal",    "deviceName": "wifi-ap-14",     "deviceType": "Access Point",   "devicesConnected": 32, "servicesConnected": 1, "status": "Online",  "id": "NET-9F04C118" },
+    { "source": "heal",        "application": "Internal Analytics", "deviceName": "nas-storage-02", "deviceType": "Storage Appliance", "devicesConnected": 2, "servicesConnected": 2, "status": "Offline", "id": "NET-1D77A230" }
+  ]
+}

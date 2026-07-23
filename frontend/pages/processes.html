@@ -6,7 +6,7 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Network Devices — MCP Dashboard</title>
+  <title>Processes — MCP Dashboard</title>
 
   <!-- Fonts (vendored, offline) -->
   <link rel="stylesheet" href="../vendor/fonts/fonts.css" />
@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="../css/shared.css" />
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="../css/network_devices.css" />
+  <link rel="stylesheet" href="../css/processes.css" />
 </head>
 <body>
   <div id="app">
@@ -44,14 +44,14 @@
       <section id="page-content" class="flex flex-col flex-1 overflow-y-auto bg-background">
 
         <!-- Page header row -->
-        <div class="nd-page-header flex items-start justify-between px-5 border-b">
+        <div class="proc-page-header flex items-start justify-between px-5 border-b">
           <div class="flex items-center gap-2">
             <div class="icon-badge">
-              <i data-lucide="router"></i>
+              <i data-lucide="cpu"></i>
             </div>
             <div>
-              <h1 class="nd-title">NETWORK DEVICES</h1>
-              <p class="nd-subtitle">Network devices discovered across all connected sources</p>
+              <h1 class="proc-title">PROCESSES</h1>
+              <p class="proc-subtitle">Processes discovered across all connected sources, applications, and hosting services</p>
             </div>
           </div>
         </div>
@@ -64,22 +64,21 @@
 
         <!-- ── Table ── -->
         <div class="px-5 py-4 flex flex-col gap-5">
-          <section class="nd-table-card" aria-labelledby="nd-table-heading">
-            <h2 id="nd-table-heading" class="sr-only">Network devices</h2>
-            <table id="network-devices-table" class="display" style="width:100%">
+          <section class="proc-table-card" aria-labelledby="proc-table-heading">
+            <h2 id="proc-table-heading" class="sr-only">Processes</h2>
+            <table id="processes-table" class="display" style="width:100%">
               <thead>
                 <tr>
                   <th>Source</th>
                   <th>Application</th>
-                  <th>Device Name</th>
-                  <th>Device Type</th>
-                  <th>Devices Connected</th>
-                  <th>Services Connected</th>
+                  <th>Process Name</th>
+                  <th>Process Type</th>
+                  <th>Hosting Service</th>
                   <th>Status</th>
                   <th>ID</th>
                 </tr>
               </thead>
-              <tbody><!-- populated by network_devices.js --></tbody>
+              <tbody><!-- populated by processes.js --></tbody>
             </table>
           </section>
 
@@ -95,6 +94,6 @@
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/network_devices.js"></script>
+  <script src="../js/processes.js"></script>
 </body>
 </html>
