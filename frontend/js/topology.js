@@ -310,7 +310,8 @@
     const nodeIds = new Set(nodes.map(n => n.id));
     const edges = graph.edges
       .filter(e => nodeIds.has(e.from) && nodeIds.has(e.to))
-      .map(e => Object.assign({}, e));
+      .map(e => Object.assign({}, e))
+      .map(e => Object.assign({}, e, { source: e.from, target: e.to }));
 
     zoomGroup.selectAll("*").remove();
 
