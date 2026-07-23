@@ -177,6 +177,25 @@
   }
 
   /**
+   * getMcpServers()
+   * Reads backend/data/mcpservers.json (via getConfig) and returns the
+   * parsed { servers: [...] } list — the same admin-defined server list
+   * Settings → MCP Servers edits. Used by the dashboard to segregate tools
+   * by live, configured MCP servers instead of the old hardcoded CFG.TOOLS.
+   * Fallback: { servers: [] }.
+   */
+  async function getMcpServers() {
+    try {
+      const text = await getConfig("mcpservers.json");
+      const parsed = text ? JSON.parse(text) : { servers: [] };
+      return { servers: Array.isArray(parsed.servers) ? parsed.servers : [] };
+    } catch (e) {
+      console.warn("[api] getMcpServers failed:", e);
+      return { servers: [] };
+    }
+  }
+
+  /**
    * getMcpSample(source)
    * GET /api/mcp-sample?source=<id>
    * Mocked single-issue fetch used by the MCP Servers → Mapping wizard tab
@@ -562,6 +581,7 @@
     getInfrastructure,
     getServices,
     getNetworkDevices,
+    getMcpServers,
     getMcpSample,
 
     // Settings (5200)

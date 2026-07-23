@@ -106,7 +106,35 @@
     // Sync the select element to state default
     timeRangeSelect.value = state.timeRange;
 
-    CFG.TOOLS.forEach(t => {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 0b. LIVE TOOLS — segregate by configured MCP servers, not CFG.TOOLS
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Dashboard "tools" used to be the 4 hardcoded entries in CFG.TOOLS.
+    // Now they come from backend/data/mcpservers.json (the same admin-defined
+    // server list Settings → MCP Servers edits) — one tool button per
+    // *configured* server, not "all tools" and not "all MCP servers/other
+    // wiring" (auth, mapping, etc. stay out of this list). Falls back to the
+    // old CFG.TOOLS/CFG.TOOL_MAP if no servers are configured yet, so the
+    // dashboard still renders something sensible on a fresh install.
+    let liveTools   = CFG.TOOLS;
+    let liveToolMap = CFG.TOOL_MAP;
+    try {
+      const { servers } = await API.getMcpServers();
+      if (Array.isArray(servers) && servers.length > 0) {
+        liveTools = servers.map(s => ({
+          id:        s.id,
+          name:      s.name,
+          shortName: s.shortName || (s.name || s.id || "").slice(0, 2).toUpperCase(),
+          color:     s.color || "#6366f1",
+          status:    s.status || (s.enabled === false ? "offline" : "online"),
+        }));
+        liveToolMap = Object.fromEntries(liveTools.map(t => [t.id, t]));
+      }
+    } catch (e) {
+      console.warn("[dashboard] getMcpServers failed, falling back to CFG.TOOLS:", e);
+    }
+
+    liveTools.forEach(t => {
       const btn = document.createElement("button");
       btn.className = "tool-btn";
       btn.dataset.tool = t.id;
@@ -409,7 +437,7 @@ function getFilteredIssues() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     function toolBreakdown(rows) {
-      return CFG.TOOLS.map(t => {
+      return liveTools.map(t => {
         const c = rows.filter(r => r.source === t.id).length;
         return c > 0 ? `${t.shortName} ${c}` : null;
       }).filter(Boolean).join(" | ") || "—";
@@ -513,7 +541,7 @@ function getFilteredIssues() {
       }
 
       const rowData = rows.map((r, index) => {
-        const tool   = CFG.TOOL_MAP[r.source] || {};
+        const tool   = liveToolMap[r.source] || {};
         const sevCls = { Critical: "chip-critical", High: "chip-high", Medium: "chip-medium", Low: "chip-low" }[r.severity] || "chip-low";
         const staCls = r.status === "Active" ? "chip-active" : "chip-resolved";
         return [
@@ -613,7 +641,7 @@ function getFilteredIssues() {
           map.set(key, {
             app: r.application,
             tool: r.source,
-            toolName: CFG.TOOL_MAP[r.source]?.name || r.source,
+            toolName: liveToolMap[r.source]?.name || r.source,
             mostRecent: Math.max(prev?.mostRecent ?? -1, r.ts),
           });
         }
@@ -682,7 +710,7 @@ function getFilteredIssues() {
 
     function buildRowData(rows) {
       return rows.map(r => {
-        const tool   = CFG.TOOL_MAP[r.source] || {};
+        const tool   = liveToolMap[r.source] || {};
         const sevCls = { Critical: "chip-critical", High: "chip-high", Medium: "chip-medium", Low: "chip-low" }[r.severity] || "chip-low";
         const staCls = r.status === "Active" ? "chip-active" : "chip-resolved";
         return [
@@ -784,7 +812,7 @@ function getFilteredIssues() {
           if (!row) return;
           const text = [
             `Issue ID: ${row.issueId}`,
-            `Source: ${CFG.TOOL_MAP[row.source]?.name || row.source}`,
+            `Source: ${liveToolMap[row.source]?.name || row.source}`,
             `Application: ${row.application}`,
             `Title: ${row.title}`,
             `Severity: ${row.severity}`,
@@ -1007,7 +1035,7 @@ a.download = `${filenameBase || "All"} Issues.xls`;
       const fields = [
         { label: "Issue ID",          value: row.issueId,          full: false },
         { label: "Sr. No.",           value: String(row.srNo),     full: false },
-        { label: "Source",            value: CFG.TOOL_MAP[row.source]?.name || row.source, full: false },
+        { label: "Source",            value: liveToolMap[row.source]?.name || row.source, full: false },
         { label: "Application",       value: row.application,      full: false },
         { label: "Affected Entities", value: row.affectedEntities, full: false },
         { label: "Severity",          value: row.severity,         full: false },
@@ -1125,7 +1153,7 @@ byId("kpi-export-excel").addEventListener("click", () => {
       const check = byId("tool-all-check");
       if (check) check.style.display = toolId === "all" ? "" : "none";
       document.querySelectorAll(".tool-btn[data-tool]").forEach(btn => {
-        const t = CFG.TOOL_MAP[btn.dataset.tool];
+        const t = liveToolMap[btn.dataset.tool];
         const isActive = btn.dataset.tool === toolId;
         btn.classList.toggle("active", isActive);
         if (t && isActive) {
