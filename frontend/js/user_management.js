@@ -3,7 +3,7 @@
  *
  * Per decision #4: no real authentication/login enforcement — this is
  * UI + a persisted user list only. Add User modal (username, password,
- * tool-visibility restrictions) → row list with Edit/Delete → Edit modal
+ * server-visibility restrictions) → row list with Edit/Delete → Edit modal
  * (same fields, pre-filled).
  *
  * PERSISTENCE — placeholder, same pattern as topology.js's topologyStore:
@@ -18,9 +18,21 @@
  *   with a proper backend that hashes credentials server-side. Flagging
  *   this loudly so it isn't missed later.
  *
+ * SERVER LIST — same live-MCP-servers pattern as dashboard.js/topology.js.
+ *   Permissions here are per configured MCP server, not per fixed "tool".
+ *   Reads backend/data/mcpservers.json via API.getMcpServers() (the same
+ *   admin-defined list Settings → MCP Servers edits) and falls back to
+ *   CFG.TOOLS only if no servers are configured yet, so the page still
+ *   renders something sensible on a fresh install.
+ *
+ * ADMIN ROW — the built-in "admin" bootstrap account is not a manageable
+ *   user and is intentionally not seeded/listed here; this table only
+ *   ever shows accounts an admin has explicitly created.
+ *
  * DEPENDENCIES (must load before this file):
- *   config.js  → window.CFG   (TOOLS, for the tool-visibility checkboxes)
- *   api.js     → window.API
+ *   config.js  → window.CFG   (TOOLS, legacy fallback for the server-
+ *                visibility checkboxes)
+ *   api.js     → window.API   (API.getMcpServers() for the live list)
  *   common.js  → window.Utils
  */
 
@@ -32,8 +44,29 @@
     return;
   }
 
-  const TOOLS = global.CFG.TOOLS || [];
   const STORAGE_KEY = "mcp-users-data";
+
+  /* Live MCP servers list — populated by loadServers(), falls back to
+     CFG.TOOLS (legacy fixed 4) if no servers are configured yet. */
+  let SERVERS = global.CFG.TOOLS || [];
+
+  async function loadServers() {
+    try {
+      if (global.API && typeof global.API.getMcpServers === "function") {
+        const { servers } = await global.API.getMcpServers();
+        if (Array.isArray(servers) && servers.length > 0) {
+          SERVERS = servers.map(s => ({
+            id:        s.id,
+            name:      s.name,
+            shortName: s.shortName || (s.name || s.id || "").slice(0, 2).toUpperCase(),
+            color:     s.color || "#6366f1",
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn("[user_management] getMcpServers failed, falling back to CFG.TOOLS:", e);
+    }
+  }
 
   const state = {
     users: [],
@@ -63,9 +96,11 @@
   function nextId() { return `user-${idCounter++}`; }
 
   function seedUsers() {
+    // No "admin" row here on purpose — the built-in admin account isn't a
+    // manageable user (see ADMIN ROW note above). Only example non-admin
+    // accounts are seeded.
     const users = [
-      { id: nextId(), username: "admin", password: "changeme123", tools: ["all"], createdAt: new Date().toISOString() },
-      { id: nextId(), username: "ops-viewer", password: "viewonly2024", tools: TOOLS.slice(0, 2).map(t => t.id), createdAt: new Date().toISOString() },
+      { id: nextId(), username: "ops-viewer", password: "viewonly2024", servers: SERVERS.slice(0, 2).map(s => s.id), createdAt: new Date().toISOString() },
     ];
     saveUsers(users);
     return users;
@@ -76,12 +111,12 @@
     return (username || "?").trim().slice(0, 2).toUpperCase();
   }
 
-  function toolChipsHtml(tools) {
-    if (!tools || !tools.length) return `<span class="um-tool-chip">None</span>`;
-    if (tools.includes("all")) return `<span class="um-tool-chip all">All Tools</span>`;
-    return tools.map(id => {
-      const tool = TOOLS.find(t => t.id === id);
-      return `<span class="um-tool-chip">${Utils.escapeHtml(tool ? tool.shortName || tool.name : id)}</span>`;
+  function serverChipsHtml(servers) {
+    if (!servers || !servers.length) return `<span class="um-tool-chip">None</span>`;
+    if (servers.includes("all")) return `<span class="um-tool-chip all">All Servers</span>`;
+    return servers.map(id => {
+      const server = SERVERS.find(s => s.id === id);
+      return `<span class="um-tool-chip">${Utils.escapeHtml(server ? server.shortName || server.name : id)}</span>`;
     }).join("");
   }
 
@@ -111,7 +146,7 @@
             <span class="um-username">${Utils.escapeHtml(u.username)}</span>
           </div>
         </td>
-        <td><div class="um-tool-chips">${toolChipsHtml(u.tools)}</div></td>
+        <td><div class="um-tool-chips">${serverChipsHtml(u.servers)}</div></td>
         <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground)">${formatDate(u.createdAt)}</span></td>
         <td>
           <div class="um-row-actions">
@@ -132,26 +167,26 @@
     Utils.refreshIcons();
   }
 
-  /* ─── Tool-visibility checkbox list ───────────────────────────────────── */
-  function renderToolCheckboxes(selectedTools) {
+  /* ─── Server-visibility checkbox list ─────────────────────────────────── */
+  function renderServerCheckboxes(selectedServers) {
     const el = document.getElementById("um-tools-checkbox-list");
     if (!el) return;
-    const hasAll = (selectedTools || []).includes("all");
+    const hasAll = (selectedServers || []).includes("all");
 
     const allRow = `
       <label class="um-checkbox-row all-row">
         <input type="checkbox" id="um-tool-all" ${hasAll ? "checked" : ""} />
-        All Tools
+        All Servers
       </label>
     `;
-    const toolRows = TOOLS.map(t => `
+    const serverRows = SERVERS.map(s => `
       <label class="um-checkbox-row">
-        <input type="checkbox" class="um-tool-item" value="${Utils.escapeHtml(t.id)}" ${!hasAll && (selectedTools || []).includes(t.id) ? "checked" : ""} ${hasAll ? "disabled" : ""} />
-        <span class="swatch" style="background:${t.color || "var(--accent-indigo,#6366f1)"}"></span>${Utils.escapeHtml(t.name)}
+        <input type="checkbox" class="um-tool-item" value="${Utils.escapeHtml(s.id)}" ${!hasAll && (selectedServers || []).includes(s.id) ? "checked" : ""} ${hasAll ? "disabled" : ""} />
+        <span class="swatch" style="background:${s.color || "var(--accent-indigo,#6366f1)"}"></span>${Utils.escapeHtml(s.name)}
       </label>
     `).join("");
 
-    el.innerHTML = allRow + toolRows;
+    el.innerHTML = allRow + serverRows;
 
     const allCheckbox = document.getElementById("um-tool-all");
     allCheckbox.addEventListener("change", () => {
@@ -162,7 +197,7 @@
     });
   }
 
-  function readSelectedTools() {
+  function readSelectedServers() {
     const allCheckbox = document.getElementById("um-tool-all");
     if (allCheckbox && allCheckbox.checked) return ["all"];
     return Array.from(document.querySelectorAll(".um-tool-item:checked")).map(cb => cb.value);
@@ -183,13 +218,13 @@
       usernameInput.value = user.username;
       passwordInput.value = user.password;
       passwordHint.textContent = "Leave unchanged unless you want to reset it.";
-      renderToolCheckboxes(user.tools);
+      renderServerCheckboxes(user.servers);
     } else {
       title.textContent = "Add User";
       usernameInput.value = "";
       passwordInput.value = "";
       passwordHint.textContent = "Minimum 8 characters.";
-      renderToolCheckboxes([]);
+      renderServerCheckboxes([]);
     }
 
     document.getElementById("um-modal-overlay").classList.remove("hidden");
@@ -204,7 +239,7 @@
   function saveModal() {
     const username = document.getElementById("um-username-input").value.trim();
     const password = document.getElementById("um-password-input").value;
-    const tools = readSelectedTools();
+    const servers = readSelectedServers();
 
     if (!username) {
       Utils.showToast ? Utils.showToast("Username is required", "error") : alert("Username is required");
@@ -220,11 +255,11 @@
       if (user) {
         user.username = username;
         user.password = password;
-        user.tools = tools;
+        user.servers = servers;
       }
     } else {
       state.users.push({
-        id: nextId(), username, password, tools,
+        id: nextId(), username, password, servers,
         createdAt: new Date().toISOString(),
       });
     }
@@ -266,7 +301,8 @@
   }
 
   /* ─── Bootstrap ───────────────────────────────────────────────────────── */
-  function initPage() {
+  async function initPage() {
+    await loadServers();
     state.users = loadUsers();
     wire();
     renderTable();

@@ -16,15 +16,18 @@
  *   as the endpoint returns the same shape (see the JSDoc on the function),
  *   nothing else on this page needs to change.
  *
- * Sources: "all" (aggregate across every CFG.TOOLS entry) + one tab per
- * tool in CFG.TOOLS (dynatrace / opmanager / appdynamics / heal today —
- * whatever TOOLS contains is what renders; nothing here is hardcoded to
- * those 4 names specifically, so Phase 15's N-server model can extend this
- * for free once TOOLS/TOOL_MAP is generalized).
+ * Sources: "all" (aggregate across every configured MCP server) + one tab
+ * per live server (from backend/data/mcpservers.json, same list Settings →
+ * MCP Servers edits — same live-servers pattern as dashboard.js/topology.js/
+ * user_management.js). Falls back to the legacy fixed CFG.TOOLS list only if
+ * no servers are configured yet, so the page still renders something
+ * sensible on a fresh install. Nothing here is hardcoded to any specific
+ * server names — whatever the live list contains is what renders.
  *
  * DEPENDENCIES (must load before this file):
- *   config.js  → window.CFG   (TOOLS)
- *   api.js     → window.API   (not used for data yet — see swap-in path)
+ *   config.js  → window.CFG   (TOOLS, legacy fallback)
+ *   api.js     → window.API   (API.getMcpServers() for the live list; not
+ *                used for capacity data yet — see swap-in path above)
  *   common.js  → window.Utils
  *   Chart.js (vendored, loaded in capacity.html <head>)
  */
@@ -37,7 +40,26 @@
     return;
   }
 
-  const TOOLS = global.CFG.TOOLS || [];
+  /* Live MCP servers list — populated by loadSources(), falls back to
+     CFG.TOOLS (legacy fixed 4) if no servers are configured yet. */
+  let SOURCES = global.CFG.TOOLS || [];
+
+  async function loadSources() {
+    try {
+      if (global.API && typeof global.API.getMcpServers === "function") {
+        const { servers } = await global.API.getMcpServers();
+        if (Array.isArray(servers) && servers.length > 0) {
+          SOURCES = servers.map(s => ({
+            id:    s.id,
+            name:  s.name,
+            color: s.color || "#6366f1",
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn("[capacity] getMcpServers failed, falling back to CFG.TOOLS:", e);
+    }
+  }
 
   /* ─── State ───────────────────────────────────────────────────────────── */
   const state = {
@@ -238,8 +260,8 @@
 
   function sourceLabel(sourceId) {
     if (sourceId === "all") return "across all sources";
-    const tool = TOOLS.find(t => t.id === sourceId);
-    return tool ? `on ${tool.name}` : `on ${sourceId}`;
+    const source = SOURCES.find(s => s.id === sourceId);
+    return source ? `on ${source.name}` : `on ${sourceId}`;
   }
 
   /* ─── Rendering: source tabs ──────────────────────────────────────────── */
@@ -248,7 +270,7 @@
     if (!el) return;
 
     const tabs = [{ id: "all", name: "All Sources", color: "var(--accent-indigo, #6366f1)" }]
-      .concat(TOOLS.map(t => ({ id: t.id, name: t.name, color: t.color || "var(--accent-indigo, #6366f1)" })));
+      .concat(SOURCES.map(s => ({ id: s.id, name: s.name, color: s.color || "var(--accent-indigo, #6366f1)" })));
 
     el.innerHTML = tabs.map(t => `
       <button type="button" class="cap-source-tab${t.id === state.sourceId ? " active" : ""}" data-source="${Utils.escapeHtml(t.id)}" role="tab" aria-selected="${t.id === state.sourceId}">
@@ -509,13 +531,14 @@
      onTabActivated(true) fires. Controls/tabs are wired immediately since
      they're cheap and don't depend on data being loaded yet.
   ──────────────────────────────────────────────────────────────────────── */
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", async function () {
     if (global.Utils && typeof global.Utils.initHeader === "function") {
       global.Utils.initHeader();
     }
     if (global.lucide) {
       global.lucide.createIcons();
     }
+    await loadSources();
     renderSourceTabs();
     wireControls();
   });

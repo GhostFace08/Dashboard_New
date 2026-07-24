@@ -43,7 +43,7 @@
             </div>
             <div>
               <h1 class="um-title">USER MANAGEMENT</h1>
-              <p class="um-subtitle">Dashboard user accounts and per-tool visibility</p>
+              <p class="um-subtitle">Dashboard user accounts and per-server visibility</p>
             </div>
           </div>
           <button id="um-add-btn" class="btn btn-primary" type="button">
@@ -71,7 +71,7 @@
               <thead>
                 <tr>
                   <th>User</th>
-                  <th>Tool Visibility</th>
+                  <th>Server Visibility</th>
                   <th>Created</th>
                   <th style="text-align:right">Actions</th>
                 </tr>
@@ -111,9 +111,9 @@
           <span class="um-form-hint" id="um-password-hint">Minimum 8 characters.</span>
         </div>
         <div class="um-form-row">
-          <label>Tool Visibility</label>
+          <label>Server Visibility</label>
           <div class="um-checkbox-list" id="um-tools-checkbox-list"><!-- populated by user_management.js --></div>
-          <span class="um-form-hint">Controls which sources' data this user can see on the dashboard — not an access-control enforcement layer.</span>
+          <span class="um-form-hint">Controls which MCP servers' data this user can see on the dashboard — not an access-control enforcement layer.</span>
         </div>
       </div>
       <div class="modal-footer">

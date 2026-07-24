@@ -429,12 +429,12 @@
       +       '<span class="sidebar-brand-mark">M</span>'
       +       '<span class="sidebar-brand-text">MCP Dashboard</span>'
       +     '</div>'
+      +     '<button id="theme-toggle-btn" class="sidebar-icon-btn sidebar-top-theme-btn" title="Toggle theme" aria-label="Toggle theme">'
+      +       '<i data-lucide="' + themeIcon + '"></i>'
+      +     '</button>'
       +   '</div>'
       +   '<nav class="sidebar-nav">' + groupsHTML + '</nav>'
       +   '<div class="sidebar-footer">'
-      +     '<button id="theme-toggle-btn" class="sidebar-icon-btn" title="Toggle theme" aria-label="Toggle theme">'
-      +       '<i data-lucide="' + themeIcon + '"></i>'
-      +     '</button>'
       +     '<div class="sidebar-user" id="sidebar-user-btn" title="Account" role="button" tabindex="0">'
       +       '<div class="sidebar-avatar">A</div>'
       +       '<span class="sidebar-user-name nav-item-label">Admin</span>'
@@ -470,7 +470,10 @@
     "}",
     ".app-sidebar.collapsed .sidebar-brand-text{display:none;}",
     ".app-sidebar.collapsed .sidebar-brand-mark{display:none;}",
-    ".app-sidebar.collapsed .sidebar-top{justify-content:center;padding:0;}",
+    ".app-sidebar.collapsed .sidebar-top{flex-direction:column;justify-content:center;height:auto;padding:8px 0;gap:8px;}",
+
+    ".sidebar-top-theme-btn{margin-left:auto;flex-shrink:0;}",
+    ".app-sidebar.collapsed .sidebar-top-theme-btn{margin-left:0;}",
 
     ".sidebar-nav{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:10px 8px;}",
     ".nav-group{display:flex;flex-direction:column;gap:2px;}",
@@ -923,6 +926,130 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     7b. TOASTS — small floating top-right confirmation popups
+     Utils.showToast(message, type?, opts?)
+       type: "success" | "error" | "info" | "warning"  (default "info")
+       opts.duration: ms before auto-dismiss (default 5000)
+     Used for save/test/change confirmations (Settings, User Management, ...).
+     Works in every document that loads common.js — including page iframes,
+     which each have their own document and so need their own container —
+     no dependency on the shell/sidebar being present.
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  var TOAST_CSS = [
+    "#mcp-toast-root{",
+      "position:fixed;top:14px;right:14px;z-index:9999;",
+      "display:flex;flex-direction:column;gap:8px;",
+      "max-width:320px;pointer-events:none;",
+    "}",
+    ".mcp-toast{",
+      "pointer-events:auto;display:flex;align-items:flex-start;gap:8px;",
+      "min-width:200px;max-width:320px;padding:9px 10px;border-radius:var(--radius-sm);",
+      "background:var(--card);color:var(--card-foreground);",
+      "box-shadow:var(--shadow-card-hover);border:1px solid var(--border);",
+      "border-left:3px solid var(--muted-foreground);",
+      "font-family:var(--font-sans);font-size:12px;line-height:1.45;",
+      "opacity:0;transform:translateX(16px);",
+      "transition:opacity 180ms ease,transform 180ms ease;",
+    "}",
+    ".mcp-toast.show{opacity:1;transform:translateX(0);}",
+    ".mcp-toast.hide{opacity:0;transform:translateX(16px);}",
+    ".mcp-toast.success{border-left-color:var(--accent-green,#10b981);}",
+    ".mcp-toast.error{border-left-color:var(--accent-red,#e5534b);}",
+    ".mcp-toast.warning{border-left-color:var(--accent-amber,#e5a030);}",
+    ".mcp-toast.info{border-left-color:var(--accent-indigo,#6366f1);}",
+    ".mcp-toast-icon{flex-shrink:0;width:15px;height:15px;margin-top:1px;}",
+    ".mcp-toast-icon.success{color:var(--accent-green,#10b981);}",
+    ".mcp-toast-icon.error{color:var(--accent-red,#e5534b);}",
+    ".mcp-toast-icon.warning{color:var(--accent-amber,#e5a030);}",
+    ".mcp-toast-icon.info{color:var(--accent-indigo,#6366f1);}",
+    ".mcp-toast-msg{flex:1 1 auto;min-width:0;word-break:break-word;}",
+    ".mcp-toast-close{",
+      "flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;",
+      "border-radius:4px;color:var(--muted-foreground);margin:-2px -2px 0 0;",
+    "}",
+    ".mcp-toast-close:hover{background:var(--secondary);color:var(--foreground);}",
+  ].join("");
+
+  function injectToastCSS() {
+    if (document.getElementById("mcp-toast-css")) return;
+    var style = document.createElement("style");
+    style.id = "mcp-toast-css";
+    style.textContent = TOAST_CSS;
+    document.head.appendChild(style);
+  }
+
+  function getToastRoot() {
+    injectToastCSS();
+    var root = document.getElementById("mcp-toast-root");
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "mcp-toast-root";
+      document.body.appendChild(root);
+    }
+    return root;
+  }
+
+  var TOAST_ICONS = {
+    success: "check-circle-2",
+    error:   "x-circle",
+    warning: "alert-triangle",
+    info:    "info"
+  };
+
+  /**
+   * Utils.showToast(message, type, opts)
+   * Small color-coded floating popup, top-right, auto-dismisses after
+   * opts.duration ms (default 5000) and always has a manual close button.
+   */
+  function showToast(message, type, opts) {
+    type = (type === "success" || type === "error" || type === "warning") ? type : "info";
+    var duration = (opts && typeof opts.duration === "number") ? opts.duration : 5000;
+
+    var root = getToastRoot();
+    var el = document.createElement("div");
+    el.className = "mcp-toast " + type;
+    el.setAttribute("role", type === "error" ? "alert" : "status");
+
+    var iconName = TOAST_ICONS[type];
+    el.innerHTML =
+        '<i data-lucide="' + iconName + '" class="mcp-toast-icon ' + type + '"></i>'
+      + '<span class="mcp-toast-msg"></span>'
+      + '<button type="button" class="mcp-toast-close" aria-label="Dismiss" title="Dismiss">'
+      +   '<i data-lucide="x" style="width:12px;height:12px;display:block"></i>'
+      + '</button>';
+    /* Message set via textContent (not innerHTML) so caller-supplied text
+       can never inject markup. */
+    el.querySelector(".mcp-toast-msg").textContent = message;
+
+    root.appendChild(el);
+    if (global.lucide && typeof global.lucide.createIcons === "function") {
+      global.lucide.createIcons({ nameAttr: "data-lucide", attrs: {}, icons: undefined });
+    }
+
+    var dismissed = false;
+    var timer = null;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      if (timer) clearTimeout(timer);
+      el.classList.remove("show");
+      el.classList.add("hide");
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }
+
+    el.querySelector(".mcp-toast-close").addEventListener("click", dismiss);
+    timer = setTimeout(dismiss, duration);
+
+    /* Trigger enter transition on next frame */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { el.classList.add("show"); });
+    });
+
+    return { dismiss: dismiss };
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      8. PUBLIC SURFACE
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -933,6 +1060,9 @@
     getTheme:     getTheme,
     applyTheme:   applyTheme,
     refreshIcons: refreshIcons,
+
+    /* Toasts */
+    showToast: showToast,
 
     /* Sidebar (shell only) */
     getSidebarCollapsed:     getSidebarCollapsed,

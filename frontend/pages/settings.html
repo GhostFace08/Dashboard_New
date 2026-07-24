@@ -410,7 +410,7 @@
             <div class="scard-head">
               <h3 class="scard-title">Local LLM</h3>
               <p class="scard-desc">Provider used for chat completions and reasoning.</p>
-              <button class="btn btn-ghost" style="font-size:11px;margin-left:auto">Validate Model</button>
+              <button id="btn-validate-model" class="btn btn-ghost" style="font-size:11px;margin-left:auto"><i data-lucide="plug-zap" style="width:12px;height:12px"></i> Validate Model</button>
             </div>
             <div class="scard-body grid-2">
               <label class="sfield">
@@ -472,7 +472,9 @@
             <p class="sec-hint">Document ingestion, vector stores, and retrieval endpoints.</p>
           </div>
           <div class="scard">
-            <div class="scard-head"><h3 class="scard-title">Service</h3><p class="scard-desc">HTTP endpoints exposed by the retrieval service.</p></div>
+            <div class="scard-head"><h3 class="scard-title">Service</h3><p class="scard-desc">HTTP endpoints exposed by the retrieval service.</p>
+              <button id="btn-test-rag" class="btn btn-ghost" style="font-size:11px;margin-left:auto"><i data-lucide="plug-zap" style="width:12px;height:12px"></i> Test Connectivity</button>
+            </div>
             <div class="scard-body grid-2">
               <label class="sfield"><span class="sfield-label">Base URL</span><input id="rag-base-url" type="text" class="input input-mono" value="http://localhost:8000" /></label>
               <label class="sfield"><span class="sfield-label">Data Endpoint</span><input id="rag-data-ep" type="text" class="input input-mono" value="/data" /></label>

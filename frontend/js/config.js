@@ -61,18 +61,27 @@ const SIDEBAR_NAV = [
     items: [
       { id: "user-management", label: "User Management", icon: "users",            href: "pages/user_management.html", ready: true },
       { id: "auto-escalation", label: "Auto-Escalation",  icon: "alert-triangle",   href: "pages/auto_escalation.html", ready: true },
-      { id: "about-faq",       label: "About & FAQ",      icon: "help-circle",      href: "pages/about_faq.html",       ready: true },
+      { id: "settings",        label: "Settings",         icon: "settings",        href: "pages/settings.html",        ready: true  },
     ],
   },
   {
     label: null,
     items: [
-      { id: "settings",        label: "Settings",         icon: "settings",        href: "pages/settings.html",        ready: true  },
+      { id: "about-faq",       label: "About & FAQ",      icon: "help-circle",      href: "pages/about_faq.html",       ready: true },
     ],
   },
 ];
 
-/* ─── APM Tools ──────────────────────────────────────────────────────────── */
+/* ─── Legacy fallback MCP servers ────────────────────────────────────────────
+   Used only as a fallback when no MCP servers are configured yet (Settings →
+   MCP Servers is empty on a fresh install). Every page that shows "sources"
+   or "servers" (Dashboard, Capacity, Topology, User Management, ...) prefers
+   the live list from backend/data/mcpservers.json via API.getMcpServers()
+   and only falls back to this fixed list otherwise — see each page's
+   loadSources()/loadServers() for the pattern. ids/names here are left as-is
+   because common.js's payload-shape auto-detection (parseDynatraceTime,
+   detectToolFromShape, etc.) keys directly off these same id strings and the
+   real field shapes each of these vendors actually sends. ──────────────── */
 
 const TOOLS = [
   {
@@ -82,7 +91,7 @@ const TOOLS = [
     color:       "#6366f1",
     status:      "online",
     latency:     "14ms",
-    description: "APM & Infrastructure",
+    description: "Monitoring & Infrastructure",
     url:         "https://www.dynatrace.com",
   },
   {

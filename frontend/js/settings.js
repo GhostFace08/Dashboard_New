@@ -165,6 +165,10 @@
   }
 
   function refreshIcons() { Utils.refreshIcons(); }
+  function toast(message, type) {
+    if (Utils.showToast) Utils.showToast(message, type);
+    else if (type === "error") alert(message);
+  }
 
   /** Read the active data-val from a segmented control */
   function activeSegValue(segId) {
@@ -356,10 +360,91 @@
         ? `<i data-lucide="check-circle-2" style="width:12px;height:12px;color:var(--success,#10b981)"></i> Reachable`
         : `<i data-lucide="x-circle" style="width:12px;height:12px;color:var(--destructive,#ef4444)"></i> No response`;
       refreshIcons();
+      toast(ok ? `${s.name}: connection reachable.` : `${s.name}: no response from server.`, ok ? "success" : "error");
       setTimeout(() => {
         if (btn) { btn.innerHTML = `<i data-lucide="plug-zap" style="width:12px;height:12px"></i> Test Connection`; refreshIcons(); }
       }, 3000);
     }
+  }
+
+  /**
+   * validateLlmModel()
+   * Ollama-style check: hits {base URL}/api/tags and confirms the selected
+   * model is actually present on that server before you rely on it for
+   * chat completions. Any reachable-but-model-missing response is reported
+   * as a failure too, not just outright network errors.
+   */
+  async function validateLlmModel() {
+    const btn = $("btn-validate-model");
+    const baseUrl = val("llm-url", "").trim();
+    const model = val("llm-model", "").trim();
+    if (!baseUrl) { toast("LLM Base URL is required before validating.", "error"); return; }
+
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" style="width:12px;height:12px;animation:spin 1s linear infinite"></i> Validating…`; refreshIcons(); }
+
+    let ok = false, reason = "";
+    try {
+      const res = await fetch(baseUrl.replace(/\/+$/, "") + "/api/tags", { method: "GET" });
+      if (!res.ok) {
+        reason = `server responded ${res.status}`;
+      } else {
+        const data = await res.json();
+        const names = (data.models || []).map(m => m.name || m.model || "");
+        ok = names.some(n => n === model || n.split(":")[0] === model.split(":")[0]);
+        if (!ok) reason = `"${model}" not found on that server`;
+      }
+    } catch (e) {
+      reason = "unreachable";
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = ok
+        ? `<i data-lucide="check-circle-2" style="width:12px;height:12px;color:var(--success,#10b981)"></i> Validated`
+        : `<i data-lucide="x-circle" style="width:12px;height:12px;color:var(--destructive,#ef4444)"></i> Failed`;
+      refreshIcons();
+      setTimeout(() => {
+        if (btn) { btn.innerHTML = `<i data-lucide="plug-zap" style="width:12px;height:12px"></i> Validate Model`; refreshIcons(); }
+      }, 3000);
+    }
+    toast(ok ? `Model "${model}" is available at ${baseUrl}.` : `Validation failed: ${reason}.`, ok ? "success" : "error");
+  }
+
+  /**
+   * testRagConnectivity()
+   * Pings the RAG service Base URL directly from the browser. Any response
+   * at all (even a non-2xx one, since a lot of these services don't expose
+   * a dedicated health route) counts as "reachable" — only a network-level
+   * failure (refused/timed out/unresolvable) counts as unreachable.
+   */
+  async function testRagConnectivity() {
+    const btn = $("btn-test-rag");
+    const baseUrl = val("rag-base-url", "").trim();
+    if (!baseUrl) { toast("RAG Base URL is required before testing.", "error"); return; }
+
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" style="width:12px;height:12px;animation:spin 1s linear infinite"></i> Testing…`; refreshIcons(); }
+
+    let ok = false;
+    try {
+      await fetch(baseUrl, { method: "GET", mode: "no-cors" });
+      // With mode:"no-cors" a resolved promise means the request reached
+      // the server (opaque response) — a rejected one means it didn't.
+      ok = true;
+    } catch (e) {
+      ok = false;
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = ok
+        ? `<i data-lucide="check-circle-2" style="width:12px;height:12px;color:var(--success,#10b981)"></i> Reachable`
+        : `<i data-lucide="x-circle" style="width:12px;height:12px;color:var(--destructive,#ef4444)"></i> No response`;
+      refreshIcons();
+      setTimeout(() => {
+        if (btn) { btn.innerHTML = `<i data-lucide="plug-zap" style="width:12px;height:12px"></i> Test Connectivity`; refreshIcons(); }
+      }, 3000);
+    }
+    toast(ok ? `RAG service reachable at ${baseUrl}.` : `RAG service unreachable at ${baseUrl}.`, ok ? "success" : "error");
   }
 
   async function toggleServerEnabled(id) {
@@ -368,6 +453,7 @@
     s.enabled = s.enabled === false ? true : false;
     await persistServers();
     renderServerList();
+    toast(`${s.name} ${s.enabled ? "enabled" : "disabled"}.`, "info");
   }
 
   // ── Add Server modal ─────────────────────────────────────────────────────
@@ -394,17 +480,17 @@
   async function saveNewServer() {
     const name = val("mcp-add-name", "").trim();
     const baseUrl = val("mcp-add-baseurl", "").trim();
-    if (!name) { alert("Server Name is required."); return; }
-    if (baseUrl && !/^https?:\/\/.+/.test(baseUrl)) { alert("Base URL must start with http:// or https://"); return; }
+    if (!name) { toast("Server Name is required.", "error"); return; }
+    if (baseUrl && !/^https?:\/\/.+/.test(baseUrl)) { toast("Base URL must start with http:// or https://", "error"); return; }
 
     const vendor = val("mcp-add-vendor", "dynatrace");
     const customType = val("mcp-add-type", "").trim();
-    if (vendor === "custom" && !customType) { alert("Custom Tool Name is required when Type/Vendor is Custom Tool."); return; }
+    if (vendor === "custom" && !customType) { toast("Custom Tool Name is required when Type/Vendor is Custom Tool.", "error"); return; }
     const type = vendor === "custom" ? customType : vendor;
 
     if (addRegistryPaths.length > 0) {
       const chosenPath = val("mcp-add-registry-path", "");
-      if (!chosenPath) { alert("Registry Path for Fetching Issues is required once a Tool Registry is uploaded."); return; }
+      if (!chosenPath) { toast("Registry Path for Fetching Issues is required once a Tool Registry is uploaded.", "error"); return; }
     }
 
     let id = slugify(name);
@@ -460,6 +546,7 @@
     await persistKeywords();
     renderServerList();
     closeAddModal();
+    toast(`${name} added.`, "success");
   }
 
   // ── Edit Server modal ────────────────────────────────────────────────────
@@ -943,7 +1030,7 @@
       const paths = editRegistryPaths[s.id] || (s.registry?.paths || []);
       if (paths.length > 0) {
         const chosenPath = val("edit-registry-path", "");
-        if (!chosenPath) { alert("Registry Path for Fetching Issues is required once a Tool Registry is uploaded."); if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; } return; }
+        if (!chosenPath) { toast("Registry Path for Fetching Issues is required once a Tool Registry is uploaded.", "error"); if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; } return; }
         s.issuesRegistryPath = chosenPath;
         s.dashboards = s.dashboards || {};
         s.dashboards.issuesPath = chosenPath;
@@ -974,7 +1061,7 @@
         s.dashboards[f.key] = v || null;
       });
       if (missing.length > 0) {
-        alert(`These Dashboards-tab fields are required: ${missing.join(", ")}`);
+        toast(`These Dashboards-tab fields are required: ${missing.join(", ")}`, "error");
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; }
         return;
       }
@@ -984,6 +1071,7 @@
 
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Tab"; }
     renderServerList();
+    toast(`${s.name}: ${editingTab} tab saved.`, "success");
   }
 
   async function deleteServer(id) {
@@ -994,6 +1082,7 @@
     await persistServers();
     closeEditModal();
     renderServerList();
+    toast(`${s.name} deleted.`, "success");
   }
 
   function wireMcpEvents() {
@@ -1291,7 +1380,7 @@
   async function saveSettings() {
     const errors = validate();
     if (errors.length > 0) {
-      alert("Cannot save — please fix the following:\n\n• " + errors.join("\n• "));
+      toast("Cannot save — please fix: " + errors.join("; "), "error");
       return;
     }
 
@@ -1318,9 +1407,10 @@
       dirty = false;
       updateFooter();
       console.info("[settings] All config files saved.");
+      toast("Settings saved.", "success");
     } else {
       console.warn("[settings] Save failed:", result.error);
-      alert(`Save failed: ${result.error || "unknown error"}`);
+      toast(`Save failed: ${result.error || "unknown error"}`, "error");
     }
   }
 
@@ -1378,6 +1468,8 @@
     $("btn-save")?.addEventListener("click", saveSettings);
     $("btn-cancel")?.addEventListener("click", () => { dirty = false; updateFooter(); });
     $("btn-reset")?.addEventListener("click",  () => { dirty = false; updateFooter(); });
+    $("btn-validate-model")?.addEventListener("click", validateLlmModel);
+    $("btn-test-rag")?.addEventListener("click", testRagConnectivity);
 
     document.querySelectorAll("#settings-body input, #settings-body select, #settings-body textarea").forEach(el =>
       el.addEventListener("change", markDirty)
