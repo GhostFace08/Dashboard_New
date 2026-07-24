@@ -113,21 +113,36 @@
       .filter(line => line.length > 0 && !line.startsWith("#"));
   }
 
-  // Show the "uploaded document is payload" toggle only once BOTH a
-  // URL/API value and an uploaded file are present — otherwise there's
-  // nothing to disambiguate.
-  function updateRegistryPayloadToggleVisibility(urlInputId, fileInputId, rowId) {
-    const urlVal  = ($(urlInputId)?.value || "").trim();
-    const hasFile = !!($(fileInputId)?.files && $(fileInputId).files.length > 0);
-    $(rowId)?.classList.toggle("hidden", !(urlVal && hasFile));
+  // The "needs a payload" toggle is only interactable once the Tool
+  // Registry Endpoint URL has a value. Clearing the URL forces the
+  // toggle back off and re-disables it, and hides the payload box.
+  function updateRegistryPayloadToggleState(urlInputId, toggleId, payloadWrapId) {
+    const urlVal = ($(urlInputId)?.value || "").trim();
+    const toggle = $(toggleId);
+    const wrap   = $(payloadWrapId);
+    if (!toggle) return;
+    if (!urlVal) {
+      toggle.disabled = true;
+      toggle.dataset.on = "false";
+      toggle.classList.remove("on");
+      wrap?.classList.add("hidden");
+    } else {
+      toggle.disabled = false;
+    }
+    wrap?.classList.toggle("hidden", !(urlVal && toggle.dataset.on === "true"));
   }
 
   // Fetch a tool registry from a URL/API endpoint. Tries JSON first
   // (array of paths, or { paths: [...] }), falls back to parsing the
   // response body as newline-separated paths (same shape as an uploaded
-  // registry document).
-  async function fetchRegistryFromUrl(url, authToken) {
-    const opts = authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : {};
+  // registry document). If a payload is supplied, the request is sent
+  // as a POST with that payload as the raw body; otherwise it's a GET.
+  async function fetchRegistryFromUrl(url, authToken, payload) {
+    const headers = {};
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const opts = payload
+      ? { method: "POST", headers: { ...headers, "Content-Type": "text/plain" }, body: payload }
+      : { method: "GET", headers };
     const res = await fetch(url, opts);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
@@ -467,6 +482,11 @@
     const certStatus = $("mcp-add-cert-status"); if (certStatus) certStatus.textContent = "";
     const registryInput = $("mcp-add-registry"); if (registryInput) registryInput.value = "";
     const registryStatus = $("mcp-add-registry-status"); if (registryStatus) registryStatus.textContent = "";
+    const registryFetchStatus = $("mcp-add-registry-fetch-status"); if (registryFetchStatus) registryFetchStatus.textContent = "";
+    const registryPayload = $("mcp-add-registry-payload"); if (registryPayload) registryPayload.value = "";
+    const registryToggle = $("mcp-add-registry-payload-toggle");
+    if (registryToggle) { registryToggle.dataset.on = "false"; registryToggle.classList.remove("on"); registryToggle.disabled = true; }
+    $("mcp-add-registry-payload-wrap")?.classList.add("hidden");
     const vendorSel = $("mcp-add-vendor"); if (vendorSel) vendorSel.value = "dynatrace";
     $("mcp-add-custom-type-wrap")?.classList.add("hidden");
     const pathSel = $("mcp-add-registry-path");
@@ -519,7 +539,13 @@
       url: baseUrl,
       certUploaded: addCertAcked,
       registry: addRegistryPaths.length > 0
-        ? { fileName: $("mcp-add-registry")?.files?.[0]?.name || "", paths: addRegistryPaths.slice() }
+        ? {
+            url: val("mcp-add-registry-url", "").trim(),
+            usesPayload: $("mcp-add-registry-payload-toggle")?.dataset.on === "true",
+            payload: val("mcp-add-registry-payload", ""),
+            fileName: $("mcp-add-registry")?.files?.[0]?.name || "",
+            paths: addRegistryPaths.slice(),
+          }
         : null,
       issuesRegistryPath: addRegistryPaths.length > 0 ? val("mcp-add-registry-path", "") : null,
       mapping,
@@ -618,29 +644,31 @@
         </div>
       </div>
       <div class="sfield mt-2">
-        <span class="sfield-label">Tool Registry — URL / API</span>
-        <span class="sfield-hint">${s.registry?.url ? `On file: <strong>${esc(s.registry.url)}</strong>. Change to replace it.` : "Point at the endpoint that serves this tool's registry, and/or upload a registry document below."}</span>
+        <span class="sfield-label">Tool Registry Endpoint</span>
+        <span class="sfield-hint">${s.registry?.url ? `On file: <strong>${esc(s.registry.url)}</strong>. Change to replace it.` : "Point at the endpoint that serves this tool's registry — or skip this and upload a registry document below instead."}</span>
         <input id="edit-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" value="${esc(s.registry?.url || "")}" />
       </div>
-      <div class="sfield mt-2">
-        <span class="sfield-label">Tool Registry — Upload Document</span>
-        <span class="sfield-hint">${s.registry?.fileName ? `On file: <strong>${esc(s.registry.fileName)}</strong> (${paths.length} path${paths.length === 1 ? "" : "s"}). Upload a new file to replace it.` : "Upload the tool's issue registry (a file listing its available issue paths)."}</span>
-        <div class="flex gap-2 items-center mt-1">
-          <input id="edit-registry" type="file" class="input" style="max-width:260px" />
-          <span id="edit-registry-status" class="text-muted" style="font-size:11px"></span>
-        </div>
-      </div>
-      <div class="toggle-row hidden" id="edit-registry-payload-row">
+      <div class="toggle-row" id="edit-registry-payload-row">
         <div class="toggle-info">
-          <p class="toggle-label">Uploaded document is the payload</p>
-          <p class="toggle-desc">On: the uploaded file itself is parsed as the registry. Off: the URL/API is fetched and the uploaded file is ignored for parsing.</p>
+          <p class="toggle-label">This fetch needs a payload</p>
+          <p class="toggle-desc">Turn on if the endpoint requires a request body to return the registry. Enter a URL above to enable this.</p>
         </div>
-        <button class="toggle-switch${s.registry?.payloadIsUpload ? " on" : ""}" id="edit-registry-payload-toggle" data-on="${s.registry?.payloadIsUpload ? "true" : "false"}"><span class="toggle-thumb"></span></button>
+        <button class="toggle-switch${s.registry?.usesPayload ? " on" : ""}" id="edit-registry-payload-toggle" data-on="${s.registry?.usesPayload ? "true" : "false"}"${s.registry?.url ? "" : " disabled"}><span class="toggle-thumb"></span></button>
       </div>
-      <div class="flex gap-2 items-center mt-2">
-        <button class="btn btn-ghost" id="edit-registry-fetch" type="button" style="font-size:11px">
-          <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
-        </button>
+      <div class="sfield mt-2${s.registry?.usesPayload && s.registry?.url ? "" : " hidden"}" id="edit-registry-payload-wrap">
+        <span class="sfield-label">Payload</span>
+        <span class="sfield-hint">Sent as the request body when fetching the registry (raw JSON or text).</span>
+        <textarea id="edit-registry-payload" class="input input-mono" rows="4" placeholder='{ "key": "value" }'>${esc(s.registry?.payload || "")}</textarea>
+      </div>
+      <div class="sfield mt-2">
+        <div class="flex gap-2 items-center">
+          <button class="btn btn-ghost" id="edit-registry-fetch" type="button" style="font-size:11px">
+            <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
+          </button>
+          <span class="text-muted" style="font-size:11px">— or —</span>
+          <input id="edit-registry" type="file" class="input" style="max-width:220px" />
+        </div>
+        <span id="edit-registry-status" class="text-muted" style="font-size:11px">${s.registry?.fileName ? `On file: ${esc(s.registry.fileName)} (${paths.length} path${paths.length === 1 ? "" : "s"})` : ""}</span>
         <span id="edit-registry-fetch-status" class="text-muted" style="font-size:11px"></span>
       </div>
       <label class="sfield mt-2">
@@ -698,14 +726,24 @@
           "${esc(mcpCategorization.unknownLabel || "Unknown")}".
         </span>
       </div>
+      <div class="sfield mb-3">
+        <span class="sfield-label">Add Category</span>
+        <span class="sfield-hint">New categories are shared across every server — this adds an empty bucket that any server can then attach its own keywords to below.</span>
+        <div class="flex gap-2 items-center mt-1">
+          <input type="text" class="input input-mono" id="mcp-cat-new-name" placeholder="e.g. Database" style="max-width:220px" />
+          <button class="btn btn-ghost" id="mcp-cat-add-btn" type="button" style="font-size:11px"><i data-lucide="plus" style="width:12px;height:12px"></i> Add Category</button>
+        </div>
+        <span id="mcp-cat-add-status" class="text-muted" style="font-size:11px"></span>
+      </div>
       ${cats.map(c => {
         const kws = (c.keywordsBySource && c.keywordsBySource[s.id]) || [];
         return `
           <div class="mcp-cat-block" data-cat="${c.id}">
-            <div class="mcp-cat-block-head">
+            <div class="mcp-cat-block-head flex items-center gap-2">
               <span class="mcp-cat-priority">#${c.priority ?? "—"}</span>
               <h4 class="mcp-cat-name">${esc(c.name)}</h4>
               <span class="text-muted" style="font-size:11px">${kws.length} keyword${kws.length === 1 ? "" : "s"}</span>
+              <button class="btn btn-ghost mcp-cat-delete-btn" data-cat="${c.id}" data-name="${esc(c.name)}" type="button" title="Delete category" style="font-size:11px;color:var(--destructive,#ef4444);margin-left:auto"><i data-lucide="trash-2" style="width:12px;height:12px"></i></button>
             </div>
             <div class="flex flex-wrap gap-1 mb-2">
               ${kws.length === 0
@@ -720,6 +758,33 @@
         `;
       }).join("")}
     `;
+  }
+
+  // Adds a new shared category (name only — the admin attaches keywords
+  // per server afterwards, same as any pre-existing category). Priority
+  // is appended to the end of the current ordering so nothing already
+  // defined shifts. Every existing server gets an empty keyword bucket
+  // for it so the per-server tab can render immediately, mirroring what
+  // addServer() does for existing categories.
+  function addCategory(name) {
+    const trimmed = (name || "").trim();
+    if (!trimmed) return { ok: false, error: "Enter a category name." };
+    const dupe = mcpCategorization.categories.some(c => c.name.toLowerCase() === trimmed.toLowerCase());
+    if (dupe) return { ok: false, error: `"${trimmed}" already exists.` };
+
+    let id = slugify(trimmed);
+    if (mcpCategorization.categories.some(c => c.id === id)) id = `${id}-${Date.now().toString().slice(-4)}`;
+    const nextPriority = mcpCategorization.categories.reduce((max, c) => Math.max(max, c.priority ?? 0), 0) + 1;
+
+    const keywordsBySource = {};
+    mcpServers.forEach(srv => { keywordsBySource[srv.id] = []; });
+
+    mcpCategorization.categories.push({ id, name: trimmed, priority: nextPriority, keywordsBySource });
+    return { ok: true };
+  }
+
+  function deleteCategory(id) {
+    mcpCategorization.categories = mcpCategorization.categories.filter(c => c.id !== id);
   }
 
   // ── Time Mapping helpers ──────────────────────────────────────────────
@@ -884,15 +949,13 @@
         $("edit-custom-type-wrap")?.classList.toggle("hidden", vendorSel.value !== "custom");
       });
       const registryInput = $("edit-registry");
-      updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
+      updateRegistryPayloadToggleState("edit-registry-url", "edit-registry-payload-toggle", "edit-registry-payload-wrap");
+      // File upload is an independent OR path — parses on choose,
+      // regardless of the URL/payload toggle state.
       if (registryInput) registryInput.addEventListener("change", async () => {
         const file = registryInput.files && registryInput.files[0];
         const status = $("edit-registry-status");
-        updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
         if (!file) return;
-        const payloadToggle = $("edit-registry-payload-toggle");
-        const isPayload = !payloadToggle || payloadToggle.dataset.on !== "false" || !$("edit-registry-url")?.value.trim();
-        if (!isPayload) return;
         const text = await file.text();
         editRegistryPaths[s.id] = parseRegistryFile(text);
         if (status) status.textContent = `Registry parsed ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
@@ -906,39 +969,32 @@
         }
       });
       $("edit-registry-url")?.addEventListener("input", () => {
-        updateRegistryPayloadToggleVisibility("edit-registry-url", "edit-registry", "edit-registry-payload-row");
+        updateRegistryPayloadToggleState("edit-registry-url", "edit-registry-payload-toggle", "edit-registry-payload-wrap");
       });
       $("edit-registry-payload-toggle")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
+        if (btn.disabled) return;
         const on = btn.dataset.on !== "true";
         btn.dataset.on = String(on);
         btn.classList.toggle("on", on);
+        $("edit-registry-payload-wrap")?.classList.toggle("hidden", !on);
       });
       $("edit-registry-fetch")?.addEventListener("click", async () => {
         const btn = $("edit-registry-fetch");
         const status = $("edit-registry-fetch-status");
         const url = ($("edit-registry-url")?.value || "").trim();
+        if (!url) { if (status) status.textContent = "Enter a Tool Registry Endpoint first."; return; }
         const payloadToggle = $("edit-registry-payload-toggle");
         const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
-        if (usePayload) {
-          const file = $("edit-registry")?.files?.[0];
-          if (!file) { if (status) status.textContent = "No uploaded document to use as payload."; return; }
-          if (btn) btn.disabled = true;
-          try {
-            editRegistryPaths[s.id] = parseRegistryFile(await file.text());
-            if (status) status.textContent = `Registry parsed ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
-          } finally { if (btn) btn.disabled = false; }
-        } else {
-          if (!url) { if (status) status.textContent = "Enter a URL/API endpoint first."; return; }
-          if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
-          try {
-            editRegistryPaths[s.id] = await fetchRegistryFromUrl(url, val("edit-token", ""));
-            if (status) status.textContent = `Registry fetched ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
-          } catch (err) {
-            if (status) status.textContent = `Fetch failed: ${err.message || err}`;
-          } finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
-          }
+        const payload = usePayload ? ($("edit-registry-payload")?.value || "") : "";
+        if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+        try {
+          editRegistryPaths[s.id] = await fetchRegistryFromUrl(url, val("edit-token", ""), payload || undefined);
+          if (status) status.textContent = `Registry fetched ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
+        } catch (err) {
+          if (status) status.textContent = `Fetch failed: ${err.message || err}`;
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
         }
         const pathSel = $("edit-registry-path");
         if (pathSel) {
@@ -962,6 +1018,23 @@
         renderEditTabBody();
       });
     } else if (editingTab === "categorization") {
+      const addCatBtn   = $("mcp-cat-add-btn");
+      const addCatInput = $("mcp-cat-new-name");
+      const addCatStatus = $("mcp-cat-add-status");
+      const runAddCategory = () => {
+        const res = addCategory(addCatInput?.value);
+        if (!res.ok) { if (addCatStatus) addCatStatus.textContent = res.error; return; }
+        renderEditTabBody();
+      };
+      if (addCatBtn)   addCatBtn.addEventListener("click", runAddCategory);
+      if (addCatInput) addCatInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runAddCategory(); } });
+      $("mcp-edit-body").querySelectorAll(".mcp-cat-delete-btn").forEach(btn =>
+        btn.addEventListener("click", () => {
+          if (!window.confirm(`Delete category "${btn.dataset.name}"? This removes its keywords for every server, not just ${s.name}.`)) return;
+          deleteCategory(btn.dataset.cat);
+          renderEditTabBody();
+        })
+      );
       $("mcp-edit-body").querySelectorAll(".mcp-cat-kw-remove").forEach(btn =>
         btn.addEventListener("click", () => {
           const cat = mcpCategorization.categories.find(c => c.id === btn.dataset.cat);
@@ -1023,7 +1096,8 @@
         s.registry = {
           fileName: $("edit-registry")?.files?.[0]?.name || s.registry?.fileName || "",
           url: val("edit-registry-url", s.registry?.url || "").trim(),
-          payloadIsUpload: editRegistryPayloadToggle ? editRegistryPayloadToggle.dataset.on === "true" : !!s.registry?.payloadIsUpload,
+          usesPayload: editRegistryPayloadToggle ? editRegistryPayloadToggle.dataset.on === "true" : !!s.registry?.usesPayload,
+          payload: val("edit-registry-payload", s.registry?.payload || ""),
           paths: editRegistryPaths[s.id].slice(),
         };
       }
@@ -1106,15 +1180,13 @@
       const vendorSel = $("mcp-add-vendor");
       $("mcp-add-custom-type-wrap")?.classList.toggle("hidden", vendorSel.value !== "custom");
     });
+    // File upload is an independent OR path — parses on choose,
+    // regardless of the URL/payload toggle state.
     $("mcp-add-registry")?.addEventListener("change", async () => {
       const input = $("mcp-add-registry");
       const file = input.files && input.files[0];
       const status = $("mcp-add-registry-status");
-      updateRegistryPayloadToggleVisibility("mcp-add-registry-url", "mcp-add-registry", "mcp-add-registry-payload-row");
       if (!file) return;
-      const payloadToggle = $("mcp-add-registry-payload-toggle");
-      const isPayload = !payloadToggle || payloadToggle.dataset.on !== "false" || !$("mcp-add-registry-url")?.value.trim();
-      if (!isPayload) return; // toggle says the URL/API is authoritative — don't parse the file
       const text = await file.text();
       addRegistryPaths = parseRegistryFile(text);
       if (status) status.textContent = `Registry parsed ✓ (${addRegistryPaths.length} paths found)`;
@@ -1125,39 +1197,32 @@
       }
     });
     $("mcp-add-registry-url")?.addEventListener("input", () => {
-      updateRegistryPayloadToggleVisibility("mcp-add-registry-url", "mcp-add-registry", "mcp-add-registry-payload-row");
+      updateRegistryPayloadToggleState("mcp-add-registry-url", "mcp-add-registry-payload-toggle", "mcp-add-registry-payload-wrap");
     });
     $("mcp-add-registry-payload-toggle")?.addEventListener("click", (e) => {
       const btn = e.currentTarget;
+      if (btn.disabled) return;
       const on = btn.dataset.on !== "true";
       btn.dataset.on = String(on);
       btn.classList.toggle("on", on);
+      $("mcp-add-registry-payload-wrap")?.classList.toggle("hidden", !on);
     });
     $("mcp-add-registry-fetch")?.addEventListener("click", async () => {
       const btn = $("mcp-add-registry-fetch");
       const status = $("mcp-add-registry-fetch-status");
       const url = ($("mcp-add-registry-url")?.value || "").trim();
+      if (!url) { if (status) status.textContent = "Enter a Tool Registry Endpoint first."; return; }
       const payloadToggle = $("mcp-add-registry-payload-toggle");
       const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
-      if (usePayload) {
-        const file = $("mcp-add-registry")?.files?.[0];
-        if (!file) { if (status) status.textContent = "No uploaded document to use as payload."; return; }
-        if (btn) btn.disabled = true;
-        try {
-          addRegistryPaths = parseRegistryFile(await file.text());
-          if (status) status.textContent = `Registry parsed ✓ (${addRegistryPaths.length} paths found)`;
-        } finally { if (btn) btn.disabled = false; }
-      } else {
-        if (!url) { if (status) status.textContent = "Enter a URL/API endpoint first."; return; }
-        if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
-        try {
-          addRegistryPaths = await fetchRegistryFromUrl(url, val("mcp-add-token", ""));
-          if (status) status.textContent = `Registry fetched ✓ (${addRegistryPaths.length} paths found)`;
-        } catch (err) {
-          if (status) status.textContent = `Fetch failed: ${err.message || err}`;
-        } finally {
-          if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
-        }
+      const payload = usePayload ? ($("mcp-add-registry-payload")?.value || "") : "";
+      if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+      try {
+        addRegistryPaths = await fetchRegistryFromUrl(url, val("mcp-add-token", ""), payload || undefined);
+        if (status) status.textContent = `Registry fetched ✓ (${addRegistryPaths.length} paths found)`;
+      } catch (err) {
+        if (status) status.textContent = `Fetch failed: ${err.message || err}`;
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry`; refreshIcons(); }
       }
       const pathSel = $("mcp-add-registry-path");
       if (pathSel) {

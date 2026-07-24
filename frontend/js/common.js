@@ -759,24 +759,49 @@
    *
    * Categorization no longer reads a mapped "category" field from the source
    * payload (that mapping is being removed from Settings entirely). Instead
-   * it matches keywords the user has defined in Settings → Issue
-   * Categorization (backend/data/category.json → categoryRules, shape
-   * [{ keyword, category }]) against a free-text blob built from the issue's
-   * title + description. First matching rule wins. No match → "Other".
+   * it matches keywords the user has defined in Settings ▸ MCP Servers ▸
+   * Issue Categorization (backend/data/categorization.json → categorization,
+   * shape { unknownLabel, categories: [{ id, name, priority,
+   * keywordsBySource: { [sourceId]: [keyword, ...] } }] }) against a
+   * free-text blob built from the issue's title + description.
+   *
+   * Matching is two-phase, mirroring what Settings' Issue Categorization tab
+   * tells the admin will happen:
+   *   1. This issue's own source's keywords, checked category-by-category in
+   *      priority order.
+   *   2. If nothing matched, every source's keywords for each category,
+   *      still in priority order (so a keyword defined on another server
+   *      can still catch an issue from this one).
+   * No match in either phase → categorization.unknownLabel (default "Other").
    *
    * searchText: pre-built lowercase-agnostic text (e.g. title + " " + description)
+   * source: the issue's detected source id (e.g. "dynatrace") — used to check
+   *   that source's own keywords first.
    */
-  function normalizeCategory(searchText, categoryRules) {
+  function normalizeCategory(searchText, categorization, source) {
     var lower = String(searchText == null ? "" : searchText).toLowerCase();
-    if (Array.isArray(categoryRules)) {
-      for (var j = 0; j < categoryRules.length; j++) {
-        var rule = categoryRules[j];
-        if (rule && rule.keyword && lower.indexOf(String(rule.keyword).toLowerCase()) !== -1) {
-          return rule.category;
+    var cats = (categorization && Array.isArray(categorization.categories)) ? categorization.categories : [];
+    var sorted = cats.slice().sort(function (a, b) { return (a.priority || 0) - (b.priority || 0); });
+
+    for (var i = 0; i < sorted.length; i++) {
+      var ownKws = (sorted[i].keywordsBySource && sorted[i].keywordsBySource[source]) || [];
+      for (var j = 0; j < ownKws.length; j++) {
+        if (ownKws[j] && lower.indexOf(String(ownKws[j]).toLowerCase()) !== -1) return sorted[i].name;
+      }
+    }
+
+    for (var k = 0; k < sorted.length; k++) {
+      var bySource = sorted[k].keywordsBySource || {};
+      var sourceIds = Object.keys(bySource);
+      for (var m = 0; m < sourceIds.length; m++) {
+        var kws = bySource[sourceIds[m]] || [];
+        for (var n = 0; n < kws.length; n++) {
+          if (kws[n] && lower.indexOf(String(kws[n]).toLowerCase()) !== -1) return sorted[k].name;
         }
       }
     }
-    return "Other";
+
+    return (categorization && categorization.unknownLabel) || "Other";
   }
 
   function resolveField(item, fieldPath) {
@@ -802,7 +827,7 @@
     return "unknown";
   }
 
-  function normalizeIssue(item, source, mapping, categoryRules, index) {
+  function normalizeIssue(item, source, mapping, categorization, index) {
     var cfg = global.CFG || {};
     var sourceMap = (mapping && mapping[source]) || (cfg.DEFAULT_MAPPING && cfg.DEFAULT_MAPPING[source]) || {};
 
@@ -821,7 +846,7 @@
       : String(rawAffectedRaw || rawApplication || "—");
 
     var severity = normalizeSeverity(rawSeverity, source);
-    var category = normalizeCategory(String(rawTitle) + " " + String(rawDescription), categoryRules);
+    var category = normalizeCategory(String(rawTitle) + " " + String(rawDescription), categorization, source);
     var status   = normalizeStatus(rawStatus, source);
 
     var startDate = parseSourceTime(rawStartTime, source);
@@ -852,7 +877,7 @@
     };
   }
 
-  function normalizeAllIssues(rawData, mapping, categoryRules) {
+  function normalizeAllIssues(rawData, mapping, categorization) {
     var groups = Array.isArray(rawData && rawData.allIssues)
       ? rawData.allIssues
       : Array.isArray(rawData) ? rawData : [];
@@ -862,7 +887,7 @@
       var items = Array.isArray(group) ? group : (Array.isArray(group && group.data) ? group.data : []);
       items.forEach(function (item) {
         var source = detectSource(item);
-        var row    = normalizeIssue(item, source, mapping, categoryRules, rows.length);
+        var row    = normalizeIssue(item, source, mapping, categorization, rows.length);
         rows.push(Object.assign({}, row, { srNo: rows.length + 1 }));
       });
     });

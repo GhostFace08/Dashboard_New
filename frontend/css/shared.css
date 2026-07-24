@@ -779,6 +779,10 @@ ul, ol        { list-style: none; }
   transition: left var(--transition);
 }
 .toggle-switch.on .toggle-thumb { left: 18px; }
+.toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
 
 /* ── 10.8 Segmented control ───────────────────────────────────────────────── */
 .segmented {

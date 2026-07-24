@@ -16,7 +16,7 @@
     const state = {
       allIssues:           [],
       mapping:             {},
-      categoryRules:       [],
+      categorization:      { unknownLabel: "Other", categories: [] },
       availableCategories: [],
 
       activeTool:     "all",
@@ -153,21 +153,56 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     async function loadAllData() {
-      const [mappingRaw, categoryRaw] = await Promise.all([
+      const [mappingRaw, categorizationRaw] = await Promise.all([
         API.getConfig("mapping.json"),
-        API.getConfig("category.json"),
+        API.getConfig("categorization.json"),
       ]);
       try { state.mapping = JSON.parse(mappingRaw) || {}; } catch { state.mapping = CFG.DEFAULT_MAPPING || {}; }
-      try { state.categoryRules = JSON.parse(categoryRaw) || []; } catch { state.categoryRules = CFG.DEFAULT_CATEGORY_RULES || []; }
+      try {
+        const parsed = JSON.parse(categorizationRaw);
+        state.categorization = (parsed && Array.isArray(parsed.categories))
+          ? parsed
+          : fallbackCategorization();
+      } catch {
+        state.categorization = fallbackCategorization();
+      }
 
       // Change 2 — KPI categories are the categories the user has defined in
-      // Settings (Issue Categorization), not whatever shows up in the data.
-      // Every category gets a KPI card, even with a 0 count. "Other" is the
-      // fixed catch-all bucket for issues that don't match any rule.
-      const definedCats = [...new Set(state.categoryRules.map(r => r.category).filter(Boolean))];
-      state.availableCategories = [...definedCats, "Other"];
+      // Settings ▸ MCP Servers ▸ Issue Categorization, not whatever shows up
+      // in the data. Every category gets a KPI card, even with a 0 count.
+      // Ordered by priority to match the order shown in Settings; the
+      // categorization's own unknownLabel (default "Unknown") is the fixed
+      // catch-all bucket appended at the end for issues that match nothing.
+      const definedCats = [...state.categorization.categories]
+        .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
+        .map(c => c.name)
+        .filter(Boolean);
+      state.availableCategories = [...new Set(definedCats)].concat(state.categorization.unknownLabel || "Other");
 
       await loadIssues();
+    }
+
+    // Used only if categorization.json is missing/unparseable. Reshapes the
+    // old flat { keyword, category } rule list (CFG.DEFAULT_CATEGORY_RULES)
+    // into the new { categories: [{ name, priority, keywordsBySource }] }
+    // shape so normalizeCategory() only has to understand one format. The
+    // "*" source bucket means these keywords are found for any source in
+    // Utils.normalizeCategory's cross-server fallback pass.
+    function fallbackCategorization() {
+      const rules = CFG.DEFAULT_CATEGORY_RULES || [];
+      const byName = new Map();
+      rules.forEach(r => {
+        if (!r || !r.category || !r.keyword) return;
+        if (!byName.has(r.category)) byName.set(r.category, []);
+        byName.get(r.category).push(r.keyword);
+      });
+      const categories = [...byName.entries()].map(([name, keywords], i) => ({
+        id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        name,
+        priority: i + 1,
+        keywordsBySource: { "*": keywords },
+      }));
+      return { unknownLabel: "Other", categories };
     }
 
     async function loadIssues(silent = false) {
@@ -184,7 +219,7 @@
         }
         hideError();
 
-        const rows = Utils.normalizeAllIssues(raw, state.mapping, state.categoryRules);
+        const rows = Utils.normalizeAllIssues(raw, state.mapping, state.categorization);
 
         // Change 3 — timestamps come from server headers/payload, never new Date()
         if (raw._fileModifiedAt) {
@@ -484,8 +519,8 @@ function getFilteredIssues() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     function renderKPIs(filtered) {
-      // Master list is fixed by Settings (category.json), computed once in
-      // loadAllData — always render one card per category, 0-count included.
+      // Master list is fixed by Settings (categorization.json), computed once
+      // in loadAllData — always render one card per category, 0-count included.
       const cats = state.availableCategories;
 
       if (cats.length === 0) {

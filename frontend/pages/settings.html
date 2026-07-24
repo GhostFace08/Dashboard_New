@@ -319,29 +319,31 @@
                 </div>
               </div>
               <div class="sfield mt-2">
-                <span class="sfield-label">Tool Registry — URL / API</span>
-                <span class="sfield-hint">Point at the endpoint that serves this tool's registry, and/or upload a registry document below.</span>
+                <span class="sfield-label">Tool Registry Endpoint</span>
+                <span class="sfield-hint">Point at the endpoint that serves this tool's registry — or skip this and upload a registry document below instead.</span>
                 <input id="mcp-add-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" />
               </div>
-              <div class="sfield mt-2">
-                <span class="sfield-label">Tool Registry — Upload Document</span>
-                <span class="sfield-hint">Upload the tool's issue registry (a file listing its available issue paths).</span>
-                <div class="flex gap-2 items-center mt-1">
-                  <input id="mcp-add-registry" type="file" class="input" style="max-width:260px" />
-                  <span id="mcp-add-registry-status" class="text-muted" style="font-size:11px"></span>
-                </div>
-              </div>
-              <div class="toggle-row hidden" id="mcp-add-registry-payload-row">
+              <div class="toggle-row" id="mcp-add-registry-payload-row">
                 <div class="toggle-info">
-                  <p class="toggle-label">Uploaded document is the payload</p>
-                  <p class="toggle-desc">On: the uploaded file itself is parsed as the registry. Off: the URL/API is fetched and the uploaded file is ignored for parsing.</p>
+                  <p class="toggle-label">This fetch needs a payload</p>
+                  <p class="toggle-desc">Turn on if the endpoint requires a request body to return the registry. Enter a URL above to enable this.</p>
                 </div>
-                <button class="toggle-switch" id="mcp-add-registry-payload-toggle" data-on="false"><span class="toggle-thumb"></span></button>
+                <button class="toggle-switch" id="mcp-add-registry-payload-toggle" data-on="false" disabled><span class="toggle-thumb"></span></button>
               </div>
-              <div class="flex gap-2 items-center mt-2">
-                <button class="btn btn-ghost" id="mcp-add-registry-fetch" type="button" style="font-size:11px">
-                  <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
-                </button>
+              <div class="sfield mt-2 hidden" id="mcp-add-registry-payload-wrap">
+                <span class="sfield-label">Payload</span>
+                <span class="sfield-hint">Sent as the request body when fetching the registry (raw JSON or text).</span>
+                <textarea id="mcp-add-registry-payload" class="input input-mono" rows="4" placeholder='{ "key": "value" }'></textarea>
+              </div>
+              <div class="sfield mt-2">
+                <div class="flex gap-2 items-center">
+                  <button class="btn btn-ghost" id="mcp-add-registry-fetch" type="button" style="font-size:11px">
+                    <i data-lucide="download" style="width:12px;height:12px"></i> Fetch Tool Registry
+                  </button>
+                  <span class="text-muted" style="font-size:11px">— or —</span>
+                  <input id="mcp-add-registry" type="file" class="input" style="max-width:220px" />
+                </div>
+                <span id="mcp-add-registry-status" class="text-muted" style="font-size:11px"></span>
                 <span id="mcp-add-registry-fetch-status" class="text-muted" style="font-size:11px"></span>
               </div>
               <label class="sfield mt-2">
