@@ -34,7 +34,9 @@
  * DEPENDENCIES (must load before this file):
  *   demo_data.js → window.DEMO_DATA (optional but expected for the demo)
  *   config.js    → window.CFG   (TOOLS, legacy fallback source list)
- *   api.js       → window.API   (API.getMcpServers() for live MCP list)
+ *   api.js       → window.API   (API.getTopologyServers() for the live MCP
+ *                  list, via TopologyMiddleware; falls back to
+ *                  API.getMcpServers() if Topology is unreachable)
  *   common.js    → window.Utils
  *   d3 (vendored: selection, force, drag, zoom — all attach to window.d3)
  */
@@ -211,15 +213,33 @@
     return graph.nodes.filter(n => n.label.toLowerCase().includes(q));
   }
 
-  /* ─── MCP servers (live list, for Add Topology / Add Node dropdowns) ──── */
+  /* ─── MCP servers (live list, for Add Topology / Add Node dropdowns) ────
+   * Prefers TopologyMiddleware's getTopologyServers() (a read-only proxy in
+   * front of Settings' mcpservers.json — see api.js). Falls back to the
+   * older direct getMcpServers() path (straight to Settings) if Topology is
+   * unreachable or returns an empty list, and from there to CFG.TOOLS as
+   * before — this is strictly additive, no existing fallback was removed.
+   */
   async function loadMcpServers() {
     try {
-      if (global.API && typeof global.API.getMcpServers === "function") {
-        const res = await global.API.getMcpServers();
-        state.mcpServers = Array.isArray(res.servers) ? res.servers : [];
+      if (global.API && typeof global.API.getTopologyServers === "function") {
+        const res = await global.API.getTopologyServers();
+        if (Array.isArray(res.servers) && res.servers.length) {
+          state.mcpServers = res.servers;
+        }
       }
     } catch (e) {
-      console.warn("[topology] loadMcpServers failed, falling back to CFG.TOOLS:", e);
+      console.warn("[topology] getTopologyServers failed, falling back to getMcpServers:", e);
+    }
+    if (!state.mcpServers.length) {
+      try {
+        if (global.API && typeof global.API.getMcpServers === "function") {
+          const res = await global.API.getMcpServers();
+          state.mcpServers = Array.isArray(res.servers) ? res.servers : [];
+        }
+      } catch (e) {
+        console.warn("[topology] loadMcpServers failed, falling back to CFG.TOOLS:", e);
+      }
     }
     if (!state.mcpServers.length) {
       state.mcpServers = TOOLS.map(t => ({ id: t.id, name: t.name, registry: { paths: [] } }));

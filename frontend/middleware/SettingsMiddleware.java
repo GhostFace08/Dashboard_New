@@ -117,6 +117,9 @@ public class SettingsMiddleware {
         // POST /api/settings/save  (atomic multi-file save — NEW)
         server.createContext("/api/settings/save",   new SaveHandler());
 
+        server.createContext("/health",              new HealthHandler());
+        server.createContext("/",                    new CatchAllHandler());
+
         server.setExecutor(Executors.newFixedThreadPool(4));
         server.start();
 
@@ -125,6 +128,38 @@ public class SettingsMiddleware {
         LOG.info("  GET  /api/config/<filename>");
         LOG.info("  PUT  /api/config/<filename>");
         LOG.info("  POST /api/settings/save         ← atomic multi-file save");
+        LOG.info("  GET  /health");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: GET /health
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class HealthHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1); return;
+            }
+            sendJson(ex, "{\"status\":\"ok\",\"service\":\"settings\",\"port\":" + PORT + "}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: catch-all — see ObservabilityMiddleware for rationale.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class CatchAllHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1); return;
+            }
+            LOG.warning("Unmatched route: " + ex.getRequestMethod() + " " + ex.getRequestURI());
+            sendError(ex, 404, "No such route on SettingsMiddleware: " + ex.getRequestURI().getPath());
+        }
     }
 
     // ── Shared HTTP helpers ───────────────────────────────────────────────────

@@ -121,6 +121,8 @@ public class ChatMiddleware {
         // /api/chat/stream must be registered BEFORE /api/chat.
         server.createContext("/api/chat/stream", new StreamHandler());
         server.createContext("/api/chat",        new ChatHandler());
+        server.createContext("/health",          new HealthHandler());
+        server.createContext("/",                new CatchAllHandler());
 
         // Use a thread pool so a slow LLM response on one connection
         // does not block the server from accepting other requests.
@@ -130,6 +132,38 @@ public class ChatMiddleware {
         LOG.info("ChatMiddleware listening on http://localhost:" + PORT);
         LOG.info("  POST /api/chat         → " + INTENT_AGENT_URL + "/query");
         LOG.info("  POST /api/chat/stream  → " + RAG_BACKEND_URL  + "/stream");
+        LOG.info("  GET  /health");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: GET /health
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class HealthHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1); return;
+            }
+            sendJson(ex, "{\"status\":\"ok\",\"service\":\"chat\",\"port\":" + PORT + "}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: catch-all — see ObservabilityMiddleware for rationale.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class CatchAllHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1); return;
+            }
+            LOG.warning("Unmatched route: " + ex.getRequestMethod() + " " + ex.getRequestURI());
+            sendError(ex, 404, "No such route on ChatMiddleware: " + ex.getRequestURI().getPath());
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -479,7 +513,7 @@ public class ChatMiddleware {
 
     private static void addCors(HttpExchange ex) {
         ex.getResponseHeaders().set("Access-Control-Allow-Origin",  "*");
-        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         ex.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
     }
 
