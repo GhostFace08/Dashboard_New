@@ -1,640 +1,1317 @@
 {
-  "allIssues" : [ {
-    "source" : "dynatrace",
-    "data" : [ {
-      "timestamp" : "2026-07-13T06:29:46.692000000Z",
-      "dt.entity.process_group" : [ "PROCESS_GROUP-BD642CE75F15A222" ],
-      "related_entity_names" : [ "Thread_Dump", "com.dynatrace.easytravel.weblauncher.jar easytravel-*-x*" ],
-      "event.category" : "CUSTOM_ALERT",
-      "display_id" : "P-2607162",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.service" ],
-      "related_entity_ids" : [ "HOST_GROUP-77693739306412E3", "PROCESS_GROUP-BD642CE75F15A222" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Services" ],
-      "entity_tags" : [ "dt.host_group.id:Thread_Dump" ],
-      "dt.analysis.offset" : "-240000000000",
-      "dt.entity.host_group" : [ "HOST_GROUP-77693739306412E3" ],
-      "dt.entity.service" : [ "SERVICE-66A07B9BC45F84C1" ],
-      "dt.host_group.id" : [ "Thread_Dump" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "SERVICE-66A07B9BC45F84C1" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "IncidentTest1", "Infra CPU Alerts1", "EazyTravel_Linux_Test", "Incidenttest2", "CPU_TEST", "webhook" ],
-      "event.severity" : "3",
-      "event.name" : "Response time is above 100ms on EasyTravel Service",
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "Web Launcher" ],
-      "dt.davis.event_ids" : [ "-3135559430167373897_1783679100000" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, Web Launcher**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "UPDATED",
-      "event.id" : "-3135559430167373897_1783679100000V2",
-      "event.start" : "2026-07-10T10:29:00.000000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T09:19:01.149000000Z",
-      "event.category" : "AVAILABILITY",
-      "display_id" : "P-2607224",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "dt.entity.apm_security_gateway" : [ "APM_SECURITY_GATEWAY-000000002E8C761C" ],
-      "affected_entity_types" : [ "dt.entity.apm_security_gateway" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Environment" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "APM_SECURITY_GATEWAY-000000002E8C761C" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "event.name" : "Synthetic ActiveGate outage",
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "10.83.145.158" ],
-      "dt.davis.event_ids" : [ "-353510836098334039_1783933440000" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Synthetic ActiveGate outage\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**ActiveGate, 10.83.145.158**\n\nAvailability: Synthetic ActiveGate outage\n\n- Availability failure from AndheriDC",
-      "dt.duration_marker" : "900000000000",
-      "event.status_transition" : "UPDATED",
-      "event.id" : "-353510836098334039_1783933440000V2",
-      "event.start" : "2026-07-13T09:04:00.000000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:27.217000000Z",
-      "event.category" : "AVAILABILITY",
-      "k8s.cluster.name" : [ "easytradedemo" ],
-      "display_id" : "P-260752",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.kubernetes_cluster" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "easytradedemo",
-        "id" : "K8S_CLUSTER-CEF7FC9249159377",
-        "type" : "K8S_CLUSTER"
-      } ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "KUBERNETES_CLUSTER-66595461C0017EC6" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "K8S_CLUSTER-CEF7FC9249159377" ],
-      "event.name" : "Monitoring not available",
-      "k8s.cluster.uid" : [ "cdd5fc31-a69c-4cc8-bdca-03c1aaa39bca" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "easytradedemo" ],
-      "dt.davis.event_ids" : [ "-5610503899778146164_1783404066189" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, easytradedemo**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "smartscape.affected_entity.types" : [ "K8S_CLUSTER" ],
-      "dt.entity.kubernetes_cluster" : [ "KUBERNETES_CLUSTER-66595461C0017EC6" ],
-      "event.id" : "-5610503899778146164_1783404066189V2",
-      "event.start" : "2026-07-07T06:01:06.189000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:17.207000000Z",
-      "dt.entity.process_group" : [ "PROCESS_GROUP-8857AB7A6CCAA8A7" ],
-      "related_entity_names" : [ "Thread_Dump", "com.dynatrace.easytravel.business.backend.jar easytravel-*-x*" ],
-      "event.category" : "CUSTOM_ALERT",
-      "display_id" : "P-2607161",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.service" ],
-      "related_entity_ids" : [ "HOST_GROUP-77693739306412E3", "PROCESS_GROUP-8857AB7A6CCAA8A7" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Services" ],
-      "entity_tags" : [ "[Environment]DT_RELEASE_BUILD_VERSION:2.0.0.3679 (2025-03-18)", "[Environment]DT_RELEASE_PRODUCT:easytravel", "[Environment]DT_RELEASE_STAGE:demo", "[Environment]DT_RELEASE_VERSION:2.0.0", "dt.host_group.id:Thread_Dump" ],
-      "dt.analysis.offset" : "-180000000000",
-      "dt.entity.host_group" : [ "HOST_GROUP-77693739306412E3" ],
-      "dt.entity.service" : [ "SERVICE-53A9B01E4E5513F4" ],
-      "dt.host_group.id" : [ "Thread_Dump" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "SERVICE-53A9B01E4E5513F4" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "IncidentTest1", "Infra CPU Alerts1", "EazyTravel_Linux_Test", "Incidenttest2", "CPU_TEST", "webhook" ],
-      "event.severity" : "3",
-      "event.name" : "Response time is above 100ms on EasyTravel Service",
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "BookingService" ],
-      "dt.davis.event_ids" : [ "-6004231264708222457_1783679160000" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, BookingService**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "event.id" : "-6004231264708222457_1783679160000V2",
-      "event.start" : "2026-07-10T10:29:00.000000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T05:24:05.801000000Z",
-      "related_entity_names" : [ "OB_LAB_DB" ],
-      "event.category" : "AVAILABILITY",
-      "display_id" : "P-260791",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.host" ],
-      "related_entity_ids" : [ "HOST_GROUP-35590436109C5227" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "Hitachi Lab Servers" ],
-      "dt.entity.host_group" : [ "HOST_GROUP-35590436109C5227" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "microservices2",
-        "id" : "HOST-4CEAB80642323E89",
-        "type" : "HOST"
-      } ],
-      "host.name" : [ "microservices2" ],
-      "dt.host_group.id" : [ "OB_LAB_DB" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "HOST-4CEAB80642323E89" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "HOST-4CEAB80642323E89" ],
-      "event.name" : "Below the minimum process count",
-      "dt.entity.host" : [ "HOST-4CEAB80642323E89" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "192.168.100.107_DBServer" ],
-      "dt.davis.event_ids" : [ "-6312491849810356711_1783570870600" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Below the minimum process count\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Host, 192.168.100.107_DBServer**\n\nAvailability: Below the minimum process count\n\n- Minimum process count not met for the rule: ProcessEnabled",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "UPDATED",
-      "smartscape.affected_entity.types" : [ "HOST" ],
-      "event.id" : "-6312491849810356711_1783570870600V2",
-      "event.start" : "2026-07-09T04:21:10.600000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:37.239000000Z",
-      "event.category" : "AVAILABILITY",
-      "k8s.cluster.name" : [ "dynatrace" ],
-      "display_id" : "P-260756",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.kubernetes_cluster" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "dynatrace",
-        "id" : "K8S_CLUSTER-4E8EC8B27BB5C7FE",
-        "type" : "K8S_CLUSTER"
-      } ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "KUBERNETES_CLUSTER-3228FA7DCDCEDB15" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "K8S_CLUSTER-4E8EC8B27BB5C7FE" ],
-      "event.name" : "Monitoring not available",
-      "k8s.cluster.uid" : [ "3cfd195e-003f-4b23-a4ee-7d113d37e184" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "dynatrace" ],
-      "dt.davis.event_ids" : [ "-6620217693113724433_1783404066189" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, dynatrace**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "smartscape.affected_entity.types" : [ "K8S_CLUSTER" ],
-      "dt.entity.kubernetes_cluster" : [ "KUBERNETES_CLUSTER-3228FA7DCDCEDB15" ],
-      "event.id" : "-6620217693113724433_1783404066189V2",
-      "event.start" : "2026-07-07T06:01:06.189000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T05:24:05.782000000Z",
-      "dt.entity.process_group" : [ "PROCESS_GROUP-DD447FCF1F07BFFE" ],
-      "related_entity_names" : [ "Thread_Dump", "CreditCardAuthorizationS*" ],
-      "event.category" : "CUSTOM_ALERT",
-      "display_id" : "P-2607163",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.service" ],
-      "related_entity_ids" : [ "HOST_GROUP-77693739306412E3", "PROCESS_GROUP-DD447FCF1F07BFFE" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Services" ],
-      "entity_tags" : [ "[Environment]DT_RELEASE_BUILD_VERSION:2.0.0.3679 (2025-03-18)", "[Environment]DT_RELEASE_PRODUCT:easytravel", "[Environment]DT_RELEASE_STAGE:demo", "[Environment]DT_RELEASE_VERSION:2.0.0", "dt.host_group.id:Thread_Dump" ],
-      "dt.analysis.offset" : "-180000000000",
-      "dt.entity.host_group" : [ "HOST_GROUP-77693739306412E3" ],
-      "dt.entity.service" : [ "SERVICE-782EBEEBD7FAB8F1" ],
-      "dt.host_group.id" : [ "Thread_Dump" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "SERVICE-782EBEEBD7FAB8F1" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "IncidentTest1", "Infra CPU Alerts1", "EazyTravel_Linux_Test", "Incidenttest2", "CPU_TEST", "webhook" ],
-      "event.severity" : "3",
-      "event.name" : "Response time is above 100ms on EasyTravel Service",
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "CreditCardValidation" ],
-      "dt.davis.event_ids" : [ "-9044633430004771396_1783679160000" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, CreditCardValidation**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "UPDATED",
-      "event.id" : "-9044633430004771396_1783679160000V2",
-      "event.start" : "2026-07-10T10:29:00.000000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:32.223000000Z",
-      "event.category" : "AVAILABILITY",
-      "k8s.cluster.name" : [ "test" ],
-      "display_id" : "P-260754",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.kubernetes_cluster" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "test",
-        "id" : "K8S_CLUSTER-E4BA31C0737E24D6",
-        "type" : "K8S_CLUSTER"
-      } ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "KUBERNETES_CLUSTER-179B7CA05643A06F" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "K8S_CLUSTER-E4BA31C0737E24D6" ],
-      "event.name" : "Monitoring not available",
-      "k8s.cluster.uid" : [ "4e2e2e6c-8812-458d-8f4e-3d7e0091cfae" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "test" ],
-      "dt.davis.event_ids" : [ "2933202092656175894_1783404066189" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, test**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "smartscape.affected_entity.types" : [ "K8S_CLUSTER" ],
-      "dt.entity.kubernetes_cluster" : [ "KUBERNETES_CLUSTER-179B7CA05643A06F" ],
-      "event.id" : "2933202092656175894_1783404066189V2",
-      "event.start" : "2026-07-07T06:01:06.189000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:37.239000000Z",
-      "event.category" : "AVAILABILITY",
-      "k8s.cluster.name" : [ "redhat-test" ],
-      "display_id" : "P-260755",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.kubernetes_cluster" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "redhat-test",
-        "id" : "K8S_CLUSTER-514D17C8FE29F427",
-        "type" : "K8S_CLUSTER"
-      } ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "KUBERNETES_CLUSTER-EB3D4B0EC8C798C8" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "K8S_CLUSTER-514D17C8FE29F427" ],
-      "event.name" : "Monitoring not available",
-      "k8s.cluster.uid" : [ "702dd697-6b1d-4c6d-97de-451f884f034a" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "redhat-test" ],
-      "dt.davis.event_ids" : [ "2961038738797714347_1783404066189" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, redhat-test**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "smartscape.affected_entity.types" : [ "K8S_CLUSTER" ],
-      "dt.entity.kubernetes_cluster" : [ "KUBERNETES_CLUSTER-EB3D4B0EC8C798C8" ],
-      "event.id" : "2961038738797714347_1783404066189V2",
-      "event.start" : "2026-07-07T06:01:06.189000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T09:11:29.803000000Z",
-      "event.category" : "AVAILABILITY",
-      "display_id" : "P-260751",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.synthetic_location" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Synthetic" ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "SYNTHETIC_LOCATION-8513CEF29DA1703A" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "event.name" : "Synthetic private location outage",
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "AndheriDC" ],
-      "dt.davis.event_ids" : [ "5655309057366849785_1783403160000" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Synthetic private location outage\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Synthetic Location, AndheriDC**\n\nAvailability: Synthetic private location outage\n\n- Availability failure from AndheriDC",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "UPDATED",
-      "dt.entity.synthetic_location" : [ "SYNTHETIC_LOCATION-8513CEF29DA1703A" ],
-      "event.id" : "5655309057366849785_1783403160000V2",
-      "event.start" : "2026-07-07T05:46:00.000000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    }, {
-      "timestamp" : "2026-07-13T06:01:32.223000000Z",
-      "event.category" : "AVAILABILITY",
-      "k8s.cluster.name" : [ "micro-k8s-cluster" ],
-      "display_id" : "P-260753",
-      "dt.davis.mute.status" : "NOT_MUTED",
-      "affected_entity_types" : [ "dt.entity.kubernetes_cluster" ],
-      "event.status" : "ACTIVE",
-      "dt.davis.impact_level" : [ "Infrastructure" ],
-      "entity_tags" : [ "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available" ],
-      "smartscape.affected_entities" : [ {
-        "name" : "micro-k8s-cluster",
-        "id" : "K8S_CLUSTER-99DA0A77DC93F829",
-        "type" : "K8S_CLUSTER"
-      } ],
-      "event.kind" : "DAVIS_PROBLEM",
-      "dt.analysis.ready" : true,
-      "affected_entity_ids" : [ "KUBERNETES_CLUSTER-2ECBA240A9BAE4B6" ],
-      "labels.alerting_profile" : [ "Application Error Alerts", "Incidenttest2", "webhook" ],
-      "event.severity" : "3",
-      "smartscape.affected_entity.ids" : [ "K8S_CLUSTER-99DA0A77DC93F829" ],
-      "event.name" : "Monitoring not available",
-      "k8s.cluster.uid" : [ "9fcd71bf-e52d-457b-b8cf-411eb8d146c1" ],
-      "dt.davis.is_frequent_event" : false,
-      "dt.davis.is_duplicate" : false,
-      "affected_entity_names" : [ "micro-k8s-cluster" ],
-      "dt.davis.event_ids" : [ "5676091170720909747_1783404066189" ],
-      "maintenance.is_under_maintenance" : false,
-      "event.description" : "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, micro-k8s-cluster**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
-      "dt.duration_marker" : "86400000000000",
-      "event.status_transition" : "REFRESHED",
-      "smartscape.affected_entity.types" : [ "K8S_CLUSTER" ],
-      "dt.entity.kubernetes_cluster" : [ "KUBERNETES_CLUSTER-2ECBA240A9BAE4B6" ],
-      "event.id" : "5676091170720909747_1783404066189V2",
-      "event.start" : "2026-07-07T06:01:06.189000000Z",
-      "dt.openpipeline.source" : "classic_root_cause_analysis",
-      "dt.openpipeline.pipelines" : [ "davis.problems:default" ]
-    } ]
-  }, {
-    "source" : "opmanager",
-    "data" : [ {
-      "alarmId" : "26",
-      "deviceName" : "microservice87.10000000001",
-      "displayName" : "Microservice87",
-      "severity" : "Critical",
-      "category" : "Server",
-      "eventType" : "Threshold Down",
-      "status" : "Critical",
-      "message" : "Memory Utilization is 25%, threshold value for this monitor is 20%: Top 3 Processes:-java - 7.2%;beam.smp - 0.8%;postgres - 0.8%",
-      "modTime" : "9 Jul 2026 03:14:12 PM IST"
-    }, {
-      "alarmId" : "7",
-      "deviceName" : "APM_Probe",
-      "displayName" : "APM_Probe",
-      "severity" : "Clear",
-      "category" : "Probe",
-      "eventType" : "Probe Communication",
-      "status" : "Clear",
-      "message" : "Communication with the Central Server has been restored",
-      "modTime" : "9 Jul 2026 03:09:05 PM IST"
-    }, {
-      "alarmId" : "2",
-      "deviceName" : "System",
-      "displayName" : "System",
-      "severity" : "Clear",
-      "category" : "SelfMonitoring",
-      "eventType" : "SelfMonitoring Alarm",
-      "status" : "Clear",
-      "message" : "OpManager Plus Process CPU is now back to normal, current value is 2%",
-      "modTime" : "8 Jul 2026 04:09:07 PM IST"
-    }, {
-      "alarmId" : "306",
-      "deviceName" : "APM_10000242.10000000001",
-      "displayName" : "192.168.100.187_PGSQL",
-      "severity" : "Critical",
-      "category" : "APM",
-      "eventType" : "Applications_Alarm",
-      "status" : "Critical",
-      "message" : "APM Plugin: Health of 192.168.100.187_PGSQL (PostgreSQL) is critical. Root Cause : 1. 127.0.0.1 (Replication) is down",
-      "modTime" : "29 Jun 2026 12:10:50 AM IST"
-    }, {
-      "alarmId" : "27",
-      "deviceName" : "microservice87.10000000001",
-      "displayName" : "Microservice87",
-      "severity" : "Clear",
-      "category" : "Server",
-      "eventType" : "Threshold Up",
-      "status" : "Clear",
-      "message" : "CPU Utilization is now back to normal, current value is 9%",
-      "modTime" : "28 Jun 2026 09:32:23 PM IST"
-    }, {
-      "alarmId" : "453",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Trouble",
-      "category" : "Switch",
-      "eventType" : "Interface Utilization",
-      "status" : "Trouble",
-      "message" : "Interface 'GigabitEthernet1/0/1-AP_3700'  util threshold violated.Current IN traffic is 283.753 Kbps(2.84%) and OUT traffic is 4.043 Mbps(40.44%), whereas configured threshold is 30% .",
-      "modTime" : "27 Jun 2026 08:33:03 AM IST"
-    }, {
-      "alarmId" : "560",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Stack Switch State Change",
-      "status" : "Clear",
-      "message" : "Switch status: Switch Switch-2-2000 is active and operational.",
-      "modTime" : "26 Jun 2026 01:38:50 PM IST"
-    }, {
-      "alarmId" : "465",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Up",
-      "status" : "Clear",
-      "message" : "Interface 'GigabitEthernet2/0/1-AP_2800' is up.",
-      "modTime" : "24 May 2026 03:38:50 PM IST"
-    }, {
-      "alarmId" : "1395",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Up",
-      "status" : "Clear",
-      "message" : "Interface 'GigabitEthernet2/0/5-Core_to_firewall_0/4' is up.",
-      "modTime" : "14 May 2026 04:28:50 PM IST"
-    }, {
-      "alarmId" : "1391",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Up",
-      "status" : "Clear",
-      "message" : "Interface 'GigabitEthernet1/0/5-Core_to_firewall_0/4' is up.",
-      "modTime" : "14 May 2026 12:28:50 PM IST"
-    }, {
-      "alarmId" : "1392",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Discards",
-      "status" : "Clear",
-      "message" : "Discards rate for Interface 'GigabitEthernet2/0/1-AP_2800' is now back to normal, current value is 0%.",
-      "modTime" : "14 May 2026 12:17:59 PM IST"
-    }, {
-      "alarmId" : "803",
-      "deviceName" : "APM_10000303.10000000001",
-      "displayName" : "OnlineBanking",
-      "severity" : "Critical",
-      "category" : "APM",
-      "eventType" : "Applications_Alarm",
-      "status" : "Critical",
-      "message" : "APM Plugin: Health of OnlineBanking (APM-Insight-Application) is critical. Root Cause : 1. APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) --> Apdex  0.6 < 0.85 T (threshold).2. APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) --> Response Time  55099 > 2000 ms (threshold).3. Apdex  0.333 < 0.8500 T (threshold).4. Frustrated  0.0 < 0.85 % (threshold).5. Response Time  2289 > 2000 ms (threshold).",
-      "modTime" : "12 May 2026 04:32:50 AM IST"
-    }, {
-      "alarmId" : "1353",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Discards",
-      "status" : "Clear",
-      "message" : "Discards rate for Interface 'GigabitEthernet1/0/1-AP_3700' is now back to normal, current value is 0%.",
-      "modTime" : "4 May 2026 10:24:30 AM IST"
-    }, {
-      "alarmId" : "802",
-      "deviceName" : "APM_10000304.10000000001",
-      "displayName" : "APPD-TARGET1:8080 (App Name: OnlineBanking)",
-      "severity" : "Critical",
-      "category" : "APM",
-      "eventType" : "Applications_Alarm",
-      "status" : "Critical",
-      "message" : "APM Plugin: Health of APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) is critical. Root Cause : 1. Apdex  0.6 < 0.85 T (threshold).2. Response Time  55099 > 2000 ms (threshold).",
-      "modTime" : "21 Apr 2026 02:03:53 AM IST"
-    }, {
-      "alarmId" : "445",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Trouble",
-      "category" : "Switch",
-      "eventType" : "Interface Down",
-      "status" : "Trouble",
-      "message" : "Interface 'GigabitEthernet1/0/21-Gi1/0/21' is down.",
-      "modTime" : "15 Apr 2026 01:33:02 PM IST"
-    }, {
-      "alarmId" : "437",
-      "deviceName" : "APM_10000252.10000000001",
-      "displayName" : "Kubernetes Monitoring",
-      "severity" : "Critical",
-      "category" : "APM",
-      "eventType" : "Applications_Alarm",
-      "status" : "Critical",
-      "message" : "APM Plugin: Health of Kubernetes Monitoring (Kubernetes) is critical. Root Cause : 1. worker2.hitachi-systems.com (NodeDetails) is down",
-      "modTime" : "17 Mar 2026 08:12:30 PM IST"
-    }, {
-      "alarmId" : "610",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Utilization",
-      "status" : "Clear",
-      "message" : "Interface 'Vlan70-Vl70' is now back to normal, current IN traffic is 1.812 M(0.18%) and OUT traffic is 3.553 Mbps(0.36%).",
-      "modTime" : "5 Mar 2026 06:42:08 PM IST"
-    }, {
-      "alarmId" : "553",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Attention",
-      "category" : "Switch",
-      "eventType" : "Hardware Information Change",
-      "status" : "Attention",
-      "message" : "SerialNumber has been changed.",
-      "modTime" : "2 Mar 2026 08:24:06 PM IST"
-    }, {
-      "alarmId" : "460",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Trouble",
-      "category" : "Switch",
-      "eventType" : "Interface Down",
-      "status" : "Trouble",
-      "message" : "Interface 'GigabitEthernet1/0/22-Gi1/0/22' is down.",
-      "modTime" : "13 Oct 2025 03:59:45 PM IST"
-    }, {
-      "alarmId" : "434",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Discards",
-      "status" : "Clear",
-      "message" : "Discards rate for Interface 'Vlan30-Vl30' is now back to normal, current value is 0%.",
-      "modTime" : "22 Sep 2025 08:37:13 AM IST"
-    }, {
-      "alarmId" : "410",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Trouble",
-      "category" : "Switch",
-      "eventType" : "Interface Down",
-      "status" : "Trouble",
-      "message" : "Interface 'GigabitEthernet2/0/24-Gi2/0/24' is down.",
-      "modTime" : "19 Jul 2025 11:25:14 AM IST"
-    }, {
-      "alarmId" : "182",
-      "deviceName" : "10.10.10.1.10000000001",
-      "displayName" : "10.10.10.1",
-      "severity" : "Clear",
-      "category" : "Switch",
-      "eventType" : "Interface Discards",
-      "status" : "Clear",
-      "message" : "Discards rate for Interface 'GigabitEthernet2/0/24-Gi2/0/24' is now back to normal, current value is 0%.",
-      "modTime" : "18 Jul 2025 02:27:45 PM IST"
-    }, {
-      "alarmId" : "171",
-      "deviceName" : "172.17.17.6.10000000001",
-      "displayName" : "172.17.17.6",
-      "severity" : "Clear",
-      "category" : "Unknown",
-      "eventType" : "Device Up",
-      "status" : "Clear",
-      "message" : "Device Active and Responding",
-      "modTime" : "17 Jun 2025 08:23:16 PM IST"
-    }, {
-      "alarmId" : "123",
-      "deviceName" : "System",
-      "displayName" : "System",
-      "severity" : "Clear",
-      "category" : "SelfMonitoring",
-      "eventType" : "SelfMonitoring Alarm",
-      "status" : "Clear",
-      "message" : "OpManager Plus System CPU is now back to normal, current value is 8%. Top 3 Processes:-java - 32.6%; postgres - 0.9%; mysqld - 0.3%.",
-      "modTime" : "11 Jun 2025 04:51:31 PM IST"
-    }, {
-      "alarmId" : "25",
-      "deviceName" : "microservice87.10000000001",
-      "displayName" : "Microservice87",
-      "severity" : "Critical",
-      "category" : "Server",
-      "eventType" : "Threshold Down",
-      "status" : "Critical",
-      "message" : "Disk Utilization is 37%, threshold value for this monitor is 20%",
-      "modTime" : "30 May 2025 10:57:48 PM IST"
-    } ]
-  } ]
+  "allIssues": [
+    {
+      "source": "dynatrace",
+      "data": [
+        {
+          "timestamp": "2026-07-13T06:29:46.692000000Z",
+          "dt.entity.process_group": [
+            "PROCESS_GROUP-BD642CE75F15A222"
+          ],
+          "related_entity_names": [
+            "Thread_Dump",
+            "com.dynatrace.easytravel.weblauncher.jar easytravel-*-x*"
+          ],
+          "event.category": "CUSTOM_ALERT",
+          "display_id": "P-2607162",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.service"
+          ],
+          "related_entity_ids": [
+            "HOST_GROUP-77693739306412E3",
+            "PROCESS_GROUP-BD642CE75F15A222"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Services"
+          ],
+          "entity_tags": [
+            "dt.host_group.id:Thread_Dump"
+          ],
+          "dt.analysis.offset": "-240000000000",
+          "dt.entity.host_group": [
+            "HOST_GROUP-77693739306412E3"
+          ],
+          "dt.entity.service": [
+            "SERVICE-66A07B9BC45F84C1"
+          ],
+          "dt.host_group.id": [
+            "Thread_Dump"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "SERVICE-66A07B9BC45F84C1"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "IncidentTest1",
+            "Infra CPU Alerts1",
+            "EazyTravel_Linux_Test",
+            "Incidenttest2",
+            "CPU_TEST",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "event.name": "Response time is above 100ms on EasyTravel Service",
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "Web Launcher"
+          ],
+          "dt.davis.event_ids": [
+            "-3135559430167373897_1783679100000"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, Web Launcher**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "UPDATED",
+          "event.id": "-3135559430167373897_1783679100000V2",
+          "event.start": "2026-07-10T10:29:00.000000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T09:19:01.149000000Z",
+          "event.category": "AVAILABILITY",
+          "display_id": "P-2607224",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "dt.entity.apm_security_gateway": [
+            "APM_SECURITY_GATEWAY-000000002E8C761C"
+          ],
+          "affected_entity_types": [
+            "dt.entity.apm_security_gateway"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Environment"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "APM_SECURITY_GATEWAY-000000002E8C761C"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "event.name": "Synthetic ActiveGate outage",
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "10.83.145.158"
+          ],
+          "dt.davis.event_ids": [
+            "-353510836098334039_1783933440000"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Synthetic ActiveGate outage\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**ActiveGate, 10.83.145.158**\n\nAvailability: Synthetic ActiveGate outage\n\n- Availability failure from AndheriDC",
+          "dt.duration_marker": "900000000000",
+          "event.status_transition": "UPDATED",
+          "event.id": "-353510836098334039_1783933440000V2",
+          "event.start": "2026-07-13T09:04:00.000000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:27.217000000Z",
+          "event.category": "AVAILABILITY",
+          "k8s.cluster.name": [
+            "easytradedemo"
+          ],
+          "display_id": "P-260752",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.kubernetes_cluster"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "easytradedemo",
+              "id": "K8S_CLUSTER-CEF7FC9249159377",
+              "type": "K8S_CLUSTER"
+            }
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "KUBERNETES_CLUSTER-66595461C0017EC6"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "K8S_CLUSTER-CEF7FC9249159377"
+          ],
+          "event.name": "Monitoring not available",
+          "k8s.cluster.uid": [
+            "cdd5fc31-a69c-4cc8-bdca-03c1aaa39bca"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "easytradedemo"
+          ],
+          "dt.davis.event_ids": [
+            "-5610503899778146164_1783404066189"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, easytradedemo**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "smartscape.affected_entity.types": [
+            "K8S_CLUSTER"
+          ],
+          "dt.entity.kubernetes_cluster": [
+            "KUBERNETES_CLUSTER-66595461C0017EC6"
+          ],
+          "event.id": "-5610503899778146164_1783404066189V2",
+          "event.start": "2026-07-07T06:01:06.189000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:17.207000000Z",
+          "dt.entity.process_group": [
+            "PROCESS_GROUP-8857AB7A6CCAA8A7"
+          ],
+          "related_entity_names": [
+            "Thread_Dump",
+            "com.dynatrace.easytravel.business.backend.jar easytravel-*-x*"
+          ],
+          "event.category": "CUSTOM_ALERT",
+          "display_id": "P-2607161",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.service"
+          ],
+          "related_entity_ids": [
+            "HOST_GROUP-77693739306412E3",
+            "PROCESS_GROUP-8857AB7A6CCAA8A7"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Services"
+          ],
+          "entity_tags": [
+            "[Environment]DT_RELEASE_BUILD_VERSION:2.0.0.3679 (2025-03-18)",
+            "[Environment]DT_RELEASE_PRODUCT:easytravel",
+            "[Environment]DT_RELEASE_STAGE:demo",
+            "[Environment]DT_RELEASE_VERSION:2.0.0",
+            "dt.host_group.id:Thread_Dump"
+          ],
+          "dt.analysis.offset": "-180000000000",
+          "dt.entity.host_group": [
+            "HOST_GROUP-77693739306412E3"
+          ],
+          "dt.entity.service": [
+            "SERVICE-53A9B01E4E5513F4"
+          ],
+          "dt.host_group.id": [
+            "Thread_Dump"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "SERVICE-53A9B01E4E5513F4"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "IncidentTest1",
+            "Infra CPU Alerts1",
+            "EazyTravel_Linux_Test",
+            "Incidenttest2",
+            "CPU_TEST",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "event.name": "Response time is above 100ms on EasyTravel Service",
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "BookingService"
+          ],
+          "dt.davis.event_ids": [
+            "-6004231264708222457_1783679160000"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, BookingService**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "event.id": "-6004231264708222457_1783679160000V2",
+          "event.start": "2026-07-10T10:29:00.000000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T05:24:05.801000000Z",
+          "related_entity_names": [
+            "OB_LAB_DB"
+          ],
+          "event.category": "AVAILABILITY",
+          "display_id": "P-260791",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.host"
+          ],
+          "related_entity_ids": [
+            "HOST_GROUP-35590436109C5227"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "Hitachi Lab Servers"
+          ],
+          "dt.entity.host_group": [
+            "HOST_GROUP-35590436109C5227"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "microservices2",
+              "id": "HOST-4CEAB80642323E89",
+              "type": "HOST"
+            }
+          ],
+          "host.name": [
+            "microservices2"
+          ],
+          "dt.host_group.id": [
+            "OB_LAB_DB"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "HOST-4CEAB80642323E89"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "HOST-4CEAB80642323E89"
+          ],
+          "event.name": "Below the minimum process count",
+          "dt.entity.host": [
+            "HOST-4CEAB80642323E89"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "192.168.100.107_DBServer"
+          ],
+          "dt.davis.event_ids": [
+            "-6312491849810356711_1783570870600"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Below the minimum process count\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Host, 192.168.100.107_DBServer**\n\nAvailability: Below the minimum process count\n\n- Minimum process count not met for the rule: ProcessEnabled",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "UPDATED",
+          "smartscape.affected_entity.types": [
+            "HOST"
+          ],
+          "event.id": "-6312491849810356711_1783570870600V2",
+          "event.start": "2026-07-09T04:21:10.600000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:37.239000000Z",
+          "event.category": "AVAILABILITY",
+          "k8s.cluster.name": [
+            "dynatrace"
+          ],
+          "display_id": "P-260756",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.kubernetes_cluster"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "dynatrace",
+              "id": "K8S_CLUSTER-4E8EC8B27BB5C7FE",
+              "type": "K8S_CLUSTER"
+            }
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "KUBERNETES_CLUSTER-3228FA7DCDCEDB15"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "K8S_CLUSTER-4E8EC8B27BB5C7FE"
+          ],
+          "event.name": "Monitoring not available",
+          "k8s.cluster.uid": [
+            "3cfd195e-003f-4b23-a4ee-7d113d37e184"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "dynatrace"
+          ],
+          "dt.davis.event_ids": [
+            "-6620217693113724433_1783404066189"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, dynatrace**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "smartscape.affected_entity.types": [
+            "K8S_CLUSTER"
+          ],
+          "dt.entity.kubernetes_cluster": [
+            "KUBERNETES_CLUSTER-3228FA7DCDCEDB15"
+          ],
+          "event.id": "-6620217693113724433_1783404066189V2",
+          "event.start": "2026-07-07T06:01:06.189000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T05:24:05.782000000Z",
+          "dt.entity.process_group": [
+            "PROCESS_GROUP-DD447FCF1F07BFFE"
+          ],
+          "related_entity_names": [
+            "Thread_Dump",
+            "CreditCardAuthorizationS*"
+          ],
+          "event.category": "CUSTOM_ALERT",
+          "display_id": "P-2607163",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.service"
+          ],
+          "related_entity_ids": [
+            "HOST_GROUP-77693739306412E3",
+            "PROCESS_GROUP-DD447FCF1F07BFFE"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Services"
+          ],
+          "entity_tags": [
+            "[Environment]DT_RELEASE_BUILD_VERSION:2.0.0.3679 (2025-03-18)",
+            "[Environment]DT_RELEASE_PRODUCT:easytravel",
+            "[Environment]DT_RELEASE_STAGE:demo",
+            "[Environment]DT_RELEASE_VERSION:2.0.0",
+            "dt.host_group.id:Thread_Dump"
+          ],
+          "dt.analysis.offset": "-180000000000",
+          "dt.entity.host_group": [
+            "HOST_GROUP-77693739306412E3"
+          ],
+          "dt.entity.service": [
+            "SERVICE-782EBEEBD7FAB8F1"
+          ],
+          "dt.host_group.id": [
+            "Thread_Dump"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "SERVICE-782EBEEBD7FAB8F1"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "IncidentTest1",
+            "Infra CPU Alerts1",
+            "EazyTravel_Linux_Test",
+            "Incidenttest2",
+            "CPU_TEST",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "event.name": "Response time is above 100ms on EasyTravel Service",
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "CreditCardValidation"
+          ],
+          "dt.davis.event_ids": [
+            "-9044633430004771396_1783679160000"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Response time is above 100ms on EasyTravel Service\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Service, CreditCardValidation**\n\nCustom: Response time is above 100ms on EasyTravel Service\n\n- The Response time value was above normal behavior.",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "UPDATED",
+          "event.id": "-9044633430004771396_1783679160000V2",
+          "event.start": "2026-07-10T10:29:00.000000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:32.223000000Z",
+          "event.category": "AVAILABILITY",
+          "k8s.cluster.name": [
+            "test"
+          ],
+          "display_id": "P-260754",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.kubernetes_cluster"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "test",
+              "id": "K8S_CLUSTER-E4BA31C0737E24D6",
+              "type": "K8S_CLUSTER"
+            }
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "KUBERNETES_CLUSTER-179B7CA05643A06F"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "K8S_CLUSTER-E4BA31C0737E24D6"
+          ],
+          "event.name": "Monitoring not available",
+          "k8s.cluster.uid": [
+            "4e2e2e6c-8812-458d-8f4e-3d7e0091cfae"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "test"
+          ],
+          "dt.davis.event_ids": [
+            "2933202092656175894_1783404066189"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, test**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "smartscape.affected_entity.types": [
+            "K8S_CLUSTER"
+          ],
+          "dt.entity.kubernetes_cluster": [
+            "KUBERNETES_CLUSTER-179B7CA05643A06F"
+          ],
+          "event.id": "2933202092656175894_1783404066189V2",
+          "event.start": "2026-07-07T06:01:06.189000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:37.239000000Z",
+          "event.category": "AVAILABILITY",
+          "k8s.cluster.name": [
+            "redhat-test"
+          ],
+          "display_id": "P-260755",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.kubernetes_cluster"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "redhat-test",
+              "id": "K8S_CLUSTER-514D17C8FE29F427",
+              "type": "K8S_CLUSTER"
+            }
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "KUBERNETES_CLUSTER-EB3D4B0EC8C798C8"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "K8S_CLUSTER-514D17C8FE29F427"
+          ],
+          "event.name": "Monitoring not available",
+          "k8s.cluster.uid": [
+            "702dd697-6b1d-4c6d-97de-451f884f034a"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "redhat-test"
+          ],
+          "dt.davis.event_ids": [
+            "2961038738797714347_1783404066189"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, redhat-test**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "smartscape.affected_entity.types": [
+            "K8S_CLUSTER"
+          ],
+          "dt.entity.kubernetes_cluster": [
+            "KUBERNETES_CLUSTER-EB3D4B0EC8C798C8"
+          ],
+          "event.id": "2961038738797714347_1783404066189V2",
+          "event.start": "2026-07-07T06:01:06.189000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T09:11:29.803000000Z",
+          "event.category": "AVAILABILITY",
+          "display_id": "P-260751",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.synthetic_location"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Synthetic"
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "SYNTHETIC_LOCATION-8513CEF29DA1703A"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "event.name": "Synthetic private location outage",
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "AndheriDC"
+          ],
+          "dt.davis.event_ids": [
+            "5655309057366849785_1783403160000"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Synthetic private location outage\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Synthetic Location, AndheriDC**\n\nAvailability: Synthetic private location outage\n\n- Availability failure from AndheriDC",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "UPDATED",
+          "dt.entity.synthetic_location": [
+            "SYNTHETIC_LOCATION-8513CEF29DA1703A"
+          ],
+          "event.id": "5655309057366849785_1783403160000V2",
+          "event.start": "2026-07-07T05:46:00.000000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        },
+        {
+          "timestamp": "2026-07-13T06:01:32.223000000Z",
+          "event.category": "AVAILABILITY",
+          "k8s.cluster.name": [
+            "micro-k8s-cluster"
+          ],
+          "display_id": "P-260753",
+          "dt.davis.mute.status": "NOT_MUTED",
+          "affected_entity_types": [
+            "dt.entity.kubernetes_cluster"
+          ],
+          "event.status": "ACTIVE",
+          "dt.davis.impact_level": [
+            "Infrastructure"
+          ],
+          "entity_tags": [
+            "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available"
+          ],
+          "smartscape.affected_entities": [
+            {
+              "name": "micro-k8s-cluster",
+              "id": "K8S_CLUSTER-99DA0A77DC93F829",
+              "type": "K8S_CLUSTER"
+            }
+          ],
+          "event.kind": "DAVIS_PROBLEM",
+          "dt.analysis.ready": true,
+          "affected_entity_ids": [
+            "KUBERNETES_CLUSTER-2ECBA240A9BAE4B6"
+          ],
+          "labels.alerting_profile": [
+            "Application Error Alerts",
+            "Incidenttest2",
+            "webhook"
+          ],
+          "event.severity": "3",
+          "smartscape.affected_entity.ids": [
+            "K8S_CLUSTER-99DA0A77DC93F829"
+          ],
+          "event.name": "Monitoring not available",
+          "k8s.cluster.uid": [
+            "9fcd71bf-e52d-457b-b8cf-411eb8d146c1"
+          ],
+          "dt.davis.is_frequent_event": false,
+          "dt.davis.is_duplicate": false,
+          "affected_entity_names": [
+            "micro-k8s-cluster"
+          ],
+          "dt.davis.event_ids": [
+            "5676091170720909747_1783404066189"
+          ],
+          "maintenance.is_under_maintenance": false,
+          "event.description": "# Monitoring not available\n\nThe problem **affects 1 entity** overall.\n\nFollowing entities were affected by the problem:\n\n**Kubernetes cluster, micro-k8s-cluster**\n\nAvailability: Monitoring not available\n\n- Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n",
+          "dt.duration_marker": "86400000000000",
+          "event.status_transition": "REFRESHED",
+          "smartscape.affected_entity.types": [
+            "K8S_CLUSTER"
+          ],
+          "dt.entity.kubernetes_cluster": [
+            "KUBERNETES_CLUSTER-2ECBA240A9BAE4B6"
+          ],
+          "event.id": "5676091170720909747_1783404066189V2",
+          "event.start": "2026-07-07T06:01:06.189000000Z",
+          "dt.openpipeline.source": "classic_root_cause_analysis",
+          "dt.openpipeline.pipelines": [
+            "davis.problems:default"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "opmanager",
+      "data": [
+        {
+          "alarmId": "26",
+          "deviceName": "microservice87.10000000001",
+          "displayName": "Microservice87",
+          "severity": "Critical",
+          "category": "Server",
+          "eventType": "Threshold Down",
+          "status": "Critical",
+          "message": "Memory Utilization is 25%, threshold value for this monitor is 20%: Top 3 Processes:-java - 7.2%;beam.smp - 0.8%;postgres - 0.8%",
+          "modTime": "9 Jul 2026 03:14:12 PM IST"
+        },
+        {
+          "alarmId": "7",
+          "deviceName": "APM_Probe",
+          "displayName": "APM_Probe",
+          "severity": "Clear",
+          "category": "Probe",
+          "eventType": "Probe Communication",
+          "status": "Clear",
+          "message": "Communication with the Central Server has been restored",
+          "modTime": "9 Jul 2026 03:09:05 PM IST"
+        },
+        {
+          "alarmId": "2",
+          "deviceName": "System",
+          "displayName": "System",
+          "severity": "Clear",
+          "category": "SelfMonitoring",
+          "eventType": "SelfMonitoring Alarm",
+          "status": "Clear",
+          "message": "OpManager Plus Process CPU is now back to normal, current value is 2%",
+          "modTime": "8 Jul 2026 04:09:07 PM IST"
+        },
+        {
+          "alarmId": "306",
+          "deviceName": "APM_10000242.10000000001",
+          "displayName": "192.168.100.187_PGSQL",
+          "severity": "Critical",
+          "category": "APM",
+          "eventType": "Applications_Alarm",
+          "status": "Critical",
+          "message": "APM Plugin: Health of 192.168.100.187_PGSQL (PostgreSQL) is critical. Root Cause : 1. 127.0.0.1 (Replication) is down",
+          "modTime": "29 Jun 2026 12:10:50 AM IST"
+        },
+        {
+          "alarmId": "27",
+          "deviceName": "microservice87.10000000001",
+          "displayName": "Microservice87",
+          "severity": "Clear",
+          "category": "Server",
+          "eventType": "Threshold Up",
+          "status": "Clear",
+          "message": "CPU Utilization is now back to normal, current value is 9%",
+          "modTime": "28 Jun 2026 09:32:23 PM IST"
+        },
+        {
+          "alarmId": "453",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Trouble",
+          "category": "Switch",
+          "eventType": "Interface Utilization",
+          "status": "Trouble",
+          "message": "Interface 'GigabitEthernet1/0/1-AP_3700'  util threshold violated.Current IN traffic is 283.753 Kbps(2.84%) and OUT traffic is 4.043 Mbps(40.44%), whereas configured threshold is 30% .",
+          "modTime": "27 Jun 2026 08:33:03 AM IST"
+        },
+        {
+          "alarmId": "560",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Stack Switch State Change",
+          "status": "Clear",
+          "message": "Switch status: Switch Switch-2-2000 is active and operational.",
+          "modTime": "26 Jun 2026 01:38:50 PM IST"
+        },
+        {
+          "alarmId": "465",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Up",
+          "status": "Clear",
+          "message": "Interface 'GigabitEthernet2/0/1-AP_2800' is up.",
+          "modTime": "24 May 2026 03:38:50 PM IST"
+        },
+        {
+          "alarmId": "1395",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Up",
+          "status": "Clear",
+          "message": "Interface 'GigabitEthernet2/0/5-Core_to_firewall_0/4' is up.",
+          "modTime": "14 May 2026 04:28:50 PM IST"
+        },
+        {
+          "alarmId": "1391",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Up",
+          "status": "Clear",
+          "message": "Interface 'GigabitEthernet1/0/5-Core_to_firewall_0/4' is up.",
+          "modTime": "14 May 2026 12:28:50 PM IST"
+        },
+        {
+          "alarmId": "1392",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Discards",
+          "status": "Clear",
+          "message": "Discards rate for Interface 'GigabitEthernet2/0/1-AP_2800' is now back to normal, current value is 0%.",
+          "modTime": "14 May 2026 12:17:59 PM IST"
+        },
+        {
+          "alarmId": "803",
+          "deviceName": "APM_10000303.10000000001",
+          "displayName": "OnlineBanking",
+          "severity": "Critical",
+          "category": "APM",
+          "eventType": "Applications_Alarm",
+          "status": "Critical",
+          "message": "APM Plugin: Health of OnlineBanking (APM-Insight-Application) is critical. Root Cause : 1. APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) --> Apdex  0.6 < 0.85 T (threshold).2. APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) --> Response Time  55099 > 2000 ms (threshold).3. Apdex  0.333 < 0.8500 T (threshold).4. Frustrated  0.0 < 0.85 % (threshold).5. Response Time  2289 > 2000 ms (threshold).",
+          "modTime": "12 May 2026 04:32:50 AM IST"
+        },
+        {
+          "alarmId": "1353",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Discards",
+          "status": "Clear",
+          "message": "Discards rate for Interface 'GigabitEthernet1/0/1-AP_3700' is now back to normal, current value is 0%.",
+          "modTime": "4 May 2026 10:24:30 AM IST"
+        },
+        {
+          "alarmId": "802",
+          "deviceName": "APM_10000304.10000000001",
+          "displayName": "APPD-TARGET1:8080 (App Name: OnlineBanking)",
+          "severity": "Critical",
+          "category": "APM",
+          "eventType": "Applications_Alarm",
+          "status": "Critical",
+          "message": "APM Plugin: Health of APPD-TARGET1:8080 (App Name: OnlineBanking) (APM-Insight-Instance) is critical. Root Cause : 1. Apdex  0.6 < 0.85 T (threshold).2. Response Time  55099 > 2000 ms (threshold).",
+          "modTime": "21 Apr 2026 02:03:53 AM IST"
+        },
+        {
+          "alarmId": "445",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Trouble",
+          "category": "Switch",
+          "eventType": "Interface Down",
+          "status": "Trouble",
+          "message": "Interface 'GigabitEthernet1/0/21-Gi1/0/21' is down.",
+          "modTime": "15 Apr 2026 01:33:02 PM IST"
+        },
+        {
+          "alarmId": "437",
+          "deviceName": "APM_10000252.10000000001",
+          "displayName": "Kubernetes Monitoring",
+          "severity": "Critical",
+          "category": "APM",
+          "eventType": "Applications_Alarm",
+          "status": "Critical",
+          "message": "APM Plugin: Health of Kubernetes Monitoring (Kubernetes) is critical. Root Cause : 1. worker2.hitachi-systems.com (NodeDetails) is down",
+          "modTime": "17 Mar 2026 08:12:30 PM IST"
+        },
+        {
+          "alarmId": "610",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Utilization",
+          "status": "Clear",
+          "message": "Interface 'Vlan70-Vl70' is now back to normal, current IN traffic is 1.812 M(0.18%) and OUT traffic is 3.553 Mbps(0.36%).",
+          "modTime": "5 Mar 2026 06:42:08 PM IST"
+        },
+        {
+          "alarmId": "553",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Attention",
+          "category": "Switch",
+          "eventType": "Hardware Information Change",
+          "status": "Attention",
+          "message": "SerialNumber has been changed.",
+          "modTime": "2 Mar 2026 08:24:06 PM IST"
+        },
+        {
+          "alarmId": "460",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Trouble",
+          "category": "Switch",
+          "eventType": "Interface Down",
+          "status": "Trouble",
+          "message": "Interface 'GigabitEthernet1/0/22-Gi1/0/22' is down.",
+          "modTime": "13 Oct 2025 03:59:45 PM IST"
+        },
+        {
+          "alarmId": "434",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Discards",
+          "status": "Clear",
+          "message": "Discards rate for Interface 'Vlan30-Vl30' is now back to normal, current value is 0%.",
+          "modTime": "22 Sep 2025 08:37:13 AM IST"
+        },
+        {
+          "alarmId": "410",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Trouble",
+          "category": "Switch",
+          "eventType": "Interface Down",
+          "status": "Trouble",
+          "message": "Interface 'GigabitEthernet2/0/24-Gi2/0/24' is down.",
+          "modTime": "19 Jul 2025 11:25:14 AM IST"
+        },
+        {
+          "alarmId": "182",
+          "deviceName": "10.10.10.1.10000000001",
+          "displayName": "10.10.10.1",
+          "severity": "Clear",
+          "category": "Switch",
+          "eventType": "Interface Discards",
+          "status": "Clear",
+          "message": "Discards rate for Interface 'GigabitEthernet2/0/24-Gi2/0/24' is now back to normal, current value is 0%.",
+          "modTime": "18 Jul 2025 02:27:45 PM IST"
+        },
+        {
+          "alarmId": "171",
+          "deviceName": "172.17.17.6.10000000001",
+          "displayName": "172.17.17.6",
+          "severity": "Clear",
+          "category": "Unknown",
+          "eventType": "Device Up",
+          "status": "Clear",
+          "message": "Device Active and Responding",
+          "modTime": "17 Jun 2025 08:23:16 PM IST"
+        },
+        {
+          "alarmId": "123",
+          "deviceName": "System",
+          "displayName": "System",
+          "severity": "Clear",
+          "category": "SelfMonitoring",
+          "eventType": "SelfMonitoring Alarm",
+          "status": "Clear",
+          "message": "OpManager Plus System CPU is now back to normal, current value is 8%. Top 3 Processes:-java - 32.6%; postgres - 0.9%; mysqld - 0.3%.",
+          "modTime": "11 Jun 2025 04:51:31 PM IST"
+        },
+        {
+          "alarmId": "25",
+          "deviceName": "microservice87.10000000001",
+          "displayName": "Microservice87",
+          "severity": "Critical",
+          "category": "Server",
+          "eventType": "Threshold Down",
+          "status": "Critical",
+          "message": "Disk Utilization is 37%, threshold value for this monitor is 20%",
+          "modTime": "30 May 2025 10:57:48 PM IST"
+        }
+      ]
+    },
+    {
+      "source": "heal",
+      "data": [
+        {
+          "id": "HEAL-4000",
+          "signalName": "CPU utilization breach on CoreBanking",
+          "applicationName": "CoreBanking",
+          "accountName": "acct-corebanking",
+          "severity": "Critical",
+          "metricCategory": "Infrastructure",
+          "status": "OPEN",
+          "startTimeInMillis": 1785231000000,
+          "endTimeInMillis": null,
+          "description": "CPU utilization breach on CoreBanking detected by HEAL synthetic monitor for CoreBanking."
+        },
+        {
+          "id": "HEAL-4001",
+          "signalName": "Response time degraded for PaymentsGW",
+          "applicationName": "PaymentsGW",
+          "accountName": "acct-paymentsgw",
+          "severity": "High",
+          "metricCategory": "Performance",
+          "status": "ACTIVE",
+          "startTimeInMillis": 1785220200000,
+          "endTimeInMillis": null,
+          "description": "Response time degraded for PaymentsGW detected by HEAL synthetic monitor for PaymentsGW."
+        },
+        {
+          "id": "HEAL-4002",
+          "signalName": "Service CustomerPortal unreachable",
+          "applicationName": "CustomerPortal",
+          "accountName": "acct-customerportal",
+          "severity": "Medium",
+          "metricCategory": "Availability",
+          "status": "ONGOING",
+          "startTimeInMillis": 1785209400000,
+          "endTimeInMillis": null,
+          "description": "Service CustomerPortal unreachable detected by HEAL synthetic monitor for CustomerPortal."
+        },
+        {
+          "id": "HEAL-4003",
+          "signalName": "Memory usage critical on OrderService",
+          "applicationName": "OrderService",
+          "accountName": "acct-orderservice",
+          "severity": "Low",
+          "metricCategory": "Infrastructure",
+          "status": "NEW",
+          "startTimeInMillis": 1785198600000,
+          "endTimeInMillis": null,
+          "description": "Memory usage critical on OrderService detected by HEAL synthetic monitor for OrderService."
+        },
+        {
+          "id": "HEAL-4004",
+          "signalName": "5xx error spike in CoreBanking",
+          "applicationName": "CoreBanking",
+          "accountName": "acct-corebanking",
+          "severity": "Critical",
+          "metricCategory": "Application Error",
+          "status": "CLOSED",
+          "startTimeInMillis": 1785187800000,
+          "endTimeInMillis": 1785188100000,
+          "description": "5xx error spike in CoreBanking detected by HEAL synthetic monitor for CoreBanking."
+        },
+        {
+          "id": "HEAL-4005",
+          "signalName": "CPU utilization breach on PaymentsGW",
+          "applicationName": "PaymentsGW",
+          "accountName": "acct-paymentsgw",
+          "severity": "High",
+          "metricCategory": "Infrastructure",
+          "status": "RESOLVED",
+          "startTimeInMillis": 1785177000000,
+          "endTimeInMillis": 1785181260000,
+          "description": "CPU utilization breach on PaymentsGW detected by HEAL synthetic monitor for PaymentsGW."
+        },
+        {
+          "id": "HEAL-4006",
+          "signalName": "Response time degraded for CustomerPortal",
+          "applicationName": "CustomerPortal",
+          "accountName": "acct-customerportal",
+          "severity": "Medium",
+          "metricCategory": "Performance",
+          "status": "OPEN",
+          "startTimeInMillis": 1785166200000,
+          "endTimeInMillis": null,
+          "description": "Response time degraded for CustomerPortal detected by HEAL synthetic monitor for CustomerPortal."
+        },
+        {
+          "id": "HEAL-4007",
+          "signalName": "Service OrderService unreachable",
+          "applicationName": "OrderService",
+          "accountName": "acct-orderservice",
+          "severity": "Low",
+          "metricCategory": "Availability",
+          "status": "ACTIVE",
+          "startTimeInMillis": 1785155400000,
+          "endTimeInMillis": null,
+          "description": "Service OrderService unreachable detected by HEAL synthetic monitor for OrderService."
+        },
+        {
+          "id": "HEAL-4008",
+          "signalName": "Memory usage critical on CoreBanking",
+          "applicationName": "CoreBanking",
+          "accountName": "acct-corebanking",
+          "severity": "Critical",
+          "metricCategory": "Infrastructure",
+          "status": "ONGOING",
+          "startTimeInMillis": 1785144600000,
+          "endTimeInMillis": null,
+          "description": "Memory usage critical on CoreBanking detected by HEAL synthetic monitor for CoreBanking."
+        },
+        {
+          "id": "HEAL-4009",
+          "signalName": "5xx error spike in PaymentsGW",
+          "applicationName": "PaymentsGW",
+          "accountName": "acct-paymentsgw",
+          "severity": "High",
+          "metricCategory": "Application Error",
+          "status": "NEW",
+          "startTimeInMillis": 1785133800000,
+          "endTimeInMillis": null,
+          "description": "5xx error spike in PaymentsGW detected by HEAL synthetic monitor for PaymentsGW."
+        },
+        {
+          "id": "HEAL-4010",
+          "signalName": "CPU utilization breach on CustomerPortal",
+          "applicationName": "CustomerPortal",
+          "accountName": "acct-customerportal",
+          "severity": "Medium",
+          "metricCategory": "Infrastructure",
+          "status": "CLOSED",
+          "startTimeInMillis": 1785123000000,
+          "endTimeInMillis": 1785124620000,
+          "description": "CPU utilization breach on CustomerPortal detected by HEAL synthetic monitor for CustomerPortal."
+        },
+        {
+          "id": "HEAL-4011",
+          "signalName": "Response time degraded for OrderService",
+          "applicationName": "OrderService",
+          "accountName": "acct-orderservice",
+          "severity": "Low",
+          "metricCategory": "Performance",
+          "status": "RESOLVED",
+          "startTimeInMillis": 1785112200000,
+          "endTimeInMillis": 1785114060000,
+          "description": "Response time degraded for OrderService detected by HEAL synthetic monitor for OrderService."
+        },
+        {
+          "id": "HEAL-4012",
+          "signalName": "Service CoreBanking unreachable",
+          "applicationName": "CoreBanking",
+          "accountName": "acct-corebanking",
+          "severity": "Critical",
+          "metricCategory": "Availability",
+          "status": "OPEN",
+          "startTimeInMillis": 1785101400000,
+          "endTimeInMillis": null,
+          "description": "Service CoreBanking unreachable detected by HEAL synthetic monitor for CoreBanking."
+        },
+        {
+          "id": "HEAL-4013",
+          "signalName": "Memory usage critical on PaymentsGW",
+          "applicationName": "PaymentsGW",
+          "accountName": "acct-paymentsgw",
+          "severity": "High",
+          "metricCategory": "Infrastructure",
+          "status": "ACTIVE",
+          "startTimeInMillis": 1785090600000,
+          "endTimeInMillis": null,
+          "description": "Memory usage critical on PaymentsGW detected by HEAL synthetic monitor for PaymentsGW."
+        }
+      ]
+    },
+    {
+      "source": "appdynamics",
+      "data": [
+        {
+          "id": "APPD-7000",
+          "name": "Service CoreBanking unreachable",
+          "application": "CoreBanking",
+          "affectedEntities": "CoreBanking-tier-1",
+          "severity": "Critical",
+          "category": "Availability",
+          "incidentStatus": "OPEN",
+          "startTimeInMillis": 1785230100000,
+          "detectedTimeInMillis": 1785230220000,
+          "description": "Service CoreBanking unreachable raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7001",
+          "name": "Memory usage critical on PaymentsGW",
+          "application": "PaymentsGW",
+          "affectedEntities": "PaymentsGW-tier-2",
+          "severity": "High",
+          "category": "Infrastructure",
+          "incidentStatus": "ACTIVE",
+          "startTimeInMillis": 1785215700000,
+          "detectedTimeInMillis": 1785215940000,
+          "description": "Memory usage critical on PaymentsGW raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7002",
+          "name": "5xx error spike in CustomerPortal",
+          "application": "CustomerPortal",
+          "affectedEntities": "CustomerPortal-tier-3",
+          "severity": "Medium",
+          "category": "Application Error",
+          "incidentStatus": "ONGOING",
+          "startTimeInMillis": 1785201300000,
+          "detectedTimeInMillis": 1785202020000,
+          "description": "5xx error spike in CustomerPortal raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7003",
+          "name": "CPU utilization breach on OrderService",
+          "application": "OrderService",
+          "affectedEntities": "OrderService-tier-1",
+          "severity": "Low",
+          "category": "Infrastructure",
+          "incidentStatus": "RESOLVED",
+          "startTimeInMillis": 1785186900000,
+          "detectedTimeInMillis": 1785187320000,
+          "description": "CPU utilization breach on OrderService raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7004",
+          "name": "Response time degraded for CoreBanking",
+          "application": "CoreBanking",
+          "affectedEntities": "CoreBanking-tier-2",
+          "severity": "Critical",
+          "category": "Performance",
+          "incidentStatus": "OPEN",
+          "startTimeInMillis": 1785172500000,
+          "detectedTimeInMillis": 1785173640000,
+          "description": "Response time degraded for CoreBanking raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7005",
+          "name": "Service PaymentsGW unreachable",
+          "application": "PaymentsGW",
+          "affectedEntities": "PaymentsGW-tier-3",
+          "severity": "High",
+          "category": "Availability",
+          "incidentStatus": "ACTIVE",
+          "startTimeInMillis": 1785158100000,
+          "detectedTimeInMillis": 1785158460000,
+          "description": "Service PaymentsGW unreachable raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7006",
+          "name": "Memory usage critical on CustomerPortal",
+          "application": "CustomerPortal",
+          "affectedEntities": "CustomerPortal-tier-1",
+          "severity": "Medium",
+          "category": "Infrastructure",
+          "incidentStatus": "ONGOING",
+          "startTimeInMillis": 1785143700000,
+          "detectedTimeInMillis": 1785144180000,
+          "description": "Memory usage critical on CustomerPortal raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7007",
+          "name": "5xx error spike in OrderService",
+          "application": "OrderService",
+          "affectedEntities": "OrderService-tier-2",
+          "severity": "Low",
+          "category": "Application Error",
+          "incidentStatus": "RESOLVED",
+          "startTimeInMillis": 1785129300000,
+          "detectedTimeInMillis": 1785129840000,
+          "description": "5xx error spike in OrderService raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7008",
+          "name": "CPU utilization breach on CoreBanking",
+          "application": "CoreBanking",
+          "affectedEntities": "CoreBanking-tier-3",
+          "severity": "Critical",
+          "category": "Infrastructure",
+          "incidentStatus": "OPEN",
+          "startTimeInMillis": 1785114900000,
+          "detectedTimeInMillis": 1785115680000,
+          "description": "CPU utilization breach on CoreBanking raised by AppDynamics health rule violation."
+        },
+        {
+          "id": "APPD-7009",
+          "name": "Response time degraded for PaymentsGW",
+          "application": "PaymentsGW",
+          "affectedEntities": "PaymentsGW-tier-1",
+          "severity": "High",
+          "category": "Performance",
+          "incidentStatus": "ACTIVE",
+          "startTimeInMillis": 1785100500000,
+          "detectedTimeInMillis": 1785101580000,
+          "description": "Response time degraded for PaymentsGW raised by AppDynamics health rule violation."
+        }
+      ]
+    }
+  ]
 }

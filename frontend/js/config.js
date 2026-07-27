@@ -76,7 +76,7 @@ const SIDEBAR_NAV = [
    Used only as a fallback when no MCP servers are configured yet (Settings →
    MCP Servers is empty on a fresh install). Every page that shows "sources"
    or "servers" (Dashboard, Capacity, Topology, User Management, ...) prefers
-   the live list from backend/data/mcpservers.json via API.getMcpServers()
+   the live list from backend/data/mcpconf.ini via API.getMcpServers()
    and only falls back to this fixed list otherwise — see each page's
    loadSources()/loadServers() for the pattern. ids/names here are left as-is
    because common.js's payload-shape auto-detection (parseDynatraceTime,

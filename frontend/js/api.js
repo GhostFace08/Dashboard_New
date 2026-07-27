@@ -16,15 +16,20 @@
  *   GET  /api/infrastructure        → getInfrastructure()       [Observability]
  *   GET  /api/services              → getServices()             [Observability]
  *   GET  /api/mcp-sample            → getMcpSample(source)      [Observability]
- *   GET  /api/capacity/forecast     → getCapacityForecast()     [Capacity — not wired into capacity.js yet]
- *   GET  /api/topology/servers      → getTopologyServers()      [Topology — not wired into topology.js yet]
+ *   GET  /api/chat-stats            → getChatStats()            [Observability]
+ *   GET  /api/capacity/forecast     → getCapacityForecast(params) [Capacity — wired into capacity.js]
+ *   GET  /api/topology/servers      → getTopologyServers()      [Topology — wired into topology.js]
+ *   GET  /api/topology              → getTopologyData()         [Topology — wired into topology.js]
+ *   PUT  /api/topology              → saveTopologyData(data)    [Topology — wired into topology.js]
  *   GET  /api/config/:filename      → getConfig(filename)       [Settings]
  *   PUT  /api/config/:filename      → putConfig(filename, content) [Settings]
  *   POST /api/settings/save         → saveSettings(payload)     [Settings]
  *   POST /api/chat                  → postChat(...) (fallback)  [Chat]
  *   POST /api/chat/stream           → postChat(...) (primary)   [Chat]
- *   GET  /api/network-devices       → getNetworkDevices()       [Admin]
- *   GET  /api/processes             → getProcesses()            [Admin]
+ *   GET  /api/network-devices       → getNetworkDevices()       [Admin — read-only]
+ *   GET  /api/processes             → getProcesses()            [Admin — read-only]
+ *   GET  /api/users                 → getUsers()                [Admin]
+ *   PUT  /api/users                 → saveUsers(data)           [Admin]
  */
 
 (function (global) {
@@ -41,8 +46,8 @@
   //   OBSERVABILITY_URL — ObservabilityMiddleware :8081  (issues, status, refresh,
   //                                                        infrastructure, services,
   //                                                        mcp-sample — was DashboardMiddleware :8080)
-  //   CAPACITY_URL       — CapacityMiddleware      :8082  (capacity forecast — stub, not wired below yet)
-  //   TOPOLOGY_URL        — TopologyMiddleware       :8083  (topology servers — proxy, not wired below yet)
+  //   CAPACITY_URL       — CapacityMiddleware      :8082  (real capacity forecast, wired)
+  //   TOPOLOGY_URL        — TopologyMiddleware       :8083  (topology servers + graph data, wired)
   //   CHAT_URL            — ChatMiddleware            :5100  (chat, streaming chat)
   //   SETTINGS_URL        — SettingsMiddleware         :5200  (config read/write, settings save)
   //   ADMIN_URL           — AdminMiddleware            :8086  (users, network-devices, processes)
@@ -63,8 +68,6 @@
 
   const DEFAULT_TIMEOUT_MS = 20_000;
 
-  const CHAT_STATS_PATH = "../../backend/data/chatstats.json";
-
   const ENDPOINTS = {
     // Observability middleware (8081) — was Dashboard middleware (8080)
     issues:       "/api/issues",          // GET
@@ -73,12 +76,14 @@
     infrastructure: "/api/infrastructure",// GET  — Phase 6
     services:       "/api/services",      // GET  — Phase 7
     mcpSample:      "/api/mcp-sample",    // GET ?source= — Phase 15 mapping wizard
+    chatStats:      "/api/chat-stats",    // GET  — moved off the raw relative-path fetch
 
-    // Capacity middleware (8082) — NEW, stub, not called by any function below yet
-    capacityForecast: "/api/capacity/forecast", // GET
+    // Capacity middleware (8082) — real forecast, wired into capacity.js
+    capacityForecast: "/api/capacity/forecast", // GET ?sourceId=&sourceLabel=&historyDays=&horizonDays=&algorithm=
 
-    // Topology middleware (8083) — NEW, real proxy, not called by any function below yet
+    // Topology middleware (8083) — real proxy + real graph storage, wired into topology.js
     topologyServers: "/api/topology/servers",   // GET
+    topologyData:    "/api/topology",           // GET | PUT — the saved topology graph itself
 
     // Settings middleware (5200)
     config:       "/api/config",          // GET | PUT /:filename
@@ -88,12 +93,10 @@
     chat:         "/api/chat",            // POST — full response via Intent Agent
     chatStream:   "/api/chat/stream",     // POST — SSE stream via RAG backend
 
-    // Admin middleware (8086) — moved here from Observability; these were
-    // previously pointed at DashboardMiddleware but never actually served
-    // (no context was registered for them there — silent 404 → demo-data
-    // fallback). Now served for real (as stubs) by AdminMiddleware.
-    networkDevices: "/api/network-devices",// GET — Network Devices page
-    processes:      "/api/processes",     // GET — Processes page
+    // Admin middleware (8086)
+    networkDevices: "/api/network-devices",// GET (read-only) — Network Devices page
+    processes:      "/api/processes",     // GET (read-only) — Processes page
+    users:          "/api/users",         // GET | PUT — User Management page
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -226,16 +229,43 @@
   }
 
   /**
+   * getUsers() / saveUsers(data)
+   * GET|PUT /api/users — real persistence via AdminMiddleware's users.json,
+   * replacing user_management.js's old localStorage-only store.
+   * Fallback for getUsers(): { users: [] } (page then seeds its own demo
+   * users client-side exactly as before, if this fails).
+   */
+  async function getUsers() {
+    const url = `${ADMIN_URL}${ENDPOINTS.users}`;
+    const fallback = { users: [] };
+    const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
+    if (!data || typeof data !== "object" || !Array.isArray(data.users)) return fallback;
+    return data;
+  }
+
+  async function saveUsers(data) {
+    const url = `${ADMIN_URL}${ENDPOINTS.users}`;
+    const result = await fetchWithFallback(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }, null);
+    return { ok: !!(result && result.ok) };
+  }
+  /**
    * getMcpServers()
-   * Reads backend/data/mcpservers.json (via getConfig) and returns the
+   * Reads backend/data/mcpconf.ini (via getConfig) and returns the
    * parsed { servers: [...] } list — the same admin-defined server list
-   * Settings → MCP Servers edits. Used by the dashboard to segregate tools
-   * by live, configured MCP servers instead of the old hardcoded CFG.TOOLS.
+   * Settings → MCP Servers → Details tab edits. Used by the dashboard to
+   * segregate tools by live, configured MCP servers instead of the old
+   * hardcoded CFG.TOOLS.
+   * (Renamed from mcpconf.ini — content is still JSON, only the
+   * filename/extension changed as part of the settings-file reorganization.)
    * Fallback: { servers: [] }.
    */
   async function getMcpServers() {
     try {
-      const text = await getConfig("mcpservers.json");
+      const text = await getConfig("mcpconf.ini");
       const parsed = text ? JSON.parse(text) : { servers: [] };
       return { servers: Array.isArray(parsed.servers) ? parsed.servers : [] };
     } catch (e) {
@@ -262,13 +292,18 @@
 
   /**
    * getChatStats()
-   * Direct fetch from static file: backend/data/chatstats.json
+   * GET /api/chat-stats — now a real HTTP endpoint on ObservabilityMiddleware
+   * backed by backend/data/chatstats.json. Previously fetched via a raw
+   * relative filesystem path from the browser (bypassed every other
+   * page's CORS'd-middleware pattern, and broke silently if the frontend
+   * was ever served from a different working directory).
    * Fallback: CFG.AI_MONITORING_DEFAULTS
    */
   async function getChatStats() {
     const cfg = global.CFG || {};
     const fallback = cfg.AI_MONITORING_DEFAULTS || {};
-    const data = await fetchWithFallback(CHAT_STATS_PATH, { cache: "no-store" }, null);
+    const url = `${OBSERVABILITY_URL}${ENDPOINTS.chatStats}`;
+    const data = await fetchWithFallback(url, { cache: "no-store" }, null);
     if (!data || typeof data !== "object") return fallback;
     return {
       ...fallback,
@@ -608,30 +643,34 @@
   }
 
   /**
-   * getCapacityForecast()
-   * GET /api/capacity/forecast
-   * NEW — CapacityMiddleware (8082). Not called by capacity.js yet; that
-   * page still computes its numbers client-side. This exists so the
-   * migration to a real server-computed forecast is a capacity.js change
-   * only, not an api.js change too.
-   * Fallback: { implemented: false, servers: [] }
+   * getCapacityForecast(params)
+   * GET /api/capacity/forecast?sourceId=&sourceLabel=&historyDays=&horizonDays=&algorithm=
+   * Real, wired forecast — CapacityMiddleware (8082) ports the same seeded
+   * PRNG + series generator + four algorithms capacity.js used to run
+   * client-side, so switching to this endpoint changes nothing about the
+   * numbers shown, only where they're computed.
+   * @param {{sourceId:string, sourceLabel?:string, historyDays:number, horizonDays:number, algorithm:string}} params
+   * Fallback: null (capacity.js falls back to its own local computation if this fails)
    */
-  async function getCapacityForecast() {
-    const url = `${CAPACITY_URL}${ENDPOINTS.capacityForecast}`;
-    const fallback = { implemented: false, servers: [] };
-    const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
-    if (!data || typeof data !== "object") return fallback;
-    return data;
+  async function getCapacityForecast(params) {
+    const { sourceId, sourceLabel, historyDays, horizonDays, algorithm } = params || {};
+    const qs = new URLSearchParams({
+      sourceId: sourceId || "all",
+      historyDays: String(historyDays || 14),
+      horizonDays: String(horizonDays || 7),
+      algorithm: algorithm || "linear",
+    });
+    if (sourceLabel) qs.set("sourceLabel", sourceLabel);
+    const url = `${CAPACITY_URL}${ENDPOINTS.capacityForecast}?${qs.toString()}`;
+    return fetchWithFallback(url, { cache: "no-store" }, null);
   }
 
   /**
    * getTopologyServers()
    * GET /api/topology/servers
-   * NEW — TopologyMiddleware (8083), a read-only proxy in front of
-   * SettingsMiddleware's mcpservers.json. Not called by topology.js yet;
-   * that page still calls getMcpServers() directly. Prefer this once
-   * topology.js is updated — it decouples Topology from Settings' file
-   * layout.
+   * TopologyMiddleware (8083), a read-only proxy in front of
+   * SettingsMiddleware's mcpconf.ini. Wired into topology.js (with a
+   * fallback to getMcpServers() directly if Topology is unreachable).
    * Fallback: { servers: [] }
    */
   async function getTopologyServers() {
@@ -640,6 +679,28 @@
     const data = await fetchWithFallback(url, { cache: "no-store" }, fallback);
     if (!data || typeof data !== "object" || !Array.isArray(data.servers)) return fallback;
     return data;
+  }
+
+  /**
+   * getTopologyData() / saveTopologyData(data)
+   * GET|PUT /api/topology — the real saved topology graph (nodes/edges per
+   * application/topology). Replaces topology.js's old localStorage-only
+   * store; localStorage is still used as a client-side undo/redo buffer for
+   * *unsaved* edits, but the source of truth on load and on "Update
+   * Topology" confirm is always this endpoint.
+   * Fallback for getTopologyData(): null (topology.js seeds demo data locally if this fails).
+   */
+  async function getTopologyData() {
+    return fetchWithFallback(`${TOPOLOGY_URL}${ENDPOINTS.topologyData}`, { cache: "no-store" }, null);
+  }
+
+  async function saveTopologyData(data) {
+    const result = await fetchWithFallback(`${TOPOLOGY_URL}${ENDPOINTS.topologyData}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }, null);
+    return { ok: !!(result && result.ok) };
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -657,7 +718,6 @@
     DASHBOARD_URL,  // @deprecated alias for OBSERVABILITY_URL
     BASE_URL,       // @deprecated alias for OBSERVABILITY_URL
     ENDPOINTS,
-    CHAT_STATS_PATH,
 
     fetchWithFallback,
 
@@ -671,11 +731,13 @@
     getMcpServers,
     getMcpSample,
 
-    // Capacity (8082) — new, not called anywhere in the frontend yet
+    // Capacity (8082) — real, wired
     getCapacityForecast,
 
-    // Topology (8083) — new, not called anywhere in the frontend yet
+    // Topology (8083) — real, wired
     getTopologyServers,
+    getTopologyData,
+    saveTopologyData,
 
     // Settings (5200)
     getConfig,
@@ -685,9 +747,11 @@
     // Chat (5100)
     postChat,         // streaming-first, falls back to non-streaming automatically
 
-    // Admin (8086) — moved here from Observability, see ENDPOINTS comment above
+    // Admin (8086)
     getNetworkDevices,
     getProcesses,
+    getUsers,
+    saveUsers,
   };
 
   Object.freeze(global.API);

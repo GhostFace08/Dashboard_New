@@ -1,50 +1,66 @@
 {
   "dynatrace": {
-    "issueId": "display_id",
-    "title": "event.name",
-    "application": "affected_entity_names[0]",
-    "affectedEntities": "smartscape.affected_entity.ids[0]",
-    "severity": "event.severity",
-    "category": "event.category",
-    "status": "event.status",
-    "startTime": "event.start",
-    "endTime": null,
-    "description": "event.description"
+    "mapping": {
+      "issueId": "display_id",
+      "title": "event.name",
+      "application": "affected_entity_names[0]",
+      "affectedEntities": "affected_entity_names",
+      "severity": "event.severity",
+      "category": "event.category",
+      "status": "event.status",
+      "startTime": "event.start",
+      "endTime": null,
+      "description": "event.description"
+    },
+    "dashboards": {},
+    "timeMapping": {}
   },
   "opmanager": {
-    "issueId": "alarmId",
-    "title": "eventType",
-    "application": "displayName",
-    "affectedEntities": "deviceName",
-    "severity": "severity",
-    "category": "category",
-    "status": "status",
-    "startTime": "modTime",
-    "endTime": null,
-    "description": "message"
+    "mapping": {
+      "issueId": "alarmId",
+      "title": "eventType",
+      "application": "displayName",
+      "affectedEntities": "deviceName",
+      "severity": "severity",
+      "category": "category",
+      "status": "status",
+      "startTime": "modTime",
+      "endTime": null,
+      "description": "message"
+    },
+    "dashboards": {},
+    "timeMapping": {}
   },
   "appdynamics": {
-    "issueId": "id",
-    "title": null,
-    "application": "affectedEntityDefinition.name",
-    "affectedEntities": "affectedEntityDefinition.entityId",
-    "severity": "severity",
-    "category": "affectedEntityDefinition.entityType",
-    "status": "incidentStatus",
-    "startTime": "startTimeInMillis",
-    "endTime": "detectedTimeInMillis",
-    "description": "name"
+    "mapping": {
+      "issueId": "id",
+      "title": "name",
+      "application": "affectedEntityDefinition.name",
+      "affectedEntities": "affectedEntityDefinition.entityId",
+      "severity": "severity",
+      "category": "affectedEntityDefinition.entityType",
+      "status": "incidentStatus",
+      "startTime": "startTimeInMillis",
+      "endTime": "detectedTimeInMillis",
+      "description": "name"
+    },
+    "dashboards": {},
+    "timeMapping": {}
   },
   "heal": {
-    "issueId": "id",
-    "title": "signalName",
-    "application": "applicationName",
-    "affectedEntities": "accountName",
-    "severity": "severity",
-    "category": "metricCategory",
-    "status": "status",
-    "startTime": "startTimeInMillis",
-    "endTime": "endTimeInMillis",
-    "description": "description"
+    "mapping": {
+      "issueId": "id",
+      "title": "signalName",
+      "application": "applicationName",
+      "affectedEntities": "accountName",
+      "severity": "severity",
+      "category": "metricCategory",
+      "status": "status",
+      "startTime": "startTimeInMillis",
+      "endTime": "endTimeInMillis",
+      "description": "description"
+    },
+    "dashboards": {},
+    "timeMapping": {}
   }
 }

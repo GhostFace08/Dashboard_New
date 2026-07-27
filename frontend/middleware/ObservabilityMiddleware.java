@@ -54,7 +54,7 @@ import java.util.logging.*;
  *
  * The server starts on http://localhost:8081 by default (was :8080 as
  * DashboardMiddleware — bumped so all 6 split services can run at once).
- * Set PORT env var to override.
+ * Set OBSERVABILITY_PORT env var to override.
  * Set MCP_ROOT env var to point to the project root (default: working dir).
  * Set PERIODIC_CHECK_SECONDS env var to override poll interval (default: 300).
  */
@@ -63,7 +63,7 @@ public class ObservabilityMiddleware {
     // ── Configuration ─────────────────────────────────────────────────────────
 
     private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("PORT", "8081"));
+            System.getenv().getOrDefault("OBSERVABILITY_PORT", "8081"));
 
     private static final Path PROJECT_ROOT = Paths.get(
             System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
@@ -76,6 +76,7 @@ public class ObservabilityMiddleware {
 
     /** Phase 7 — Services page data file */
     private static final Path SERVICES_FILE = DATA_DIR.resolve("services.json");
+    private static final Path CHATSTATS_FILE = DATA_DIR.resolve("chatstats.json");
 
     /**
      * Phase 15 — used only to serve a mocked "sample issue" for a given
@@ -211,6 +212,7 @@ public class ObservabilityMiddleware {
         server.createContext("/api/refresh",        new RefreshHandler());
         server.createContext("/api/infrastructure", new InfrastructureHandler());
         server.createContext("/api/services",       new ServicesHandler());
+        server.createContext("/api/chat-stats",     new ChatStatsHandler());
         server.createContext("/api/mcp-sample",     new McpSampleHandler());
         server.createContext("/health",             new HealthHandler());
         server.createContext("/",                   new CatchAllHandler());
@@ -224,6 +226,7 @@ public class ObservabilityMiddleware {
         LOG.info("  POST /api/refresh");
         LOG.info("  GET  /api/infrastructure");
         LOG.info("  GET  /api/services");
+        LOG.info("  GET  /api/chat-stats");
         LOG.info("  GET  /api/mcp-sample?source=<id>   ← Phase 15 mapping-wizard mock fetch");
         LOG.info("  GET  /health");
         LOG.info("  Config/settings endpoints live in SettingsMiddleware (:5200)");
@@ -492,6 +495,38 @@ public class ObservabilityMiddleware {
     // file-serve, no Change-3 timestamp tracking. If Infrastructure ever
     // grows that tracking back in, do the same here for consistency.
     // ─────────────────────────────────────────────────────────────────────────
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: GET /api/chat-stats — backed by chatstats.json.
+    // Previously fetched by the frontend directly via a raw relative
+    // filesystem path (../../backend/data/chatstats.json), bypassing every
+    // other service's CORS'd-middleware pattern. Moved here so AI Monitoring
+    // uses a real HTTP endpoint like every other page.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class ChatStatsHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1);
+                return;
+            }
+            if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+                sendError(ex, 405, "Method not allowed");
+                return;
+            }
+            if (Files.exists(CHATSTATS_FILE)) {
+                String json = Files.readString(CHATSTATS_FILE, StandardCharsets.UTF_8);
+                LOG.info("GET /api/chat-stats → " + CHATSTATS_FILE.getFileName()
+                        + " (" + json.length() + " bytes)");
+                sendJson(ex, json);
+            } else {
+                LOG.warning("GET /api/chat-stats → file not found: " + CHATSTATS_FILE);
+                sendJson(ex, "{}");
+            }
+        }
+    }
 
     static class ServicesHandler implements HttpHandler {
         @Override

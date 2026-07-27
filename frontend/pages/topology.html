@@ -89,6 +89,17 @@
             <i data-lucide="refresh-cw"></i> Refresh from Sources
           </button>
 
+          <button id="topo-update-btn" class="btn btn-primary" type="button" title="Compare unsaved changes against the saved topology and push them if confirmed">
+            <i data-lucide="cloud-upload"></i> Update Topology
+          </button>
+
+          <button id="topo-undo-btn" class="btn-icon" type="button" disabled title="Undo">
+            <i data-lucide="undo-2"></i>
+          </button>
+          <button id="topo-redo-btn" class="btn-icon" type="button" disabled title="Redo">
+            <i data-lucide="redo-2"></i>
+          </button>
+
           <span class="spacer"></span>
 
           <div class="topo-search-wrap">
@@ -450,6 +461,27 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" type="button" id="topo-reconcile-modal-cancel-btn">Discard All</button>
         <button class="btn btn-primary" type="button" id="topo-reconcile-modal-apply-btn"><i data-lucide="check"></i> Apply Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Update Topology — diff current vs. saved, confirm before pushing ── -->
+  <div class="modal-overlay hidden" id="topo-update-modal-overlay">
+    <div class="modal-box" style="width:480px">
+      <div class="modal-header">
+        <span style="font-family:var(--font-sans);font-size:13px;font-weight:600">Update Topology</span>
+        <button class="btn-icon" type="button" id="topo-update-modal-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="banner banner-info mb-3">
+          <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0"></i>
+          <span class="banner-text">These are the differences between what's on screen and the last saved topology. Confirm to save them.</span>
+        </div>
+        <div class="topo-diff-list" id="topo-update-diff-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="topo-update-modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="topo-update-modal-confirm-btn"><i data-lucide="check"></i> Confirm Update</button>
       </div>
     </div>
   </div>

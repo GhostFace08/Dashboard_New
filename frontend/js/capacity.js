@@ -17,7 +17,7 @@
  *   nothing else on this page needs to change.
  *
  * Sources: "all" (aggregate across every configured MCP server) + one tab
- * per live server (from backend/data/mcpservers.json, same list Settings →
+ * per live server (from backend/data/mcpconf.ini, same list Settings →
  * MCP Servers edits — same live-servers pattern as dashboard.js/topology.js/
  * user_management.js). Falls back to the legacy fixed CFG.TOOLS list only if
  * no servers are configured yet, so the page still renders something
@@ -201,6 +201,25 @@
   async function getCapacityData(params) {
     const { sourceId, historyDays, horizonDays, algorithm } = params;
 
+    // Real, wired path: CapacityMiddleware ports this exact same PRNG +
+    // series generator + forecast algorithms server-side, so the numbers
+    // are identical either way — this just moves where they're computed.
+    try {
+      const remote = await API.getCapacityForecast({
+        sourceId, historyDays, horizonDays, algorithm,
+        sourceLabel: sourceLabel(sourceId),
+      });
+      if (remote && remote.cpu && remote.memory && Array.isArray(remote.comparison)) {
+        return remote;
+      }
+      console.warn("[capacity] API.getCapacityForecast returned an unexpected shape, falling back to local computation");
+    } catch (e) {
+      console.warn("[capacity] API.getCapacityForecast failed, falling back to local computation:", e);
+    }
+
+    // Fallback — identical local computation, used only if the backend is
+    // unreachable or returns something unexpected, so this page never goes
+    // fully blank just because CapacityMiddleware is down.
     const cpuHistory = generateSeries(sourceId, "cpu", historyDays);
     const memHistory = generateSeries(sourceId, "mem", historyDays);
 

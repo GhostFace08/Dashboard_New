@@ -6,11 +6,10 @@
  * server-visibility restrictions) → row list with Edit/Delete → Edit modal
  * (same fields, pre-filled).
  *
- * PERSISTENCE — placeholder, same pattern as topology.js's topologyStore:
- *   Backed by localStorage for now (key below) so accounts survive a
- *   reload during review. Every read/write funnels through loadUsers()/
- *   saveUsers() — swapping to a real backend endpoint later means
- *   replacing just those two functions' bodies, same shape.
+ * PERSISTENCE — backed by AdminMiddleware's /api/users endpoint
+ *   (backend/data/users.json) via API.getUsers()/API.saveUsers(). Every
+ *   read/write still funnels through loadUsers()/saveUsers() so the rest of
+ *   this file didn't need to change shape when the backend became real.
  *
  *   Passwords are stored as plain text in this placeholder store. That is
  *   ONLY acceptable because there is no real auth behind this yet (decision
@@ -20,7 +19,7 @@
  *
  * SERVER LIST — same live-MCP-servers pattern as dashboard.js/topology.js.
  *   Permissions here are per configured MCP server, not per fixed "tool".
- *   Reads backend/data/mcpservers.json via API.getMcpServers() (the same
+ *   Reads backend/data/mcpconf.ini via API.getMcpServers() (the same
  *   admin-defined list Settings → MCP Servers edits) and falls back to
  *   CFG.TOOLS only if no servers are configured yet, so the page still
  *   renders something sensible on a fresh install.
@@ -32,7 +31,7 @@
  * DEPENDENCIES (must load before this file):
  *   config.js  → window.CFG   (TOOLS, legacy fallback for the server-
  *                visibility checkboxes)
- *   api.js     → window.API   (API.getMcpServers() for the live list)
+ *   api.js     → window.API   (API.getMcpServers(), API.getUsers(), API.saveUsers())
  *   common.js  → window.Utils
  */
 
@@ -43,8 +42,6 @@
     console.error("[user_management.js] CFG not found — did config.js load?");
     return;
   }
-
-  const STORAGE_KEY = "mcp-users-data";
 
   /* Live MCP servers list — populated by loadServers(), falls back to
      CFG.TOOLS (legacy fixed 4) if no servers are configured yet. */
@@ -75,25 +72,37 @@
     loaded: false,
   };
 
-  /* ─── Store (localStorage-backed placeholder — see doc comment) ─────────── */
-  function loadUsers() {
+  /* ─── Store (real backend — AdminMiddleware's users.json) ────────────────
+   * ID scheme fix: previously `user-${idCounter++}` with idCounter reset to
+   * 1 on every page load, while the actual user list persisted — so after
+   * a reload, newly-created users could collide with an existing id (two
+   * different accounts both named "user-1"), and Edit/Delete would then
+   * act on whichever one `.find()` hit first. Now mixes Date.now() into
+   * the id, same fix topology.js already used for its node ids.
+   */
+  async function loadUsers() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* fall through to seed */ }
+      const { users } = await global.API.getUsers();
+      if (Array.isArray(users) && users.length > 0) return users;
+    } catch (e) {
+      console.warn("[user_management] getUsers failed:", e);
+    }
     return seedUsers();
   }
 
-  function saveUsers(users) {
+  async function saveUsers(users) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+      const result = await global.API.saveUsers({ users });
+      if (!result || !result.ok) {
+        console.warn("[user_management] saveUsers did not confirm ok:true");
+      }
     } catch (e) {
       console.warn("[user_management] failed to persist user list:", e);
     }
   }
 
   let idCounter = 1;
-  function nextId() { return `user-${idCounter++}`; }
+  function nextId() { return `user-${Date.now().toString(36)}-${idCounter++}`; }
 
   function seedUsers() {
     // No "admin" row here on purpose — the built-in admin account isn't a
@@ -236,7 +245,7 @@
     state.editingId = null;
   }
 
-  function saveModal() {
+  async function saveModal() {
     const username = document.getElementById("um-username-input").value.trim();
     const password = document.getElementById("um-password-input").value;
     const servers = readSelectedServers();
@@ -264,14 +273,14 @@
       });
     }
 
-    saveUsers(state.users);
+    await saveUsers(state.users);
     renderTable();
     closeModal();
   }
 
-  function deleteUser(userId) {
+  async function deleteUser(userId) {
     state.users = state.users.filter(u => u.id !== userId);
-    saveUsers(state.users);
+    await saveUsers(state.users);
     renderTable();
   }
 
@@ -303,7 +312,7 @@
   /* ─── Bootstrap ───────────────────────────────────────────────────────── */
   async function initPage() {
     await loadServers();
-    state.users = loadUsers();
+    state.users = await loadUsers();
     wire();
     renderTable();
   }

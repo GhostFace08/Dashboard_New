@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "user-seed-1",
+      "username": "ops-viewer",
+      "password": "viewonly2024",
+      "servers": ["dynatrace", "opmanager"],
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}

@@ -29,7 +29,7 @@ import java.util.logging.*;
  *   java  SettingsMiddleware
  *
  * Environment overrides:
- *   PORT     — port to listen on  (default: 5200)
+ *   SETTINGS_PORT — port to listen on  (default: 5200)
  *   MCP_ROOT — project root path  (default: working directory)
  */
 public class SettingsMiddleware {
@@ -37,7 +37,7 @@ public class SettingsMiddleware {
     // ── Configuration ─────────────────────────────────────────────────────────
 
     private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("PORT", "5200"));
+            System.getenv().getOrDefault("SETTINGS_PORT", "5200"));
 
     private static final Path PROJECT_ROOT = Paths.get(
             System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
@@ -48,34 +48,47 @@ public class SettingsMiddleware {
     /**
      * Files the settings UI is allowed to read or write.
      * Any key not in this set is rejected with HTTP 403.
+     *
+     * Rewritten to the new one-file-per-settings-page layout:
+     *   conf.properties      — General section + non-per-server MCP-servers-section data
+     *   mcpconf.ini          — the "Details" tab per MCP server (id/name/baseUrl/timeout/
+     *                          registry/etc.) — JSON content despite the .ini name (a flat
+     *                          properties format can't cleanly express nested arrays like
+     *                          registry.paths, so this file keeps JSON content; only the
+     *                          extension changed to match the new naming convention)
+     *   capacity.ini         — Capacity & Forecasting section (left blank/unwired per spec)
+     *   llm.ini              — AI & Models section + per-server "Keywords" tab (merged;
+     *                          replaces the old standalone keywords.json)
+     *   rag.ini              — Retrieval (RAG) section
+     *   performance.ini      — Performance section
+     *   chat.ini             — Advanced section
+     *   categorization.json  — per-server "Categorization" tab (unchanged from before)
+     *   mapping.json         — per-server "Mapping", "Dashboards", and "Time Mapping" tabs,
+     *                          keyed by server id (previously these lived embedded inside
+     *                          mcpservers.json and this file was an orphaned, unwritten
+     *                          legacy duplicate — now it's the real, live source)
      */
     private static final Set<String> ALLOWED_FILES = Set.of(
-            "conf.ini",
-            "mcpconf.properties",
-            "apmconf.properties",
-            "category.json",
-            "mapping.json",
-            // Phase 15 — MCP Servers overhaul. These three replace the fixed
-            // 4-tool model with an admin-defined N-server one. category.json/
-            // mapping.json above are left in place untouched (still written by
-            // the legacy buildCategoryJson()/buildMappingJson() paths) — no
-            // migration of old data into these new files is done here; they
-            // start from a hand-seeded snapshot of today's 4 tools instead.
-            "mcpservers.json",
+            "conf.properties",
+            "mcpconf.ini",
+            "capacity.ini",
+            "llm.ini",
+            "rag.ini",
+            "performance.ini",
+            "chat.ini",
             "categorization.json",
-            "keywords.json"
+            "mapping.json"
     );
 
     /**
      * Files whose content must be valid JSON.
-     * Validated before any disk write occurs.
+     * Validated before any disk write occurs. The *.ini/*.properties files
+     * are plain text (properties/ini format) and are intentionally excluded.
      */
     private static final Set<String> JSON_FILES = Set.of(
-            "category.json",
-            "mapping.json",
-            "mcpservers.json",
+            "mcpconf.ini",
             "categorization.json",
-            "keywords.json"
+            "mapping.json"
     );
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -295,21 +308,22 @@ public class SettingsMiddleware {
      *
      * Request body example:
      * {
-     *   "conf.ini":           "# conf.ini...",
-     *   "mcpconf.properties": "# mcpconf...",
-     *   "apmconf.properties": "# apmconf...",
-     *   "category.json":      "[{\"keyword\":\"down\",\"category\":\"Availability\"}]",
-     *   "mapping.json":       "{\"dynatrace\":{...},...}"
+     *   "conf.properties":   "# conf.properties...",
+     *   "llm.ini":           "# llm.ini...",
+     *   "rag.ini":           "# rag.ini...",
+     *   "performance.ini":   "# performance.ini...",
+     *   "chat.ini":          "# chat.ini...",
+     *   "capacity.ini":      "# capacity.ini..."
      * }
      *
      * Response (success):
-     *   200  { "ok": true, "written": ["conf.ini", "mcpconf.properties", ...] }
+     *   200  { "ok": true, "written": ["conf.properties", "llm.ini", ...] }
      *
      * Response (validation error):
-     *   422  { "error": "Invalid JSON in category.json: ..." }
+     *   422  { "error": "Invalid JSON in mcpconf.ini: ..." }
      *
      * Response (write error):
-     *   500  { "error": "Write failed for conf.ini: ..." }
+     *   500  { "error": "Write failed for conf.properties: ..." }
      *
      * All files are validated BEFORE any writes. If validation passes, all
      * writes are performed; a write failure returns 500 but already-written

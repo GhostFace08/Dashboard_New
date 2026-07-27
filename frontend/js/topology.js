@@ -78,7 +78,53 @@
 
   let svg, zoomGroup, simulation, zoomBehavior;
 
-  /* ─── Store (localStorage-backed placeholder — see doc comment) ─────────── */
+  /* ─── Store (localStorage-backed, synced from the server at page load) ──
+   * Persistence model:
+   *   - On page load, bootstrapFromServer() fetches the real saved graph
+   *     from TopologyMiddleware's /api/topology (backend/data/topology.json)
+   *     and mirrors it into localStorage — this becomes the working copy
+   *     for the rest of the session, so the many existing synchronous
+   *     loadStore()/saveStore() call sites throughout this file don't need
+   *     to become async.
+   *   - Every edit still goes through loadStore()/saveStore() exactly as
+   *     before — those stay localStorage-backed and synchronous.
+   *   - "Update Topology" is the only place that talks to the server after
+   *     load: it diffs the current localStorage state against a fresh
+   *     fetch of the server's saved copy, and on confirm PUTs the current
+   *     state back (see updateTopologyToServer() below).
+   *   - Undo/Redo operate purely on localStorage history (unsaved-changes
+   *     buffer) — they do not touch the server.
+   */
+  let serverNodePool = {};        // topologyNodePool passthrough — preserved verbatim across saves
+  let lastServerSnapshot = null;  // JSON string of the graph as of the last successful load/save from the server
+
+  const undoStack = [];
+  const redoStack = [];
+  const MAX_HISTORY = 50;
+
+  function rawStoreString() {
+    try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
+  }
+  function rawStoreWrite(str) {
+    try { localStorage.setItem(STORAGE_KEY, str); } catch (e) {
+      console.warn("[topology] failed to persist topology store:", e);
+    }
+  }
+
+  async function bootstrapFromServer() {
+    try {
+      if (!(global.API && typeof global.API.getTopologyData === "function")) return;
+      const result = await global.API.getTopologyData();
+      if (result && result.topology && Object.keys(result.topology).length > 0) {
+        rawStoreWrite(JSON.stringify(result.topology));
+        serverNodePool = result.topologyNodePool || {};
+        lastServerSnapshot = JSON.stringify(result.topology);
+      }
+    } catch (e) {
+      console.warn("[topology] bootstrapFromServer failed, using local/demo data:", e);
+    }
+  }
+
   function loadStore() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -87,12 +133,62 @@
     return seedStore();
   }
 
+  // Pushes the pre-mutation state onto the undo stack, clears redo (any new
+  // committed change invalidates whatever was available to redo), then
+  // persists. This works for every existing call site unchanged, since they
+  // all follow the same "load, mutate, saveStore(store)" pattern.
   function saveStore(store) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    } catch (e) {
-      console.warn("[topology] failed to persist topology store:", e);
+    const prev = rawStoreString();
+    if (prev !== null) {
+      undoStack.push(prev);
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
     }
+    redoStack.length = 0;
+    rawStoreWrite(JSON.stringify(store));
+    updateUndoRedoButtons();
+  }
+
+  function undoChange() {
+    if (!undoStack.length) return;
+    const cur = rawStoreString();
+    if (cur !== null) redoStack.push(cur);
+    const prev = undoStack.pop();
+    rawStoreWrite(prev);
+    updateUndoRedoButtons();
+    refreshAfterExternalChange();
+  }
+
+  function redoChange() {
+    if (!redoStack.length) return;
+    const cur = rawStoreString();
+    if (cur !== null) undoStack.push(cur);
+    const next = redoStack.pop();
+    rawStoreWrite(next);
+    updateUndoRedoButtons();
+    refreshAfterExternalChange();
+  }
+
+  function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById("topo-undo-btn");
+    const redoBtn = document.getElementById("topo-redo-btn");
+    if (undoBtn) undoBtn.disabled = undoStack.length === 0;
+    if (redoBtn) redoBtn.disabled = redoStack.length === 0;
+    const updateBtn = document.getElementById("topo-update-btn");
+    if (updateBtn) {
+      const dirty = rawStoreString() !== lastServerSnapshot;
+      updateBtn.classList.toggle("has-changes", dirty);
+    }
+  }
+
+  // Full re-render after a store change that didn't come from the normal
+  // "mutate in a handler, then call renderGraph()" flow (i.e. undo/redo).
+  function refreshAfterExternalChange() {
+    const store = loadStore();
+    state.apps = Object.keys(store);
+    if (!state.apps.includes(state.currentApp)) state.currentApp = state.apps[0] || null;
+    renderAppSelect();
+    if (state.view === "focused") renderTopologySelect();
+    renderGraph();
   }
 
   function seedStore() {
@@ -215,7 +311,7 @@
 
   /* ─── MCP servers (live list, for Add Topology / Add Node dropdowns) ────
    * Prefers TopologyMiddleware's getTopologyServers() (a read-only proxy in
-   * front of Settings' mcpservers.json — see api.js). Falls back to the
+   * front of Settings' mcpconf.ini — see api.js). Falls back to the
    * older direct getMcpServers() path (straight to Settings) if Topology is
    * unreachable or returns an empty list, and from there to CFG.TOOLS as
    * before — this is strictly additive, no existing fallback was removed.
@@ -542,6 +638,10 @@
       if (state.view !== "focused") return;
       openReconcileModal();
     });
+
+    document.getElementById("topo-update-btn").addEventListener("click", openUpdateTopologyModal);
+    document.getElementById("topo-undo-btn").addEventListener("click", undoChange);
+    document.getElementById("topo-redo-btn").addEventListener("click", redoChange);
 
     document.getElementById("topo-fit-btn").addEventListener("click", fitView);
     document.getElementById("topo-zoom-in-btn").addEventListener("click", () => zoomBehavior && svg.transition().duration(150).call(zoomBehavior.scaleBy, 1.3));
@@ -904,6 +1004,143 @@
     renderGraph();
   }
 
+  /* ─── Update Topology — diff current (unsaved) state vs. server-saved
+     topology.json, show the changes, confirm, then PUT to the server ────── */
+
+  function diffAgainstServer(serverStore, localStore) {
+    const changes = [];
+    const appNames = new Set([...Object.keys(serverStore || {}), ...Object.keys(localStore || {})]);
+
+    appNames.forEach(appName => {
+      const oldApp = (serverStore || {})[appName];
+      const newApp = (localStore || {})[appName];
+      if (!oldApp && newApp) { changes.push({ type: "app-added", app: appName }); return; }
+      if (oldApp && !newApp) { changes.push({ type: "app-removed", app: appName }); return; }
+
+      const oldTopoIds = new Set(Object.keys(oldApp.topologies || {}));
+      const newTopoIds = new Set(Object.keys(newApp.topologies || {}));
+      const allTopoIds = new Set([...oldTopoIds, ...newTopoIds]);
+
+      allTopoIds.forEach(topoId => {
+        const oldTopo = (oldApp.topologies || {})[topoId];
+        const newTopo = (newApp.topologies || {})[topoId];
+        if (!oldTopo && newTopo) { changes.push({ type: "topo-added", app: appName, topoId, label: newTopo.label }); return; }
+        if (oldTopo && !newTopo) { changes.push({ type: "topo-removed", app: appName, topoId, label: oldTopo.label }); return; }
+
+        const oldNodes = new Map((oldTopo.nodes || []).map(n => [n.id, n]));
+        const newNodes = new Map((newTopo.nodes || []).map(n => [n.id, n]));
+        const allNodeIds = new Set([...oldNodes.keys(), ...newNodes.keys()]);
+
+        allNodeIds.forEach(nodeId => {
+          const oldNode = oldNodes.get(nodeId);
+          const newNode = newNodes.get(nodeId);
+          if (!oldNode && newNode) {
+            changes.push({ type: "node-added", app: appName, topoId, label: newNode.label, kind: newNode.kind });
+          } else if (oldNode && !newNode) {
+            changes.push({ type: "node-removed", app: appName, topoId, label: oldNode.label, kind: oldNode.kind });
+          } else if (oldNode && newNode) {
+            const fieldsChanged = ["label", "kind", "status"].filter(f => oldNode[f] !== newNode[f]);
+            if (fieldsChanged.length) {
+              changes.push({ type: "node-modified", app: appName, topoId, label: newNode.label, fields: fieldsChanged, oldNode, newNode });
+            }
+          }
+        });
+
+        const edgeKey = e => `${e.from}→${e.to}`;
+        const oldEdges = new Map((oldTopo.edges || []).map(e => [edgeKey(e), e]));
+        const newEdges = new Map((newTopo.edges || []).map(e => [edgeKey(e), e]));
+        const allEdgeKeys = new Set([...oldEdges.keys(), ...newEdges.keys()]);
+        allEdgeKeys.forEach(key => {
+          if (!oldEdges.has(key) && newEdges.has(key)) changes.push({ type: "edge-added", app: appName, topoId, key });
+          else if (oldEdges.has(key) && !newEdges.has(key)) changes.push({ type: "edge-removed", app: appName, topoId, key });
+        });
+      });
+    });
+
+    return changes;
+  }
+
+  function describeChange(c) {
+    switch (c.type) {
+      case "app-added":     return { tag: "NEW",  text: `Application "${c.app}" added` };
+      case "app-removed":   return { tag: "GONE", text: `Application "${c.app}" removed` };
+      case "topo-added":    return { tag: "NEW",  text: `Topology "${c.label}" added to ${c.app}` };
+      case "topo-removed":  return { tag: "GONE", text: `Topology "${c.label}" removed from ${c.app}` };
+      case "node-added":    return { tag: "NEW",  text: `Node "${c.label}" (${c.kind}) added — ${c.app}` };
+      case "node-removed":  return { tag: "GONE", text: `Node "${c.label}" (${c.kind}) removed — ${c.app}` };
+      case "node-modified": return { tag: "CHANGED", text: `Node "${c.newNode.label}" changed (${c.fields.join(", ")}) — ${c.app}` };
+      case "edge-added":    return { tag: "NEW",  text: `Connection ${c.key} added — ${c.app}` };
+      case "edge-removed":  return { tag: "GONE", text: `Connection ${c.key} removed — ${c.app}` };
+      default:              return { tag: "?", text: "Unknown change" };
+    }
+  }
+
+  let pendingTopologyUpdate = null;
+
+  async function openUpdateTopologyModal() {
+    const localStore = loadStore();
+    let serverStore = {};
+    try {
+      if (global.API && typeof global.API.getTopologyData === "function") {
+        const result = await global.API.getTopologyData();
+        if (result && result.topology) serverStore = result.topology;
+      }
+    } catch (e) {
+      console.warn("[topology] could not fetch server topology for comparison:", e);
+    }
+
+    const changes = diffAgainstServer(serverStore, localStore);
+
+    if (changes.length === 0) {
+      Utils.showToast ? Utils.showToast("Topologies are already up to date.", "info") : alert("Topologies are already up to date.");
+      return;
+    }
+
+    pendingTopologyUpdate = { localStore };
+    const list = document.getElementById("topo-update-diff-list");
+    if (list) {
+      list.innerHTML = changes.map(c => {
+        const { tag, text } = describeChange(c);
+        const cls = tag === "NEW" ? "added" : tag === "GONE" ? "removed" : "modified";
+        return `<div class="topo-diff-item ${cls}"><span class="tag">${tag}</span> ${Utils.escapeHtml(text)}</div>`;
+      }).join("");
+    }
+    const overlay = document.getElementById("topo-update-modal-overlay");
+    if (overlay) overlay.classList.remove("hidden");
+  }
+
+  function closeUpdateTopologyModal() {
+    document.getElementById("topo-update-modal-overlay")?.classList.add("hidden");
+    pendingTopologyUpdate = null;
+  }
+
+  async function confirmUpdateTopology() {
+    if (!pendingTopologyUpdate) return;
+    const { localStore } = pendingTopologyUpdate;
+    const btn = document.getElementById("topo-update-modal-confirm-btn");
+    if (btn) { btn.disabled = true; btn.textContent = "Updating…"; }
+
+    try {
+      const result = await global.API.saveTopologyData({
+        topology: localStore,
+        topologyNodePool: serverNodePool,
+      });
+      if (result && result.ok) {
+        lastServerSnapshot = JSON.stringify(localStore);
+        updateUndoRedoButtons();
+        Utils.showToast ? Utils.showToast("Topologies updated.", "success") : alert("Topologies updated.");
+      } else {
+        Utils.showToast ? Utils.showToast("Failed to update topology on the server.", "error") : alert("Failed to update topology.");
+      }
+    } catch (e) {
+      console.warn("[topology] confirmUpdateTopology failed:", e);
+      Utils.showToast ? Utils.showToast("Failed to update topology on the server.", "error") : alert("Failed to update topology.");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Confirm Update"; }
+      closeUpdateTopologyModal();
+    }
+  }
+
   /* ─── Refresh from Sources — diff + reconciliation (Focused view) ────── */
   let pendingReconcile = null;
 
@@ -1033,10 +1270,18 @@
     document.getElementById("topo-reconcile-modal-close-btn").addEventListener("click", closeReconcileModal);
     document.getElementById("topo-reconcile-modal-cancel-btn").addEventListener("click", closeReconcileModal);
     document.getElementById("topo-reconcile-modal-apply-btn").addEventListener("click", applyReconcile);
+
+    document.getElementById("topo-update-modal-close-btn").addEventListener("click", closeUpdateTopologyModal);
+    document.getElementById("topo-update-modal-cancel-btn").addEventListener("click", closeUpdateTopologyModal);
+    document.getElementById("topo-update-modal-confirm-btn").addEventListener("click", confirmUpdateTopology);
+    document.getElementById("topo-update-modal-overlay").addEventListener("click", (e) => {
+      if (e.target.id === "topo-update-modal-overlay") closeUpdateTopologyModal();
+    });
   }
 
   /* ─── Bootstrap ───────────────────────────────────────────────────────── */
   async function initPage() {
+    await bootstrapFromServer();
     await loadMcpServers();
     const store = loadStore();
     state.apps = Object.keys(store);
@@ -1049,6 +1294,7 @@
     applyViewVisibility();
     wireToolbar();
     wireModals();
+    updateUndoRedoButtons();
     renderGraph();
   }
 

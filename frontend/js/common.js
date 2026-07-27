@@ -829,7 +829,17 @@
 
   function normalizeIssue(item, source, mapping, categorization, index) {
     var cfg = global.CFG || {};
-    var sourceMap = (mapping && mapping[source]) || (cfg.DEFAULT_MAPPING && cfg.DEFAULT_MAPPING[source]) || {};
+    // mapping.json stores each source as { mapping: {...}, dashboards: {...},
+    // timeMapping: {...} } (Settings ▸ MCP Servers ▸ Mapping tab writes this
+    // shape). The canonical field map for resolveField() is the *nested*
+    // "mapping" object, not the source entry itself — reading mapping[source]
+    // directly silently resolves every field to undefined, which is why
+    // titles/times collapsed to placeholders and time-based filtering broke.
+    // Support both shapes defensively (nested, or legacy flat).
+    var sourceEntry = (mapping && mapping[source]) || null;
+    var sourceMap = (sourceEntry && sourceEntry.mapping) ? sourceEntry.mapping
+      : (sourceEntry && (sourceEntry.issueId || sourceEntry.title || sourceEntry.startTime)) ? sourceEntry
+      : (cfg.DEFAULT_MAPPING && cfg.DEFAULT_MAPPING[source]) || {};
 
     var rawIssueId     = resolveField(item, sourceMap.issueId)         || ("#" + index);
     var rawTitle       = resolveField(item, sourceMap.title)           || "—";

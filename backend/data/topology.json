@@ -3,22 +3,230 @@
     "Payments Gateway": {
       "topologies": {
         "topo-pg-dt": {
-          "id": "topo-pg-dt", "label": "DynaTrace", "kind": "mcp", "sourceLabel": "DynaTrace", "mcpServerId": "dynatrace",
+          "id": "topo-pg-dt",
+          "label": "DynaTrace",
+          "kind": "mcp",
+          "sourceLabel": "DynaTrace",
+          "mcpServerId": "dynatrace",
           "nodes": [
-            { "id": "pg-host-1", "label": "web-prod-01",   "kind": "host",      "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "HOST-7A61C3F0" },
-            { "id": "pg-host-2", "label": "web-prod-02",   "kind": "host",      "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "HOST-7A61C3F1" },
-            { "id": "pg-host-3", "label": "db-primary-01", "kind": "host",      "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "HOST-3E29B7D2" },
-            { "id": "pg-pg-1",   "label": "proc-group-1",  "kind": "procgroup", "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "PG-1001" },
-            { "id": "pg-pg-2",   "label": "proc-group-2",  "kind": "procgroup", "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "PG-1002" },
-            { "id": "pg-svc-1",  "label": "checkout-api",  "kind": "service",   "origin": "discovered", "status": "problem",     "source": "DynaTrace", "entityId": "SVC-9A1D2E40" },
-            { "id": "pg-svc-2",  "label": "auth-service",  "kind": "service",   "origin": "discovered", "status": "healthy",     "source": "DynaTrace", "entityId": "SVC-9A1D2E41" }
+            {
+              "id": "pg-host-1",
+              "label": "web-prod-01",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "DynaTrace",
+              "entityId": "HOST-7A61C3F0"
+            },
+            {
+              "id": "pg-host-2",
+              "label": "web-prod-02",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "HOST-7A61C3F1"
+            },
+            {
+              "id": "pg-host-3",
+              "label": "db-primary-01",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "HOST-3E29B7D2"
+            },
+            {
+              "id": "pg-pg-1",
+              "label": "proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "DynaTrace",
+              "entityId": "PG-1001"
+            },
+            {
+              "id": "pg-pg-2",
+              "label": "proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "PG-1002"
+            },
+            {
+              "id": "pg-svc-1",
+              "label": "checkout-api",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "DynaTrace",
+              "entityId": "SVC-9A1D2E40"
+            },
+            {
+              "id": "pg-svc-2",
+              "label": "auth-service",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "SVC-9A1D2E41"
+            }
           ],
           "edges": [
-            { "from": "pg-host-1", "to": "pg-pg-1",  "origin": "discovered", "problem": true,  "type": "hosts" },
-            { "from": "pg-host-2", "to": "pg-pg-2",  "origin": "discovered", "problem": false, "type": "hosts" },
-            { "from": "pg-pg-1",   "to": "pg-svc-1", "origin": "discovered", "problem": true,  "type": "runs" },
-            { "from": "pg-pg-2",   "to": "pg-svc-2", "origin": "discovered", "problem": false, "type": "runs" },
-            { "from": "pg-svc-2",  "to": "pg-svc-1", "origin": "manual",     "problem": false, "type": "depends-on" }
+            {
+              "from": "pg-host-1",
+              "to": "pg-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "pg-host-2",
+              "to": "pg-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "pg-pg-1",
+              "to": "pg-svc-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            },
+            {
+              "from": "pg-pg-2",
+              "to": "pg-svc-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "pg-svc-2",
+              "to": "pg-svc-1",
+              "origin": "manual",
+              "problem": false,
+              "type": "depends-on"
+            }
+          ]
+        },
+        "topo-pg-opm": {
+          "id": "topo-pg-opm",
+          "label": "OPManager",
+          "kind": "mcp",
+          "sourceLabel": "OPManager",
+          "mcpServerId": "opmanager",
+          "nodes": [
+            {
+              "id": "pg2-topo-pg-opm-host-1",
+              "label": "pg2-host-1",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "OPManager",
+              "entityId": "HOST-0B08"
+            },
+            {
+              "id": "pg2-topo-pg-opm-host-2",
+              "label": "pg2-host-2",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "HOST-0581"
+            },
+            {
+              "id": "pg2-topo-pg-opm-host-3",
+              "label": "pg2-host-3",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "HOST-1582"
+            },
+            {
+              "id": "pg2-topo-pg-opm-pg-1",
+              "label": "pg2-proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "PG-5012"
+            },
+            {
+              "id": "pg2-topo-pg-opm-pg-2",
+              "label": "pg2-proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "PG-4657"
+            },
+            {
+              "id": "pg2-topo-pg-opm-svc-1",
+              "label": "pg2-svc-1",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "SVC-0CD6"
+            },
+            {
+              "id": "pg2-topo-pg-opm-svc-2",
+              "label": "pg2-svc-2",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "OPManager",
+              "entityId": "SVC-0A77"
+            },
+            {
+              "id": "pg2-topo-pg-opm-svc-3",
+              "label": "pg2-svc-3",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "SVC-26CF"
+            }
+          ],
+          "edges": [
+            {
+              "from": "pg2-topo-pg-opm-host-1",
+              "to": "pg2-topo-pg-opm-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "pg2-topo-pg-opm-host-2",
+              "to": "pg2-topo-pg-opm-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "pg2-topo-pg-opm-host-3",
+              "to": "pg2-topo-pg-opm-pg-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "pg2-topo-pg-opm-pg-1",
+              "to": "pg2-topo-pg-opm-svc-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "pg2-topo-pg-opm-pg-2",
+              "to": "pg2-topo-pg-opm-svc-2",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            }
           ]
         }
       }
@@ -26,16 +234,182 @@
     "Customer Portal": {
       "topologies": {
         "topo-cp-apd": {
-          "id": "topo-cp-apd", "label": "AppDynamics", "kind": "mcp", "sourceLabel": "AppDynamics", "mcpServerId": "appdynamics",
+          "id": "topo-cp-apd",
+          "label": "AppDynamics",
+          "kind": "mcp",
+          "sourceLabel": "AppDynamics",
+          "mcpServerId": "appdynamics",
           "nodes": [
-            { "id": "cp-host-1", "label": "app-worker-01",    "kind": "host",    "origin": "discovered", "status": "healthy",     "source": "AppDynamics", "entityId": "HOST-1D88E245" },
-            { "id": "cp-host-2", "label": "app-worker-02",    "kind": "host",    "origin": "discovered", "status": "disconnected","source": "AppDynamics", "entityId": "HOST-1D88E246" },
-            { "id": "cp-svc-1",  "label": "inventory-worker", "kind": "service", "origin": "discovered", "status": "problem",     "source": "AppDynamics", "entityId": "SVC-4C77B310" },
-            { "id": "cp-svc-2",  "label": "notification-svc", "kind": "service", "origin": "discovered", "status": "healthy",     "source": "AppDynamics", "entityId": "SVC-4C77B311" }
+            {
+              "id": "cp-host-1",
+              "label": "app-worker-01",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "HOST-1D88E245"
+            },
+            {
+              "id": "cp-host-2",
+              "label": "app-worker-02",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "disconnected",
+              "source": "AppDynamics",
+              "entityId": "HOST-1D88E246"
+            },
+            {
+              "id": "cp-svc-1",
+              "label": "inventory-worker",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "AppDynamics",
+              "entityId": "SVC-4C77B310"
+            },
+            {
+              "id": "cp-svc-2",
+              "label": "notification-svc",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "SVC-4C77B311"
+            }
           ],
           "edges": [
-            { "from": "cp-host-1", "to": "cp-svc-2", "origin": "discovered", "problem": false, "type": "hosts" },
-            { "from": "cp-host-2", "to": "cp-svc-1", "origin": "discovered", "problem": true,  "type": "hosts" }
+            {
+              "from": "cp-host-1",
+              "to": "cp-svc-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "cp-host-2",
+              "to": "cp-svc-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            }
+          ]
+        },
+        "topo-cp-heal": {
+          "id": "topo-cp-heal",
+          "label": "HEAL",
+          "kind": "mcp",
+          "sourceLabel": "HEAL",
+          "mcpServerId": "heal",
+          "nodes": [
+            {
+              "id": "cp2-topo-cp-heal-host-1",
+              "label": "cp2-host-1",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "HEAL",
+              "entityId": "HOST-0978"
+            },
+            {
+              "id": "cp2-topo-cp-heal-host-2",
+              "label": "cp2-host-2",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "HOST-1EE8"
+            },
+            {
+              "id": "cp2-topo-cp-heal-host-3",
+              "label": "cp2-host-3",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "HOST-05F0"
+            },
+            {
+              "id": "cp2-topo-cp-heal-pg-1",
+              "label": "cp2-proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "PG-1488"
+            },
+            {
+              "id": "cp2-topo-cp-heal-pg-2",
+              "label": "cp2-proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "PG-2535"
+            },
+            {
+              "id": "cp2-topo-cp-heal-svc-1",
+              "label": "cp2-svc-1",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "SVC-11E6"
+            },
+            {
+              "id": "cp2-topo-cp-heal-svc-2",
+              "label": "cp2-svc-2",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "HEAL",
+              "entityId": "SVC-12CB"
+            },
+            {
+              "id": "cp2-topo-cp-heal-svc-3",
+              "label": "cp2-svc-3",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "HEAL",
+              "entityId": "SVC-243F"
+            }
+          ],
+          "edges": [
+            {
+              "from": "cp2-topo-cp-heal-host-1",
+              "to": "cp2-topo-cp-heal-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "cp2-topo-cp-heal-host-2",
+              "to": "cp2-topo-cp-heal-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "cp2-topo-cp-heal-host-3",
+              "to": "cp2-topo-cp-heal-pg-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "cp2-topo-cp-heal-pg-1",
+              "to": "cp2-topo-cp-heal-svc-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "cp2-topo-cp-heal-pg-2",
+              "to": "cp2-topo-cp-heal-svc-2",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            }
           ]
         }
       }
@@ -43,18 +417,465 @@
     "Order Fulfillment": {
       "topologies": {
         "topo-of-blank": {
-          "id": "topo-of-blank", "label": "Blank", "kind": "blank", "sourceLabel": "Manual", "mcpServerId": null,
+          "id": "topo-of-blank",
+          "label": "Blank",
+          "kind": "blank",
+          "sourceLabel": "Manual",
+          "mcpServerId": null,
           "nodes": [],
           "edges": []
+        },
+        "topo-of-dt": {
+          "id": "topo-of-dt",
+          "label": "DynaTrace",
+          "kind": "mcp",
+          "sourceLabel": "DynaTrace",
+          "mcpServerId": "dynatrace",
+          "nodes": [
+            {
+              "id": "of2-topo-of-dt-host-1",
+              "label": "of2-host-1",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "DynaTrace",
+              "entityId": "HOST-059A"
+            },
+            {
+              "id": "of2-topo-of-dt-host-2",
+              "label": "of2-host-2",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "HOST-10A1"
+            },
+            {
+              "id": "of2-topo-of-dt-host-3",
+              "label": "of2-host-3",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "HOST-26C8"
+            },
+            {
+              "id": "of2-topo-of-dt-pg-1",
+              "label": "of2-proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "PG-7873"
+            },
+            {
+              "id": "of2-topo-of-dt-pg-2",
+              "label": "of2-proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "PG-4611"
+            },
+            {
+              "id": "of2-topo-of-dt-svc-1",
+              "label": "of2-svc-1",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "SVC-20A7"
+            },
+            {
+              "id": "of2-topo-of-dt-svc-2",
+              "label": "of2-svc-2",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "DynaTrace",
+              "entityId": "SVC-15B5"
+            },
+            {
+              "id": "of2-topo-of-dt-svc-3",
+              "label": "of2-svc-3",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "DynaTrace",
+              "entityId": "SVC-0452"
+            }
+          ],
+          "edges": [
+            {
+              "from": "of2-topo-of-dt-host-1",
+              "to": "of2-topo-of-dt-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "of2-topo-of-dt-host-2",
+              "to": "of2-topo-of-dt-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "of2-topo-of-dt-host-3",
+              "to": "of2-topo-of-dt-pg-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "of2-topo-of-dt-pg-1",
+              "to": "of2-topo-of-dt-svc-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "of2-topo-of-dt-pg-2",
+              "to": "of2-topo-of-dt-svc-2",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            }
+          ]
+        }
+      }
+    },
+    "Inventory Service": {
+      "topologies": {
+        "topo-inv-apd": {
+          "id": "topo-inv-apd",
+          "label": "AppDynamics",
+          "kind": "mcp",
+          "sourceLabel": "AppDynamics",
+          "mcpServerId": "appdynamics",
+          "nodes": [
+            {
+              "id": "inv1-topo-inv-apd-host-1",
+              "label": "inv1-host-1",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "AppDynamics",
+              "entityId": "HOST-0E1F"
+            },
+            {
+              "id": "inv1-topo-inv-apd-host-2",
+              "label": "inv1-host-2",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "HOST-1EF4"
+            },
+            {
+              "id": "inv1-topo-inv-apd-host-3",
+              "label": "inv1-host-3",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "HOST-19AE"
+            },
+            {
+              "id": "inv1-topo-inv-apd-pg-1",
+              "label": "inv1-proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "PG-5552"
+            },
+            {
+              "id": "inv1-topo-inv-apd-pg-2",
+              "label": "inv1-proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "PG-3547"
+            },
+            {
+              "id": "inv1-topo-inv-apd-svc-1",
+              "label": "inv1-svc-1",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "SVC-11AF"
+            },
+            {
+              "id": "inv1-topo-inv-apd-svc-2",
+              "label": "inv1-svc-2",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "AppDynamics",
+              "entityId": "SVC-1972"
+            },
+            {
+              "id": "inv1-topo-inv-apd-svc-3",
+              "label": "inv1-svc-3",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "AppDynamics",
+              "entityId": "SVC-0A72"
+            }
+          ],
+          "edges": [
+            {
+              "from": "inv1-topo-inv-apd-host-1",
+              "to": "inv1-topo-inv-apd-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "inv1-topo-inv-apd-host-2",
+              "to": "inv1-topo-inv-apd-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "inv1-topo-inv-apd-host-3",
+              "to": "inv1-topo-inv-apd-pg-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "inv1-topo-inv-apd-pg-1",
+              "to": "inv1-topo-inv-apd-svc-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "inv1-topo-inv-apd-pg-2",
+              "to": "inv1-topo-inv-apd-svc-2",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            }
+          ]
+        },
+        "topo-inv-opm": {
+          "id": "topo-inv-opm",
+          "label": "OPManager",
+          "kind": "mcp",
+          "sourceLabel": "OPManager",
+          "mcpServerId": "opmanager",
+          "nodes": [
+            {
+              "id": "inv2-topo-inv-opm-host-1",
+              "label": "inv2-host-1",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "OPManager",
+              "entityId": "HOST-09D7"
+            },
+            {
+              "id": "inv2-topo-inv-opm-host-2",
+              "label": "inv2-host-2",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "HOST-1C38"
+            },
+            {
+              "id": "inv2-topo-inv-opm-host-3",
+              "label": "inv2-host-3",
+              "kind": "host",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "HOST-0A18"
+            },
+            {
+              "id": "inv2-topo-inv-opm-pg-1",
+              "label": "inv2-proc-group-1",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "PG-6881"
+            },
+            {
+              "id": "inv2-topo-inv-opm-pg-2",
+              "label": "inv2-proc-group-2",
+              "kind": "procgroup",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "PG-6635"
+            },
+            {
+              "id": "inv2-topo-inv-opm-svc-1",
+              "label": "inv2-svc-1",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "SVC-14D5"
+            },
+            {
+              "id": "inv2-topo-inv-opm-svc-2",
+              "label": "inv2-svc-2",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "problem",
+              "source": "OPManager",
+              "entityId": "SVC-06AF"
+            },
+            {
+              "id": "inv2-topo-inv-opm-svc-3",
+              "label": "inv2-svc-3",
+              "kind": "service",
+              "origin": "discovered",
+              "status": "healthy",
+              "source": "OPManager",
+              "entityId": "SVC-214F"
+            }
+          ],
+          "edges": [
+            {
+              "from": "inv2-topo-inv-opm-host-1",
+              "to": "inv2-topo-inv-opm-pg-1",
+              "origin": "discovered",
+              "problem": true,
+              "type": "hosts"
+            },
+            {
+              "from": "inv2-topo-inv-opm-host-2",
+              "to": "inv2-topo-inv-opm-pg-2",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "inv2-topo-inv-opm-host-3",
+              "to": "inv2-topo-inv-opm-pg-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "hosts"
+            },
+            {
+              "from": "inv2-topo-inv-opm-pg-1",
+              "to": "inv2-topo-inv-opm-svc-1",
+              "origin": "discovered",
+              "problem": false,
+              "type": "runs"
+            },
+            {
+              "from": "inv2-topo-inv-opm-pg-2",
+              "to": "inv2-topo-inv-opm-svc-2",
+              "origin": "discovered",
+              "problem": true,
+              "type": "runs"
+            }
+          ]
         }
       }
     }
   },
   "topologyNodePool": {
-    "host":      [ { "label": "cache-redis-01", "entityId": "HOST-9C10F4A8", "source": "AppDynamics" }, { "label": "lb-edge-01", "entityId": "HOST-56F0A9BC", "source": "OPManager" }, { "label": "win-app-01", "entityId": "HOST-EE41C0A7", "source": "OPManager" }, { "label": "batch-runner-01", "entityId": "HOST-2B7790D1", "source": "HEAL" } ],
-    "service":   [ { "label": "search-indexer", "entityId": "SVC-1F60D922", "source": "OPManager" }, { "label": "recommendation-api", "entityId": "SVC-1F60D923", "source": "HEAL" } ],
-    "device":    [ { "label": "core-switch-01", "entityId": "NET-3AB10F01", "source": "OPManager" }, { "label": "edge-router-01", "entityId": "NET-3AB10F02", "source": "OPManager" }, { "label": "fw-perimeter-01", "entityId": "NET-3AB10F03", "source": "OPManager" }, { "label": "lb-appliance-01", "entityId": "NET-6C21E907", "source": "DynaTrace" } ],
-    "process":   [ { "label": "postgres", "entityId": "PROC-7710A3", "source": "DynaTrace" }, { "label": "search-indexer.py", "entityId": "PROC-1F33C1", "source": "OPManager" }, { "label": "nginx", "entityId": "PROC-1F33C2", "source": "OPManager" }, { "label": "batch-runner.sh", "entityId": "PROC-2B44D2", "source": "HEAL" } ],
-    "procgroup": [ { "label": "proc-group-3", "entityId": "PG-2001", "source": "AppDynamics" }, { "label": "proc-group-4", "entityId": "PG-2002", "source": "OPManager" } ]
+    "host": [
+      {
+        "label": "cache-redis-01",
+        "entityId": "HOST-9C10F4A8",
+        "source": "AppDynamics"
+      },
+      {
+        "label": "lb-edge-01",
+        "entityId": "HOST-56F0A9BC",
+        "source": "OPManager"
+      },
+      {
+        "label": "win-app-01",
+        "entityId": "HOST-EE41C0A7",
+        "source": "OPManager"
+      },
+      {
+        "label": "batch-runner-01",
+        "entityId": "HOST-2B7790D1",
+        "source": "HEAL"
+      }
+    ],
+    "service": [
+      {
+        "label": "search-indexer",
+        "entityId": "SVC-1F60D922",
+        "source": "OPManager"
+      },
+      {
+        "label": "recommendation-api",
+        "entityId": "SVC-1F60D923",
+        "source": "HEAL"
+      }
+    ],
+    "device": [
+      {
+        "label": "core-switch-01",
+        "entityId": "NET-3AB10F01",
+        "source": "OPManager"
+      },
+      {
+        "label": "edge-router-01",
+        "entityId": "NET-3AB10F02",
+        "source": "OPManager"
+      },
+      {
+        "label": "fw-perimeter-01",
+        "entityId": "NET-3AB10F03",
+        "source": "OPManager"
+      },
+      {
+        "label": "lb-appliance-01",
+        "entityId": "NET-6C21E907",
+        "source": "DynaTrace"
+      }
+    ],
+    "process": [
+      {
+        "label": "postgres",
+        "entityId": "PROC-7710A3",
+        "source": "DynaTrace"
+      },
+      {
+        "label": "search-indexer.py",
+        "entityId": "PROC-1F33C1",
+        "source": "OPManager"
+      },
+      {
+        "label": "nginx",
+        "entityId": "PROC-1F33C2",
+        "source": "OPManager"
+      },
+      {
+        "label": "batch-runner.sh",
+        "entityId": "PROC-2B44D2",
+        "source": "HEAL"
+      }
+    ],
+    "procgroup": [
+      {
+        "label": "proc-group-3",
+        "entityId": "PG-2001",
+        "source": "AppDynamics"
+      },
+      {
+        "label": "proc-group-4",
+        "entityId": "PG-2002",
+        "source": "OPManager"
+      }
+    ]
   }
 }

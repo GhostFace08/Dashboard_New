@@ -110,7 +110,7 @@
     // 0b. LIVE TOOLS — segregate by configured MCP servers, not CFG.TOOLS
     // ═══════════════════════════════════════════════════════════════════════════
     // Dashboard "tools" used to be the 4 hardcoded entries in CFG.TOOLS.
-    // Now they come from backend/data/mcpservers.json (the same admin-defined
+    // Now they come from backend/data/mcpconf.ini (the same admin-defined
     // server list Settings → MCP Servers edits) — one tool button per
     // *configured* server, not "all tools" and not "all MCP servers/other
     // wiring" (auth, mapping, etc. stay out of this list). Falls back to the

@@ -9,22 +9,20 @@
  *    DOM this project's own Phase 14 pass had already removed from
  *    settings.html, so the JS was dead code guarding on missing elements.
  *  - Replaced with a single MCP Servers admin module (Section 5 below):
- *    a server list (backed by backend/data/mcpservers.json) with an Add
+ *    a server list (backed by backend/data/mcpconf.ini) with an Add
  *    Server modal and a multi-tab Edit modal (Server Details / Mapping /
  *    Issue Categorization / Time Mapping / AI Keywords). Issue
  *    Categorization now edits per-server keyword lists inside a shared
  *    categories doc (backend/data/categorization.json); AI Keywords edits
- *    a per-server list (backend/data/keywords.json). Each tab saves
- *    immediately via API.putConfig() rather than through the global
- *    Save-Changes footer, which still only covers conf.ini/mcpconf/apmconf.
- *  - category.json / mapping.json are no longer read or written by this
- *    page — they were the old shared/per-tool files these three new JSON
- *    files replace. Nothing else in the app has been repointed at the new
- *    files yet (out of scope for this phase — see handoff doc).
- *  - CFG.TOOLS / apmconf.properties are untouched and keep working exactly
- *    as before for every other page (Dashboard, Capacity, Topology, User
- *    Management) — this phase adds the new admin model alongside them, it
- *    does not migrate existing consumers onto it yet.
+ *    a per-server list inside backend/data/llm.ini's [keywords] section.
+ *    Each tab saves immediately via API.putConfig() rather than through
+ *    the global Save-Changes footer, which covers
+ *    conf.properties/llm.ini/rag.ini/performance.ini/chat.ini/capacity.ini.
+ *  - category.json, keywords.json, conf.ini, mcpconf.properties, and
+ *    apmconf.properties are gone — superseded by the file layout above
+ *    (mcpconf.ini holds the per-server "Details" tab; mapping.json now
+ *    holds Mapping/Dashboards/Time-Mapping, which used to live embedded
+ *    inside mcpservers.json with mapping.json itself sitting orphaned).
  *
  * DEPENDENCIES: config.js → api.js → common.js must load first.
  */
@@ -272,12 +270,30 @@
 
   async function loadMcpData() {
     try {
-      const serversText = await API.getConfig("mcpservers.json");
+      const serversText = await API.getConfig("mcpconf.ini");
       const parsed = serversText ? JSON.parse(serversText) : { servers: [] };
       mcpServers = Array.isArray(parsed.servers) ? parsed.servers : [];
     } catch (e) {
-      console.warn("[settings] Could not load mcpservers.json:", e);
+      console.warn("[settings] Could not load mcpconf.ini:", e);
       mcpServers = [];
+    }
+    // mapping.json holds the Mapping/Dashboards/Time-Mapping tab data, keyed
+    // by server id — merge it back onto each server object in memory so the
+    // rest of the page (which reads s.mapping/s.dashboards/s.timeMapping
+    // directly) doesn't need to change at all.
+    try {
+      const mapText = await API.getConfig("mapping.json");
+      const parsed = mapText ? JSON.parse(mapText) : {};
+      mcpServers.forEach(s => {
+        const entry = (parsed && typeof parsed === "object") ? parsed[s.id] : null;
+        if (entry) {
+          s.mapping     = entry.mapping     || s.mapping     || {};
+          s.dashboards  = entry.dashboards  || s.dashboards  || {};
+          s.timeMapping = entry.timeMapping || s.timeMapping || {};
+        }
+      });
+    } catch (e) {
+      console.warn("[settings] Could not load mapping.json:", e);
     }
     try {
       const catText = await API.getConfig("categorization.json");
@@ -286,25 +302,80 @@
     } catch (e) {
       console.warn("[settings] Could not load categorization.json:", e);
     }
+    // Keywords now live inside llm.ini's [keywords] section (merged with
+    // AI & Models on Phase 16's file reorganization) instead of the old
+    // standalone keywords.json.
     try {
-      const kwText = await API.getConfig("keywords.json");
-      const parsed = kwText ? JSON.parse(kwText) : {};
-      mcpKeywords = (parsed && typeof parsed === "object") ? parsed : {};
+      const llmText = await API.getConfig("llm.ini");
+      mcpKeywords = parseKeywordsFromLlmIni(llmText || "");
     } catch (e) {
-      console.warn("[settings] Could not load keywords.json:", e);
+      console.warn("[settings] Could not load llm.ini for keywords:", e);
     }
+    // One-time migration shim: registry.payloadIsUpload (pre-Tool-Registry-
+    // patch field name) → registry.usesPayload. Without this, any server
+    // entry saved before that rename would silently lose its toggle state
+    // the first time it loaded under the new code.
+    mcpServers.forEach(s => {
+      if (s.registry && s.registry.payloadIsUpload !== undefined && s.registry.usesPayload === undefined) {
+        s.registry.usesPayload = s.registry.payloadIsUpload;
+        delete s.registry.payloadIsUpload;
+      }
+    });
     mcpLoaded = true;
     renderServerList();
   }
 
+  // Parses the "[keywords]\nserverId = kw1, kw2, kw3" section out of an
+  // llm.ini text blob back into { [serverId]: [kw1, kw2, kw3] }.
+  function parseKeywordsFromLlmIni(text) {
+    const out = {};
+    const lines = text.split("\n");
+    let inSection = false;
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line || line.startsWith("#")) continue;
+      if (line === "[keywords]") { inSection = true; continue; }
+      if (line.startsWith("[")) { inSection = false; continue; }
+      if (!inSection) continue;
+      const eq = line.indexOf("=");
+      if (eq < 0) continue;
+      const key = line.slice(0, eq).trim();
+      const val = line.slice(eq + 1).trim();
+      out[key] = val ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
+    }
+    return out;
+  }
+
+  // Splits each server's in-memory object into the two files that now own
+  // different parts of it: mcpconf.ini gets the "Details" tab fields,
+  // mapping.json gets Mapping/Dashboards/Time-Mapping keyed by id. Both are
+  // written every time so neither ever goes stale relative to the other.
   async function persistServers() {
-    await API.putConfig("mcpservers.json", JSON.stringify({ servers: mcpServers }, null, 2));
+    const detailsOnly = mcpServers.map(s => {
+      const { mapping, dashboards, timeMapping, ...details } = s;
+      return details;
+    });
+    await API.putConfig("mcpconf.ini", JSON.stringify({ servers: detailsOnly }, null, 2));
+
+    const mappingById = {};
+    mcpServers.forEach(s => {
+      mappingById[s.id] = {
+        mapping:     s.mapping     || {},
+        dashboards:  s.dashboards  || {},
+        timeMapping: s.timeMapping || {},
+      };
+    });
+    await API.putConfig("mapping.json", JSON.stringify(mappingById, null, 2));
   }
   async function persistCategorization() {
     await API.putConfig("categorization.json", JSON.stringify(mcpCategorization, null, 2));
   }
   async function persistKeywords() {
-    await API.putConfig("keywords.json", JSON.stringify(mcpKeywords, null, 2));
+    // Keywords now live in llm.ini alongside the AI & Models fields — rebuild
+    // the whole file so a per-server "Save Tab" on Keywords never clobbers
+    // whatever's currently in the AI & Models fields (buildLlmIni() always
+    // reads both live).
+    await API.putConfig("llm.ini", buildLlmIni());
   }
 
   function renderServerList() {
@@ -1151,7 +1222,7 @@
   async function deleteServer(id) {
     const s = mcpServers.find(x => x.id === id);
     if (!s) return;
-    if (!window.confirm(`Delete "${s.name}"? This removes it from mcpservers.json — its category/keyword entries are left in place.`)) return;
+    if (!window.confirm(`Delete "${s.name}"? This removes it from mcpconf.ini — its category/keyword entries are left in place.`)) return;
     mcpServers = mcpServers.filter(x => x.id !== id);
     await persistServers();
     closeEditModal();
@@ -1283,13 +1354,22 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     11. conf.ini / mcpconf.properties / apmconf.properties builders
+     11. Settings-page file builders (conf.properties / mcpconf.ini /
+         capacity.ini / llm.ini / rag.ini / performance.ini / chat.ini)
+
+     Rewritten so each settings-page section writes to its own,
+     correctly-named file instead of everything being jammed into
+     "mcpconf.properties" / "apmconf.properties" regardless of which
+     section it actually belonged to (that mismatch was the root of
+     "settings save in the wrong file" — mcpconf.properties held AI/RAG/
+     Performance fields, and apmconf.properties held completely legacy,
+     no-longer-live data from before the MCP Servers admin list existed).
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  function buildConfIni() {
+  function buildConfProperties() {
     return [
-      "# conf.ini — MCP Dashboard General Configuration",
-      "# Auto-saved by Settings UI",
+      "# conf.properties — MCP Dashboard General Configuration",
+      "# Auto-saved by Settings UI (General section)",
       "",
       "[logging]",
       `log_level      = ${val("log-level",    "INFO")}`,
@@ -1319,85 +1399,106 @@
     ].join("\n");
   }
 
-  function buildMcpConf() {
-    // Phase 15: llm.rag_keywords is now a legacy/global fallback line only —
-    // per-server AI Keywords live in keywords.json (MCP Servers → AI
-    // Keywords tab). Kept here so mcpconf.properties stays a valid file for
-    // any code that still reads this one shared line.
+  // llm.ini — AI & Models section fields + per-server Keywords tab data
+  // (mcpKeywords, in-memory — merged in so both the master "Save Changes"
+  // button and a per-server "Save Tab" on the Keywords tab always write the
+  // complete, current file rather than clobbering whichever half they
+  // didn't touch).
+  function buildLlmIni() {
+    const lines = [
+      "# llm.ini — AI & Models Configuration",
+      "# Auto-saved by Settings UI (AI & Models section + MCP Servers → Keywords tab)",
+      "",
+      "[llm]",
+      `url              = ${val("llm-url",         "http://localhost:11434")}`,
+      `model            = ${val("llm-model",       "qwen2.5")}`,
+      `temperature      = ${val("llm-temp",        "0.2")}`,
+      `max_tokens       = ${val("llm-max-tokens",  "2048")}`,
+      `intent_mode      = ${activeSegValue("seg-intent") ?? "hybrid"}`,
+      `confidence       = ${val("llm-confidence",  "0.7")}`,
+      `timeout          = ${val("llm-timeout",     "15")}`,
+      "",
+      "[keywords]",
+    ];
+    Object.keys(mcpKeywords).forEach(serverId => {
+      lines.push(`${serverId} = ${(mcpKeywords[serverId] || []).join(", ")}`);
+    });
+    return lines.join("\n");
+  }
+
+  function buildRagIni() {
     return [
-      "# mcpconf.properties — MCP AI & RAG Configuration",
-      "# Auto-saved by Settings UI",
+      "# rag.ini — Retrieval (RAG) Configuration",
+      "# Auto-saved by Settings UI (Retrieval (RAG) section)",
       "",
-      "# AI / LLM",
-      `llm.url              = ${val("llm-url",         "http://localhost:11434")}`,
-      `llm.model            = ${val("llm-model",       "qwen2.5")}`,
-      `llm.temperature      = ${val("llm-temp",        "0.2")}`,
-      `llm.max_tokens       = ${val("llm-max-tokens",  "2048")}`,
-      `llm.intent_mode      = ${activeSegValue("seg-intent") ?? "hybrid"}`,
-      `llm.confidence       = ${val("llm-confidence",  "0.7")}`,
-      `llm.timeout          = ${val("llm-timeout",     "15")}`,
+      "[server]",
+      `base_url         = ${val("rag-base-url",    "http://localhost:8000")}`,
+      `data_endpoint    = ${val("rag-data-ep",     "/data")}`,
+      `ask_endpoint     = ${val("rag-ask-ep",      "/ask")}`,
+      `metadata_file    = ${val("rag-meta",        "metadata.json")}`,
+      `timeout          = ${val("rag-timeout",     "30")}`,
       "",
-      "# RAG Server",
-      `rag.base_url         = ${val("rag-base-url",    "http://localhost:8000")}`,
-      `rag.data_endpoint    = ${val("rag-data-ep",     "/data")}`,
-      `rag.ask_endpoint     = ${val("rag-ask-ep",      "/ask")}`,
-      `rag.metadata_file    = ${val("rag-meta",        "metadata.json")}`,
-      `rag.timeout          = ${val("rag-timeout",     "30")}`,
+      "[storage]",
+      `upload_folder    = ${val("rag-upload-folder",    "storage/uploads")}`,
+      `vector_store     = ${val("rag-vector-store",     "storage/vectors")}`,
+      `bm25_store       = ${val("rag-bm25-store",       "storage/bm25")}`,
       "",
-      "# File Storage",
-      `rag.upload_folder    = ${val("rag-upload-folder",    "storage/uploads")}`,
-      `rag.vector_store     = ${val("rag-vector-store",     "storage/vectors")}`,
-      `rag.bm25_store       = ${val("rag-bm25-store",       "storage/bm25")}`,
+      "[config_paths]",
+      `instructions_file = ${val("rag-instructions-file", "config/instructions.md")}`,
+      `faq_file          = ${val("rag-faq-file",          "config/faq.json")}`,
+      `settings_file     = ${val("rag-settings-file",     "config/settings.yaml")}`,
       "",
-      "# Config Paths",
-      `rag.instructions_file = ${val("rag-instructions-file", "config/instructions.md")}`,
-      `rag.faq_file          = ${val("rag-faq-file",          "config/faq.json")}`,
-      `rag.settings_file     = ${val("rag-settings-file",     "config/settings.yaml")}`,
+      "[search]",
+      `embed_model    = ${val("embed-model",    "bge-small-en-v1.5")}`,
+      `chunk_size     = ${val("chunk-size",     "512")}`,
+      `chunk_overlap  = ${val("chunk-overlap",  "64")}`,
+      `top_k          = ${val("top-k",          "8")}`,
+      `bm25_weight    = ${val("bm25-weight",    "0.4")}`,
+      `sem_weight     = ${val("sem-weight",     "0.6")}`,
+      `rerank_enabled = ${toggleOn("toggle-rerank")}`,
+      `rerank_model   = ${val("rerank-model",   "bge-reranker-base")}`,
+      `top_n          = ${val("top-n",          "3")}`,
       "",
-      "# Search & Ranking",
-      `search.embed_model    = ${val("embed-model",    "bge-small-en-v1.5")}`,
-      `search.chunk_size     = ${val("chunk-size",     "512")}`,
-      `search.chunk_overlap  = ${val("chunk-overlap",  "64")}`,
-      `search.top_k          = ${val("top-k",          "8")}`,
-      `search.bm25_weight    = ${val("bm25-weight",    "0.4")}`,
-      `search.sem_weight     = ${val("sem-weight",     "0.6")}`,
-      `search.rerank_enabled = ${toggleOn("toggle-rerank")}`,
-      `search.rerank_model   = ${val("rerank-model",   "bge-reranker-base")}`,
-      `search.top_n          = ${val("top-n",          "3")}`,
-      "",
-      "# Cache",
-      `cache.enabled         = ${toggleOn("toggle-cache")}`,
-      `cache.sim_threshold   = ${val("sim-threshold",  "0.92")}`,
-      `cache.size            = ${val("cache-size",     "1024")}`,
-      `cache.ttl             = ${val("cache-ttl",      "3600")}`,
-      "",
-      "# Performance",
-      `perf.gpu_threshold    = ${val("gpu-threshold",  "85")}`,
+      "[cache]",
+      `enabled         = ${toggleOn("toggle-cache")}`,
+      `sim_threshold   = ${val("sim-threshold",  "0.92")}`,
+      `size            = ${val("cache-size",     "1024")}`,
+      `ttl             = ${val("cache-ttl",      "3600")}`,
     ].join("\n");
   }
 
-  function buildApmConf() {
-    const lines = [
-      "# apmconf.properties — APM Tool Connection Configuration",
-      "# Auto-saved by Settings UI",
-      "# Unchanged by Phase 15 — CFG.TOOLS' 4 fixed tools still live here;",
-      "# admin-defined servers from MCP Servers live in mcpservers.json instead.",
+  function buildPerformanceIni() {
+    return [
+      "# performance.ini — Performance Configuration",
+      "# Auto-saved by Settings UI (Performance section)",
       "",
-    ];
-    CFG.TOOLS.forEach(t => {
-      const id = t.id;
-      const base    = CFG.SERVICE_DEFAULTS?.[id]?.baseUrl  ?? "";
-      const ep      = CFG.SERVICE_DEFAULTS?.[id]?.endpoint ?? "";
-      lines.push(`# ── ${t.name} ─────────────────────────────────────────────────────────────────`);
-      lines.push(`${id}.enabled    = true`);
-      lines.push(`${id}.base_url   = ${base}`);
-      lines.push(`${id}.endpoint   = ${ep}`);
-      lines.push(`${id}.timeout    = 30`);
-      lines.push(`${id}.collection = file`);
-      lines.push(`${id}.data_file  = backend/data/all_issues.json`);
-      lines.push("");
-    });
-    return lines.join("\n");
+      "[performance]",
+      `gpu_threshold = ${val("gpu-threshold", "85")}`,
+    ].join("\n");
+  }
+
+  function buildChatIni() {
+    return [
+      "# chat.ini — Advanced Configuration",
+      "# Auto-saved by Settings UI (Advanced section)",
+      "",
+      "[prompts]",
+      `main_prompt_path = ${val("main-prompt", "prompts/main.txt")}`,
+      `viz_prompt_path  = ${val("viz-prompt",  "prompts/visualization.txt")}`,
+    ].join("\n");
+  }
+
+  // capacity.ini — Capacity & Forecasting section is left unwired per
+  // spec (Capacity's real data comes from CapacityMiddleware's live
+  // forecast endpoint, not from saved settings). File exists so the
+  // settings-file layout is complete and predictable, but intentionally
+  // holds no real fields yet.
+  function buildCapacityIni() {
+    return [
+      "# capacity.ini — Capacity & Forecasting Configuration",
+      "# Intentionally left blank — Capacity & Forecasting settings are not",
+      "# yet wired to persistence. Reserved for future use.",
+    ].join("\n");
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -1438,8 +1539,10 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     14. SAVE  (conf.ini / mcpconf.properties / apmconf.properties only —
-         MCP Servers / Categorization / Keywords save per-tab, see Section 5)
+     14. SAVE  (conf.properties / capacity.ini / llm.ini / rag.ini /
+         performance.ini / chat.ini — the section-level files.
+         mcpconf.ini / mapping.json / categorization.json save per-tab,
+         see Section 5.)
   ═══════════════════════════════════════════════════════════════════════════ */
 
   async function saveSettings() {
@@ -1453,9 +1556,12 @@
     if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="width:14px;height:14px;animation:spin 1s linear infinite"></i> Saving…'; refreshIcons(); }
 
     const payload = {
-      "conf.ini":           buildConfIni(),
-      "mcpconf.properties": buildMcpConf(),
-      "apmconf.properties": buildApmConf(),
+      "conf.properties":  buildConfProperties(),
+      "capacity.ini":      buildCapacityIni(),
+      "llm.ini":           buildLlmIni(),
+      "rag.ini":           buildRagIni(),
+      "performance.ini":   buildPerformanceIni(),
+      "chat.ini":          buildChatIni(),
     };
 
     const result = await API.saveSettings(payload);
