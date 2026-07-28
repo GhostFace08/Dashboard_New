@@ -1,0 +1,30 @@
+{
+  "src": "dynatrace",
+  "tools": [
+    {
+      "name": "problems",
+      "description": "Lists open and resolved problems detected across monitored entities",
+      "api url": "https://abc12345.live.dynatrace.com/api/tools/problems"
+    },
+    {
+      "name": "entities",
+      "description": "Returns monitored entities (hosts, services, processes) and their properties",
+      "api url": "https://abc12345.live.dynatrace.com/api/tools/entities"
+    },
+    {
+      "name": "metrics",
+      "description": "Queries time-series metrics for a given entity or metric selector",
+      "api url": "https://abc12345.live.dynatrace.com/api/tools/metrics"
+    },
+    {
+      "name": "events",
+      "description": "Lists lifecycle, availability, and custom events across the environment",
+      "api url": "https://abc12345.live.dynatrace.com/api/tools/events"
+    },
+    {
+      "name": "topology",
+      "description": "Returns Smartscape topology relationships between monitored entities",
+      "api url": "https://abc12345.live.dynatrace.com/api/tools/topology"
+    }
+  ]
+}

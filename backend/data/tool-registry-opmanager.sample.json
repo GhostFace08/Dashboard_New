@@ -1,0 +1,25 @@
+{
+  "src": "opmanager",
+  "tools": [
+    {
+      "name": "alarms",
+      "description": "Lists current and historical alarms raised for monitored devices",
+      "api url": "https://opmgr-01.internal.local/api/tools/alarms"
+    },
+    {
+      "name": "devices",
+      "description": "Returns the discovered device inventory with status and category",
+      "api url": "https://opmgr-01.internal.local/api/tools/devices"
+    },
+    {
+      "name": "interfaces",
+      "description": "Returns network interface details and utilization per device",
+      "api url": "https://opmgr-01.internal.local/api/tools/interfaces"
+    },
+    {
+      "name": "availability",
+      "description": "Reports uptime/downtime history for monitored devices and services",
+      "api url": "https://opmgr-01.internal.local/api/tools/availability"
+    }
+  ]
+}

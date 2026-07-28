@@ -91,12 +91,20 @@
   let addCertAcked     = false;
   let editCertAcked    = false;
 
-  // Tool Registry state — a registry is a plain file the admin uploads
-  // (one path per line); we parse it client-side into a flat list of path
-  // strings and use that to populate the "Registry Path for Fetching
-  // Issues" dropdown, plus the 5 Dashboards-tab dropdowns.
-  let addRegistryPaths  = [];   // parsed from the Add-modal's uploaded file
-  let editRegistryPaths = {};   // { [serverId]: [path, ...] } parsed on edit-modal upload
+  // Tool Registry state — a registry is either a plain file the admin
+  // uploads (one path per line) or a JSON tool-registry document fetched
+  // from an endpoint, e.g.:
+  //   { "src": "dynatrace", "tools": [
+  //       { "name": "gdx", "description": "...", "api url": "https://…/api/tools/xyz" },
+  //       ...
+  //   ] }
+  // Either shape is normalized into a flat list of
+  // { name, path, description } entries — "path" is the value actually
+  // used to populate the "Registry Path for Fetching Issues" dropdown
+  // (and the 5 Dashboards-tab dropdowns), "name" is what's shown in the
+  // option label.
+  let addRegistryPaths  = [];   // [{name, path, description}, ...] parsed from the Add-modal
+  let editRegistryPaths = {};   // { [serverId]: [{name, path, description}, ...] } parsed on edit-modal
 
   // Time Mapping tab — per-server map of generalized-timestamp component
   // (token, e.g. "YYYY") → how this server's own timestamp supplies it.
@@ -104,12 +112,67 @@
   //                 tokens: { [token]: value } } }
   let editTimeMapping = {};
 
-  function parseRegistryFile(text) {
-    return String(text || "")
+  // Normalizes any supported Tool Registry shape into a flat list of
+  // { name, path, description } entries. Supports, in order of preference:
+  //   1. { "tools": [ { name, description, "api url" | apiUrl | api_url | url }, ... ] }
+  //      (the vendor-tool-registry shape, e.g. { "src": "dynatrace", "tools": [...] })
+  //   2. { "paths": ["/a", "/b", ...] }  — legacy JSON shape
+  //   3. [ "/a", "/b", ... ]             — bare JSON array of path strings
+  //   4. plain text, one path per line (# comments and blank lines skipped)
+  // Display-only mirror of SettingsMiddleware's combineRegistryUrl(), so the
+  // UI can preview the full URL before the admin actually fetches. The real
+  // combination — and the actual request — always happens server-side.
+  function combineRegistryUrlForDisplay(baseUrl, path) {
+    const p = String(path || "").trim();
+    if (!p) return "";
+    if (/^https?:\/\//i.test(p)) return p;
+    const b = String(baseUrl || "").trim().replace(/\/+$/, "");
+    if (!b) return p;
+    return b + (p.startsWith("/") ? p : `/${p}`);
+  }
+
+  function parseRegistryContent(text) {
+    // Strip a UTF-8 BOM some editors/exports prepend — left in place, it
+    // silently breaks the "{"/"[" check below and everything falls back to
+    // being split line-by-line as if it were a plain-text registry.
+    const raw = String(text || "").replace(/^\uFEFF/, "");
+    const trimmed = raw.trim();
+
+    if (trimmed) {
+      try {
+        const json = JSON.parse(trimmed);
+
+        if (Array.isArray(json)) {
+          return json.map(String).filter(Boolean).map(p => ({ name: p, path: p, description: "" }));
+        }
+
+        if (json && Array.isArray(json.tools)) {
+          return json.tools.map(t => {
+            const path = String(t["api url"] ?? t.apiUrl ?? t.api_url ?? t.url ?? t.path ?? "").trim();
+            const name = String(t.name ?? path).trim();
+            return { name: name || path, path: path || name, description: String(t.description ?? "") };
+          }).filter(e => e.path);
+        }
+
+        if (json && Array.isArray(json.paths)) {
+          return json.paths.map(String).filter(Boolean).map(p => ({ name: p, path: p, description: "" }));
+        }
+
+        // Valid JSON, but not a shape we recognize (no tools/paths array
+        // and not itself an array) — nothing usable to extract.
+        return [];
+      } catch (_) { /* not valid JSON — fall through to line parsing */ }
+    }
+
+    return raw
       .split(/\r?\n/)
       .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.startsWith("#"));
+      .filter(line => line.length > 0 && !line.startsWith("#"))
+      .map(p => ({ name: p, path: p, description: "" }));
   }
+
+  // @deprecated kept as a thin alias — old name for parseRegistryContent.
+  function parseRegistryFile(text) { return parseRegistryContent(text); }
 
   // The "needs a payload" toggle is only interactable once the Tool
   // Registry Endpoint URL has a value. Clearing the URL forces the
@@ -130,34 +193,62 @@
     wrap?.classList.toggle("hidden", !(urlVal && toggle.dataset.on === "true"));
   }
 
-  // Fetch a tool registry from a URL/API endpoint. Tries JSON first
-  // (array of paths, or { paths: [...] }), falls back to parsing the
-  // response body as newline-separated paths (same shape as an uploaded
-  // registry document). If a payload is supplied, the request is sent
-  // as a POST with that payload as the raw body; otherwise it's a GET.
-  async function fetchRegistryFromUrl(url, authToken, payload) {
-    const headers = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-    const opts = payload
-      ? { method: "POST", headers: { ...headers, "Content-Type": "text/plain" }, body: payload }
-      : { method: "GET", headers };
-    const res = await fetch(url, opts);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    try {
-      const json = JSON.parse(text);
-      if (Array.isArray(json)) return json.map(String);
-      if (json && Array.isArray(json.paths)) return json.paths.map(String);
-    } catch (_) { /* not JSON — fall through to line parsing */ }
-    return parseRegistryFile(text);
+  // Fetch a tool registry from an endpoint path (e.g. "/api/tools"). The
+  // actual HTTP request happens server-side, in SettingsMiddleware: it
+  // combines this server's Base URL with the path given here (path may
+  // also be a full absolute URL, kept as-is for back-compat with older
+  // records) and performs the GET/POST itself — the browser never talks
+  // to the target host directly, so there's no CORS to worry about.
+  async function fetchRegistryFromUrl(baseUrl, path, authToken, payload) {
+    const result = await API.fetchToolRegistry({ baseUrl, path, token: authToken, payload });
+    if (!result || !result.ok) {
+      throw new Error((result && result.error) || "Fetch failed");
+    }
+    if (result.status && (result.status < 200 || result.status >= 300)) {
+      throw new Error(`HTTP ${result.status}`);
+    }
+    return parseRegistryContent(result.body);
   }
 
+  // True for a string that looks like a fragment of raw JSON source rather
+  // than an actual tool/path name — e.g. "{", "},", "\"tools\": [",
+  // "\"name\": \"alarms\",". This is what a corrupted pre-fix registry
+  // (saved back when the JSON-detection could silently fail and fall
+  // through to line-splitting) looks like: every line of the original
+  // file ends up stored as its own "path" entry. Filtering these out at
+  // render time means a server whose registry.paths was already saved
+  // in that broken shape gets cleaned up automatically instead of
+  // displaying the raw file forever.
+  function looksLikeJsonSyntaxFragment(s) {
+    const t = String(s || "").trim();
+    if (!t) return true;
+    if (/^[{}\[\],]+$/.test(t)) return true;           // bare braces/brackets/commas: {  }  [  ],  {,
+    if (/^"[^"]*"\s*:\s*.*,?$/.test(t)) return true;    // "key": value  /  "key": "value",
+    return false;
+  }
+
+  // paths: array of either { name, path, description } entries or plain
+  // strings (back-compat with records saved before this change).
+  // The dropdown label is ALWAYS just the tool name — the (often long)
+  // api url only ever goes in as the option's value, never shown.
   function registryPathOptionsHtml(paths, selected) {
-    if (!paths || paths.length === 0) {
-      return `<option value="">Upload a Tool Registry first…</option>`;
+    const clean = (paths || []).filter(p => {
+      const name = typeof p === "string" ? p : (p && (p.name ?? p.path));
+      return !looksLikeJsonSyntaxFragment(name);
+    });
+
+    if (clean.length === 0) {
+      return (paths && paths.length > 0)
+        ? `<option value="">Saved registry data looks invalid — re-upload or re-fetch it</option>`
+        : `<option value="">Upload a Tool Registry first…</option>`;
     }
     return `<option value="">Select a path…</option>` +
-      paths.map(p => `<option value="${esc(p)}"${p === selected ? " selected" : ""}>${esc(p)}</option>`).join("");
+      clean.map(p => {
+        const entry = (typeof p === "string") ? { name: p, path: p } : p;
+        const value = entry.path;
+        const label = entry.name || entry.path;
+        return `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${esc(label)}</option>`;
+      }).join("");
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -554,6 +645,7 @@
     const registryInput = $("mcp-add-registry"); if (registryInput) registryInput.value = "";
     const registryStatus = $("mcp-add-registry-status"); if (registryStatus) registryStatus.textContent = "";
     const registryFetchStatus = $("mcp-add-registry-fetch-status"); if (registryFetchStatus) registryFetchStatus.textContent = "";
+    const registryUrlPreview = $("mcp-add-registry-url-preview"); if (registryUrlPreview) registryUrlPreview.textContent = "";
     const registryPayload = $("mcp-add-registry-payload"); if (registryPayload) registryPayload.value = "";
     const registryToggle = $("mcp-add-registry-payload-toggle");
     if (registryToggle) { registryToggle.dataset.on = "false"; registryToggle.classList.remove("on"); registryToggle.disabled = true; }
@@ -716,8 +808,9 @@
       </div>
       <div class="sfield mt-2">
         <span class="sfield-label">Tool Registry Endpoint</span>
-        <span class="sfield-hint">${s.registry?.url ? `On file: <strong>${esc(s.registry.url)}</strong>. Change to replace it.` : "Point at the endpoint that serves this tool's registry — or skip this and upload a registry document below instead."}</span>
-        <input id="edit-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" value="${esc(s.registry?.url || "")}" />
+        <span class="sfield-hint">${s.registry?.url ? `On file: <strong>${esc(s.registry.url)}</strong> → fetched from <strong>${esc(combineRegistryUrlForDisplay(s.baseUrl, s.registry.url))}</strong>. Change to replace it.` : "Enter just the path (e.g. <code>/api/tools</code>) — it's appended to this server's Base URL above. Or skip this and upload a registry document below instead."}</span>
+        <input id="edit-registry-url" type="text" class="input input-mono" placeholder="/api/tools" value="${esc(s.registry?.url || "")}" />
+        <span class="text-muted" id="edit-registry-url-preview" style="font-size:11px"></span>
       </div>
       <div class="toggle-row" id="edit-registry-payload-row">
         <div class="toggle-info">
@@ -1041,6 +1134,11 @@
       });
       $("edit-registry-url")?.addEventListener("input", () => {
         updateRegistryPayloadToggleState("edit-registry-url", "edit-registry-payload-toggle", "edit-registry-payload-wrap");
+        const preview = $("edit-registry-url-preview");
+        if (preview) {
+          const combined = combineRegistryUrlForDisplay(val("edit-baseurl", s.baseUrl || ""), val("edit-registry-url", ""));
+          preview.textContent = combined ? `→ ${combined}` : "";
+        }
       });
       $("edit-registry-payload-toggle")?.addEventListener("click", (e) => {
         const btn = e.currentTarget;
@@ -1053,14 +1151,14 @@
       $("edit-registry-fetch")?.addEventListener("click", async () => {
         const btn = $("edit-registry-fetch");
         const status = $("edit-registry-fetch-status");
-        const url = ($("edit-registry-url")?.value || "").trim();
-        if (!url) { if (status) status.textContent = "Enter a Tool Registry Endpoint first."; return; }
+        const path = ($("edit-registry-url")?.value || "").trim();
+        if (!path) { if (status) status.textContent = "Enter a Tool Registry Endpoint path first."; return; }
         const payloadToggle = $("edit-registry-payload-toggle");
         const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
         const payload = usePayload ? ($("edit-registry-payload")?.value || "") : "";
         if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
         try {
-          editRegistryPaths[s.id] = await fetchRegistryFromUrl(url, val("edit-token", ""), payload || undefined);
+          editRegistryPaths[s.id] = await fetchRegistryFromUrl(val("edit-baseurl", s.baseUrl || ""), path, val("edit-token", ""), payload || undefined);
           if (status) status.textContent = `Registry fetched ✓ (${editRegistryPaths[s.id].length} paths found — saved on Save)`;
         } catch (err) {
           if (status) status.textContent = `Fetch failed: ${err.message || err}`;
@@ -1269,6 +1367,11 @@
     });
     $("mcp-add-registry-url")?.addEventListener("input", () => {
       updateRegistryPayloadToggleState("mcp-add-registry-url", "mcp-add-registry-payload-toggle", "mcp-add-registry-payload-wrap");
+      const preview = $("mcp-add-registry-url-preview");
+      if (preview) {
+        const combined = combineRegistryUrlForDisplay(val("mcp-add-baseurl", ""), val("mcp-add-registry-url", ""));
+        preview.textContent = combined ? `→ ${combined}` : "";
+      }
     });
     $("mcp-add-registry-payload-toggle")?.addEventListener("click", (e) => {
       const btn = e.currentTarget;
@@ -1281,14 +1384,14 @@
     $("mcp-add-registry-fetch")?.addEventListener("click", async () => {
       const btn = $("mcp-add-registry-fetch");
       const status = $("mcp-add-registry-fetch-status");
-      const url = ($("mcp-add-registry-url")?.value || "").trim();
-      if (!url) { if (status) status.textContent = "Enter a Tool Registry Endpoint first."; return; }
+      const path = ($("mcp-add-registry-url")?.value || "").trim();
+      if (!path) { if (status) status.textContent = "Enter a Tool Registry Endpoint path first."; return; }
       const payloadToggle = $("mcp-add-registry-payload-toggle");
       const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
       const payload = usePayload ? ($("mcp-add-registry-payload")?.value || "") : "";
       if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
       try {
-        addRegistryPaths = await fetchRegistryFromUrl(url, val("mcp-add-token", ""), payload || undefined);
+        addRegistryPaths = await fetchRegistryFromUrl(val("mcp-add-baseurl", ""), path, val("mcp-add-token", ""), payload || undefined);
         if (status) status.textContent = `Registry fetched ✓ (${addRegistryPaths.length} paths found)`;
       } catch (err) {
         if (status) status.textContent = `Fetch failed: ${err.message || err}`;

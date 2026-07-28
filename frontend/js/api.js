@@ -24,6 +24,7 @@
  *   GET  /api/config/:filename      → getConfig(filename)       [Settings]
  *   PUT  /api/config/:filename      → putConfig(filename, content) [Settings]
  *   POST /api/settings/save         → saveSettings(payload)     [Settings]
+ *   POST /api/registry/fetch        → fetchToolRegistry({baseUrl,path,token,payload}) [Settings]
  *   POST /api/chat                  → postChat(...) (fallback)  [Chat]
  *   POST /api/chat/stream           → postChat(...) (primary)   [Chat]
  *   GET  /api/network-devices       → getNetworkDevices()       [Admin — read-only]
@@ -88,6 +89,7 @@
     // Settings middleware (5200)
     config:       "/api/config",          // GET | PUT /:filename
     settingsSave: "/api/settings/save",   // POST — atomic multi-file save
+    registryFetch: "/api/registry/fetch", // POST — Tool Registry fetch proxy (combines baseUrl + path server-side)
 
     // Chat middleware (5100)
     chat:         "/api/chat",            // POST — full response via Intent Agent
@@ -429,6 +431,49 @@
   }
 
   /**
+   * fetchToolRegistry({ baseUrl, path, token, payload })
+   * POST /api/registry/fetch
+   *
+   * Asks the SettingsMiddleware to fetch a Tool Registry document on our
+   * behalf. The admin only types the short endpoint path (e.g. "/api/tools")
+   * — the backend combines it with the server's own Base URL and performs
+   * the actual request itself, so the browser never hits the target host
+   * directly (no CORS) and the admin never has to re-type the base URL.
+   *
+   * `path` may also be given as a full absolute http(s) URL for back-compat
+   * with records saved before this change; the backend uses it as-is in
+   * that case and ignores baseUrl.
+   *
+   * @returns {Promise<{ok: boolean, status?: number, url?: string, body?: string, error?: string}>}
+   */
+  async function fetchToolRegistry({ baseUrl, path, token, payload } = {}) {
+    const url = `${SETTINGS_URL}${ENDPOINTS.registryFetch}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ baseUrl: baseUrl || "", path: path || "", token: token || "", payload: payload || "" }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { ok: false, error: data.error || `HTTP ${response.status}` };
+      }
+      return data; // { ok: true, status, url, body }
+    } catch (err) {
+      clearTimeout(timer);
+      const msg = err.name === "AbortError" ? "Request timed out" : (err.message || String(err));
+      return { ok: false, error: msg };
+    }
+  }
+
+  /**
    * _saveSettingsFallback(payload)
    * Internal: fires individual putConfig() for each file when the unified
    * POST /api/settings/save endpoint is not yet available.
@@ -743,6 +788,7 @@
     getConfig,
     putConfig,
     saveSettings,
+    fetchToolRegistry,
 
     // Chat (5100)
     postChat,         // streaming-first, falls back to non-streaming automatically

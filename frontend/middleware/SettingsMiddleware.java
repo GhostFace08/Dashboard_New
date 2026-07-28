@@ -4,8 +4,13 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.logging.*;
@@ -23,6 +28,13 @@ import java.util.logging.*;
  *   POST /api/settings/save      → atomic multi-file save (all files in one request)
  *   GET  /api/issues             → read-only proxy to all_issues.json (for settings
  *                                   page category/mapping previews)
+ *   POST /api/registry/fetch     → server-side proxy that fetches a tool registry.
+ *                                   Body: {"baseUrl":"https://host","path":"/api/tools",
+ *                                   "token":"...","payload":"..."}. The backend combines
+ *                                   baseUrl + path into the final URL (path may also be
+ *                                   given as a full absolute URL, kept as-is for back-compat),
+ *                                   performs the request itself (avoids browser CORS), and
+ *                                   returns {"ok":true,"status":200,"url":"...","body":"<raw>"}.
  *
  * HOW TO RUN:
  *   javac SettingsMiddleware.java
@@ -130,6 +142,9 @@ public class SettingsMiddleware {
         // POST /api/settings/save  (atomic multi-file save — NEW)
         server.createContext("/api/settings/save",   new SaveHandler());
 
+        // POST /api/registry/fetch  (server-side Tool Registry fetch proxy — NEW)
+        server.createContext("/api/registry/fetch",  new RegistryFetchHandler());
+
         server.createContext("/health",              new HealthHandler());
         server.createContext("/",                    new CatchAllHandler());
 
@@ -141,6 +156,7 @@ public class SettingsMiddleware {
         LOG.info("  GET  /api/config/<filename>");
         LOG.info("  PUT  /api/config/<filename>");
         LOG.info("  POST /api/settings/save         ← atomic multi-file save");
+        LOG.info("  POST /api/registry/fetch        ← Tool Registry fetch proxy (combines baseUrl + path)");
         LOG.info("  GET  /health");
     }
 
@@ -235,6 +251,145 @@ public class SettingsMiddleware {
                 sendJson(ex, "{\"allIssues\":[]}");
             }
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handler: POST /api/registry/fetch
+    //
+    // Fetches a Tool Registry document on the server's behalf, so the browser
+    // never has to call the target server directly (no CORS problems) and so
+    // the admin only has to type the *path* portion of the registry endpoint —
+    // the server's own Base URL supplies the rest.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static class RegistryFetchHandler implements HttpHandler {
+
+        private static final HttpClient CLIENT = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+
+        @Override
+        public void handle(HttpExchange ex) throws IOException {
+            addCors(ex);
+            if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+                ex.sendResponseHeaders(204, -1); return;
+            }
+            if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+                sendError(ex, 405, "Method not allowed"); return;
+            }
+
+            String body = readBody(ex);
+            String jsonErr = validateJson(body);
+            if (jsonErr != null) {
+                sendError(ex, 400, "Invalid JSON body: " + jsonErr); return;
+            }
+
+            String baseUrl = jsonStringField(body, "baseUrl");
+            String path    = jsonStringField(body, "path");
+            String token   = jsonStringField(body, "token");
+            String payload = jsonStringField(body, "payload");
+
+            String targetUrl;
+            try {
+                targetUrl = combineRegistryUrl(baseUrl, path);
+            } catch (IllegalArgumentException iae) {
+                sendError(ex, 400, iae.getMessage()); return;
+            }
+
+            try {
+                HttpRequest.Builder reqBuilder = HttpRequest.newBuilder(URI.create(targetUrl))
+                        .timeout(Duration.ofSeconds(20));
+                if (token != null && !token.isBlank()) {
+                    reqBuilder.header("Authorization", "Bearer " + token);
+                }
+                if (payload != null && !payload.isBlank()) {
+                    reqBuilder.header("Content-Type", "text/plain; charset=utf-8")
+                              .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8));
+                } else {
+                    reqBuilder.GET();
+                }
+
+                HttpResponse<String> resp = CLIENT.send(reqBuilder.build(),
+                        HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+                LOG.info("POST /api/registry/fetch → " + targetUrl + " → HTTP " + resp.statusCode());
+
+                String envelope = "{\"ok\":true,\"status\":" + resp.statusCode()
+                        + ",\"url\":\"" + escapeJson(targetUrl) + "\""
+                        + ",\"body\":\"" + escapeJson(resp.body()) + "\"}";
+                sendJson(ex, envelope);
+            } catch (Exception e) {
+                LOG.warning("POST /api/registry/fetch → " + targetUrl + " failed: " + e);
+                sendError(ex, 502, "Fetch failed for " + targetUrl + ": " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Combines a server's Base URL with the (short) registry endpoint path the
+     * admin typed in, e.g. baseUrl="https://abc12345.live.dynatrace.com" +
+     * path="/api/tools" → "https://abc12345.live.dynatrace.com/api/tools".
+     *
+     * Back-compat: if path is already an absolute http(s) URL (older records
+     * saved before this change stored the full URL), it's used as-is and
+     * baseUrl is ignored.
+     */
+    static String combineRegistryUrl(String baseUrl, String path) {
+        String p = path == null ? "" : path.trim();
+        if (p.isEmpty()) {
+            throw new IllegalArgumentException("Registry path is required");
+        }
+        if (p.matches("(?i)^https?://.+")) {
+            return p; // already absolute — back-compat with pre-existing records
+        }
+        String b = baseUrl == null ? "" : baseUrl.trim();
+        if (b.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Registry path is relative (\"" + p + "\") but this server has no Base URL set");
+        }
+        b = b.replaceAll("/+$", "");
+        p = p.startsWith("/") ? p : "/" + p;
+        return b + p;
+    }
+
+    /**
+     * Pulls a single top-level string field out of a small, flat JSON object
+     * without needing a full JSON library — sufficient for this endpoint's
+     * fixed {baseUrl, path, token, payload} request shape.
+     */
+    static String jsonStringField(String json, String key) {
+        if (json == null) return null;
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\"" + java.util.regex.Pattern.quote(key) + "\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"")
+                .matcher(json);
+        if (!m.find()) return null;
+        return m.group(1)
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\")
+                .replace("\\n", "\n")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t");
+    }
+
+    /** Escapes a string for safe embedding as a JSON string value. */
+    static String escapeJson(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder(s.length() + 16);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '"'  -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                default -> {
+                    if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
+                    else sb.append(c);
+                }
+            }
+        }
+        return sb.toString();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

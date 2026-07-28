@@ -320,8 +320,9 @@
               </div>
               <div class="sfield mt-2">
                 <span class="sfield-label">Tool Registry Endpoint</span>
-                <span class="sfield-hint">Point at the endpoint that serves this tool's registry — or skip this and upload a registry document below instead.</span>
-                <input id="mcp-add-registry-url" type="text" class="input input-mono" placeholder="https://…/registry or API endpoint" />
+                <span class="sfield-hint">Enter just the path (e.g. <code>/api/tools</code>) — it's appended to the Base URL above. Or skip this and upload a registry document below instead.</span>
+                <input id="mcp-add-registry-url" type="text" class="input input-mono" placeholder="/api/tools" />
+                <span class="text-muted" id="mcp-add-registry-url-preview" style="font-size:11px"></span>
               </div>
               <div class="toggle-row" id="mcp-add-registry-payload-row">
                 <div class="toggle-info">
