@@ -411,6 +411,19 @@
           </div>
           <div class="scard">
             <div class="scard-head">
+              <h3 class="scard-title">Intent Agent</h3>
+              <p class="scard-desc">Service that classifies and routes chat queries before they reach the LLM/RAG backends.</p>
+              <button id="btn-validate-intent-agent" class="btn btn-ghost" style="font-size:11px;margin-left:auto"><i data-lucide="plug-zap" style="width:12px;height:12px"></i> Validate Connection</button>
+            </div>
+            <div class="scard-body grid-2">
+              <label class="sfield">
+                <span class="sfield-label">Intent Agent URL</span>
+                <input id="ia-url" type="text" class="input input-mono" value="http://localhost:7000" />
+              </label>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-head">
               <h3 class="scard-title">Local LLM</h3>
               <p class="scard-desc">Provider used for chat completions and reasoning.</p>
               <button id="btn-validate-model" class="btn btn-ghost" style="font-size:11px;margin-left:auto"><i data-lucide="plug-zap" style="width:12px;height:12px"></i> Validate Model</button>

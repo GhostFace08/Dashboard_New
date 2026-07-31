@@ -9,12 +9,14 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.*;
 import java.util.regex.Pattern;
+import java.util.Properties;
 
 /**
  * ChatMiddleware — Unified MCP Dashboard
@@ -44,20 +46,26 @@ import java.util.regex.Pattern;
  */
 public class ChatMiddleware {
 
+    private static final Logger LOG = Logger.getLogger(ChatMiddleware.class.getName());
+
     // ── Configuration ─────────────────────────────────────────────────────────
 
+    private static final Properties LLM_CONFIG = loadIni("data/llm.ini");
+    private static final Properties RAG_CONFIG  = loadIni("data/rag.ini");
+
     private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("CHAT_PORT", "5100"));
+            get(LLM_CONFIG, "CHAT_PORT", System.getenv().getOrDefault("CHAT_PORT", "5100")));
 
-    private static final String INTENT_AGENT_URL = System.getenv()
-            .getOrDefault("INTENT_AGENT_URL", "http://localhost:7000");
+    private static final String INTENT_AGENT_URL = get(LLM_CONFIG, "INTENT_AGENT_URL",
+            System.getenv().getOrDefault("INTENT_AGENT_URL", "http://localhost:7000"));
 
-    private static final String RAG_BACKEND_URL = System.getenv()
-            .getOrDefault("RAG_BACKEND_URL", "http://localhost:5000");
+    private static final String RAG_BACKEND_URL = get(RAG_CONFIG, "RAG_BACKEND_URL",
+            System.getenv().getOrDefault("RAG_BACKEND_URL", "http://localhost:5000"));
 
     /** Timeout waiting for the upstream connection to be established (ms) */
     private static final int CONNECT_TIMEOUT_MS = Integer.parseInt(
-            System.getenv().getOrDefault("CONNECT_TIMEOUT_MS", "5000"));
+            get(LLM_CONFIG, "CONNECT_TIMEOUT_MS",
+                    System.getenv().getOrDefault("CONNECT_TIMEOUT_MS", "5000")));
 
     /**
      * Read timeout for upstream responses (ms).
@@ -65,11 +73,52 @@ public class ChatMiddleware {
      * Default 120 s matches Ollama's typical worst-case latency on CPU.
      */
     private static final int READ_TIMEOUT_MS = Integer.parseInt(
-            System.getenv().getOrDefault("READ_TIMEOUT_MS", "600000"));
+            get(LLM_CONFIG, "READ_TIMEOUT_MS",
+                    System.getenv().getOrDefault("READ_TIMEOUT_MS", "600000")));
+
+    // ── INI loading helpers ──────────────────────────────────────────────────
+
+    /**
+     * Loads a simple key=value ini file (no [sections] required, but a leading
+     * [section] header if present is just skipped/ignored). Missing file →
+     * empty Properties, so all values fall back to env var / default.
+     */
+    private static Properties loadIni(String path) {
+        Properties props = new Properties();
+        File file = new File(path);
+        if (!file.exists()) {
+            LOG.warning("Config file not found, using env/defaults: " + file.getAbsolutePath());
+            return props;
+        }
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith(";")) continue;
+                if (line.startsWith("[") && line.endsWith("]")) continue; // ignore section headers
+                int eq = line.indexOf('=');
+                if (eq < 0) continue;
+                String key = line.substring(0, eq).trim();
+                String value = line.substring(eq + 1).trim();
+                // strip optional surrounding quotes
+                if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
+                props.setProperty(key, value);
+            }
+        } catch (IOException e) {
+            LOG.warning("Failed to read " + path + ": " + e.getMessage());
+        }
+        return props;
+    }
+
+    private static String get(Properties ini, String key, String fallback) {
+        String v = ini.getProperty(key);
+        return (v != null && !v.isBlank()) ? v : fallback;
+    }
 
     // ── Logging ───────────────────────────────────────────────────────────────
-
-    private static final Logger LOG = Logger.getLogger("ChatMiddleware");
 
     /**
      * Runs the (blocking) Intent Agent HTTP call off the request-handling

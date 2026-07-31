@@ -544,6 +544,81 @@
     }
   }
 
+/**
+ * validateIntentAgent()
+ * Validates that the Intent Agent is reachable and responding.
+ * It calls the configured health endpoint and reports success/failure.
+ */
+async function validateIntentAgent() {
+  const btn = $("btn-validate-intent-agent");
+  const baseUrl = val("intent-agent-url", "").trim();
+
+  if (!baseUrl) {
+    toast("Intent Agent URL is required before validating.", "error");
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" style="width:12px;height:12px;animation:spin 1s linear infinite"></i> Validating…`;
+    refreshIcons();
+  }
+
+  let ok = false;
+  let reason = "";
+
+  try {
+    // Change "/health" if your API exposes another endpoint.
+    const res = await fetch(baseUrl.replace(/\/+$/, "") + "/health", {
+      method: "GET"
+    });
+
+    if (!res.ok) {
+      reason = `server responded ${res.status}`;
+    } else {
+      // Optional: verify response body
+      const data = await res.json().catch(() => ({}));
+
+      // Accept common health responses
+      ok =
+        data.status === "ok" ||
+        data.status === "healthy" ||
+        data.status === "UP" ||
+        data.success === true;
+
+      if (!ok) {
+        reason = "unexpected health response";
+      }
+    }
+  } catch (e) {
+    reason = "unreachable";
+  }
+
+  if (btn) {
+    btn.disabled = false;
+
+    btn.innerHTML = ok
+      ? `<i data-lucide="check-circle-2" style="width:12px;height:12px;color:var(--success,#10b981)"></i> Validated`
+      : `<i data-lucide="x-circle" style="width:12px;height:12px;color:var(--destructive,#ef4444)"></i> Failed`;
+
+    refreshIcons();
+
+    setTimeout(() => {
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="plug-zap" style="width:12px;height:12px"></i> Validate Intent Agent`;
+        refreshIcons();
+      }
+    }, 3000);
+  }
+
+  toast(
+    ok
+      ? `Intent Agent is reachable at ${baseUrl}.`
+      : `Validation failed: ${reason}.`,
+    ok ? "success" : "error"
+  );
+}
+
   /**
    * validateLlmModel()
    * Ollama-style check: hits {base URL}/api/tags and confirms the selected
@@ -1507,10 +1582,13 @@
   // button and a per-server "Save Tab" on the Keywords tab always write the
   // complete, current file rather than clobbering whichever half they
   // didn't touch).
-  function buildLlmIni() {
+function buildLlmIni() {
     const lines = [
       "# llm.ini — AI & Models Configuration",
       "# Auto-saved by Settings UI (AI & Models section + MCP Servers → Keywords tab)",
+      "",
+      "[intent_agent]",
+      `url              = ${val("ia-url", "http://localhost:7000")}`,
       "",
       "[llm]",
       `url              = ${val("llm-url",         "http://localhost:11434")}`,
@@ -1612,6 +1690,7 @@
     const errors = [];
 
     const urlFields = [
+      { id: "ia-url",       label: "Intent Agent URL" },
       { id: "llm-url",      label: "LLM Base URL"  },
       { id: "rag-base-url", label: "RAG Base URL"  },
     ];
@@ -1742,6 +1821,7 @@
     $("btn-save")?.addEventListener("click", saveSettings);
     $("btn-cancel")?.addEventListener("click", () => { dirty = false; updateFooter(); });
     $("btn-reset")?.addEventListener("click",  () => { dirty = false; updateFooter(); });
+    $("btn-validate-intent-agent")?.addEventListener("click", validateIntentAgent);
     $("btn-validate-model")?.addEventListener("click", validateLlmModel);
     $("btn-test-rag")?.addEventListener("click", testRagConnectivity);
 
