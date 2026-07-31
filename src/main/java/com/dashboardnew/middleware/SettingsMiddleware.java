@@ -42,6 +42,11 @@ import java.util.logging.*;
  *   javac SettingsMiddleware.java
  *   java  SettingsMiddleware
  *
+ * Config:
+ *   Reads backend/data/middleware.properties first (keys "settings.port",
+ *   "mcp.root"), then falls back to the environment variables below, then
+ *   the hardcoded default. See MiddlewareConfig.
+ *
  * Environment overrides:
  *   SETTINGS_PORT — port to listen on  (default: 5200)
  *   MCP_ROOT — project root path  (default: working directory)
@@ -50,11 +55,11 @@ public class SettingsMiddleware {
 
     // ── Configuration ─────────────────────────────────────────────────────────
 
-    private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("SETTINGS_PORT", "5200"));
+    private static final int PORT =
+            MiddlewareConfig.getInt("settings.port", "SETTINGS_PORT", 5200);
 
     private static final Path PROJECT_ROOT = Paths.get(
-            System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
+            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
 
     private static final Path DATA_DIR    = PROJECT_ROOT.resolve("backend/data");
     private static final Path ISSUES_FILE = DATA_DIR.resolve("all_issues.json");

@@ -43,6 +43,12 @@ import java.util.logging.*;
  *   javac TopologyMiddleware.java
  *   java  TopologyMiddleware
  *
+ * Config:
+ *   Reads backend/data/middleware.properties first (keys "topology.port",
+ *   "topology.settings_url", "mcp.root", "topology.connect_timeout_ms",
+ *   "topology.read_timeout_ms"), then falls back to the environment
+ *   variables below, then the hardcoded defaults. See MiddlewareConfig.
+ *
  * Environment overrides:
  *   TOPOLOGY_PORT — port to listen on            (default: 8083)
  *   SETTINGS_URL  — base URL of SettingsMiddleware (default: http://localhost:5200)
@@ -50,20 +56,22 @@ import java.util.logging.*;
  */
 public class TopologyMiddleware {
 
-    private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("TOPOLOGY_PORT", "8083"));
+    private static final int PORT =
+            MiddlewareConfig.getInt("topology.port", "TOPOLOGY_PORT", 8083);
 
-    private static final String SETTINGS_URL = System.getenv()
-            .getOrDefault("SETTINGS_URL", "http://localhost:5200");
+    private static final String SETTINGS_URL =
+            MiddlewareConfig.getString("topology.settings_url", "SETTINGS_URL", "http://localhost:5200");
 
     private static final Path PROJECT_ROOT = Paths.get(
-            System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
+            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
 
     private static final Path DATA_DIR       = PROJECT_ROOT.resolve("backend/data");
     private static final Path TOPOLOGY_FILE  = DATA_DIR.resolve("topology.json");
 
-    private static final int CONNECT_TIMEOUT_MS = 5000;
-    private static final int READ_TIMEOUT_MS    = 10000;
+    private static final int CONNECT_TIMEOUT_MS =
+            MiddlewareConfig.getInt("topology.connect_timeout_ms", "TOPOLOGY_CONNECT_TIMEOUT_MS", 5000);
+    private static final int READ_TIMEOUT_MS =
+            MiddlewareConfig.getInt("topology.read_timeout_ms", "TOPOLOGY_READ_TIMEOUT_MS", 10000);
 
     private static final Logger LOG = Logger.getLogger("TopologyMiddleware");
 

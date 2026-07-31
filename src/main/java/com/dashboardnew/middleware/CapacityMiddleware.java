@@ -32,13 +32,18 @@ import java.util.logging.*;
  *   javac CapacityMiddleware.java
  *   java  CapacityMiddleware
  *
+ * Config:
+ *   Reads backend/data/middleware.properties first (key "capacity.port"),
+ *   then falls back to the environment variable below, then the hardcoded
+ *   default. See MiddlewareConfig.
+ *
  * Environment overrides:
  *   CAPACITY_PORT — port to listen on (default: 8082)
  */
 public class CapacityMiddleware {
 
-    private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("CAPACITY_PORT", "8082"));
+    private static final int PORT =
+            MiddlewareConfig.getInt("capacity.port", "CAPACITY_PORT", 8082);
 
     private static final Logger LOG = Logger.getLogger("CapacityMiddleware");
 

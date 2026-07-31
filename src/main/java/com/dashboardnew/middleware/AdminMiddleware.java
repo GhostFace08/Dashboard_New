@@ -40,17 +40,22 @@ import java.util.logging.*;
  *   javac AdminMiddleware.java
  *   java  AdminMiddleware
  *
+ * Config:
+ *   Reads backend/data/middleware.properties first (keys "admin.port",
+ *   "mcp.root"), then falls back to the environment variables below, then
+ *   the hardcoded default. See MiddlewareConfig.
+ *
  * Environment overrides:
  *   ADMIN_PORT — port to listen on (default: 8086)
  *   MCP_ROOT   — project root path (default: working directory)
  */
 public class AdminMiddleware {
 
-    private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("ADMIN_PORT", "8086"));
+    private static final int PORT =
+            MiddlewareConfig.getInt("admin.port", "ADMIN_PORT", 8086);
 
     private static final Path PROJECT_ROOT = Paths.get(
-            System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
+            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
 
     private static final Path DATA_DIR              = PROJECT_ROOT.resolve("backend/data");
     private static final Path USERS_FILE            = DATA_DIR.resolve("users.json");

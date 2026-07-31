@@ -59,16 +59,20 @@ import java.util.logging.*;
  * Set OBSERVABILITY_PORT env var to override.
  * Set MCP_ROOT env var to point to the project root (default: working dir).
  * Set PERIODIC_CHECK_SECONDS env var to override poll interval (default: 300).
+ *
+ * All three of the above can also be set via backend/data/middleware.properties
+ * ("observability.port", "mcp.root", "observability.periodic_check_seconds"),
+ * which takes precedence over the env vars — see MiddlewareConfig.
  */
 public class ObservabilityMiddleware {
 
     // ── Configuration ─────────────────────────────────────────────────────────
 
-    private static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("OBSERVABILITY_PORT", "8081"));
+    private static final int PORT =
+            MiddlewareConfig.getInt("observability.port", "OBSERVABILITY_PORT", 8081);
 
     private static final Path PROJECT_ROOT = Paths.get(
-            System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath();
+            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
 
     private static final Path DATA_DIR   = PROJECT_ROOT.resolve("backend/data");
     private static final Path ISSUES_FILE = DATA_DIR.resolve("all_issues.json");
@@ -89,8 +93,8 @@ public class ObservabilityMiddleware {
     private static final Path ALL_ISSUES_FOR_SAMPLE = ISSUES_FILE;
 
     /** How often the background thread checks for a new issues file (seconds) */
-    private static final long PERIODIC_CHECK_SECONDS = Long.parseLong(
-            System.getenv().getOrDefault("PERIODIC_CHECK_SECONDS", "300"));
+    private static final long PERIODIC_CHECK_SECONDS = MiddlewareConfig.getLong(
+            "observability.periodic_check_seconds", "PERIODIC_CHECK_SECONDS", 300);
 
     /** Delay for a one-shot check triggered by POST /api/refresh (seconds) */
     private static final long REFRESH_CHECK_DELAY_SECONDS = 60L;

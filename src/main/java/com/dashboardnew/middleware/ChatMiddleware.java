@@ -45,6 +45,10 @@ import java.util.Properties;
  *   RAG_BACKEND_URL    — RAG backend base URL              (default: http://localhost:5000)
  *   CONNECT_TIMEOUT_MS — outbound connection timeout ms    (default: 5000)
  *   READ_TIMEOUT_MS    — outbound read timeout ms          (default: 120000)
+ *
+ * Precedence for CHAT_PORT/CONNECT_TIMEOUT_MS/READ_TIMEOUT_MS: llm.ini (Settings
+ * UI managed) > backend/data/middleware.properties ("chat.port" etc.) > the env
+ * var above > the hardcoded default. See MiddlewareConfig.
  */
 public class ChatMiddleware {
 
@@ -55,8 +59,11 @@ public class ChatMiddleware {
     private static final Properties LLM_CONFIG = loadIni("data/llm.ini");
     private static final Properties RAG_CONFIG  = loadIni("data/rag.ini");
 
+    // Precedence: llm.ini's own CHAT_PORT (Settings-UI managed, unchanged) >
+    // backend/data/middleware.properties "chat.port" > CHAT_PORT env var > 5100.
     private static final int PORT = Integer.parseInt(
-            get(LLM_CONFIG, "CHAT_PORT", System.getenv().getOrDefault("CHAT_PORT", "5100")));
+            get(LLM_CONFIG, "CHAT_PORT",
+                    String.valueOf(MiddlewareConfig.getInt("chat.port", "CHAT_PORT", 5100))));
 
     private static final String INTENT_AGENT_URL = get(LLM_CONFIG, "INTENT_AGENT_URL",
             System.getenv().getOrDefault("INTENT_AGENT_URL", "http://localhost:7000"));
@@ -67,7 +74,7 @@ public class ChatMiddleware {
     /** Timeout waiting for the upstream connection to be established (ms) */
     private static final int CONNECT_TIMEOUT_MS = Integer.parseInt(
             get(LLM_CONFIG, "CONNECT_TIMEOUT_MS",
-                    System.getenv().getOrDefault("CONNECT_TIMEOUT_MS", "5000")));
+                    String.valueOf(MiddlewareConfig.getInt("chat.connect_timeout_ms", "CONNECT_TIMEOUT_MS", 5000))));
 
     /**
      * Read timeout for upstream responses (ms).
@@ -76,7 +83,7 @@ public class ChatMiddleware {
      */
     private static final int READ_TIMEOUT_MS = Integer.parseInt(
             get(LLM_CONFIG, "READ_TIMEOUT_MS",
-                    System.getenv().getOrDefault("READ_TIMEOUT_MS", "600000")));
+                    String.valueOf(MiddlewareConfig.getInt("chat.read_timeout_ms", "READ_TIMEOUT_MS", 600000))));
 
     // ── INI loading helpers ──────────────────────────────────────────────────
 
