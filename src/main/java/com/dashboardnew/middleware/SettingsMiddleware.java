@@ -25,8 +25,8 @@ import java.util.logging.*;
  *
  * REST endpoints:
  *
- *   GET  /api/config/:filename   → reads  backend/data/<filename> as text
- *   PUT  /api/config/:filename   → writes backend/data/<filename> from body
+ *   GET  /api/config/:filename   → reads  <config.dir>/<filename> as text (default backend/data)
+ *   PUT  /api/config/:filename   → writes <config.dir>/<filename> from body
  *   POST /api/settings/save      → atomic multi-file save (all files in one request)
  *   GET  /api/issues             → read-only proxy to all_issues.json (for settings
  *                                   page category/mapping previews)
@@ -43,9 +43,9 @@ import java.util.logging.*;
  *   java  SettingsMiddleware
  *
  * Config:
- *   Reads backend/data/middleware.properties first (keys "settings.port",
- *   "mcp.root"), then falls back to the environment variables below, then
- *   the hardcoded default. See MiddlewareConfig.
+ *   Reads config/middleware.properties first (keys "settings.port",
+ *   "mcp.root", "data.dir", "config.dir", "data.file.all_issues"), then falls
+ *   back to the environment variables below, then the hardcoded default. See MiddlewareConfig.
  *
  * Environment overrides:
  *   SETTINGS_PORT — port to listen on  (default: 5200)
@@ -58,11 +58,10 @@ public class SettingsMiddleware {
     private static final int PORT =
             MiddlewareConfig.getInt("settings.port", "SETTINGS_PORT", 5200);
 
-    private static final Path PROJECT_ROOT = Paths.get(
-            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
+    private static final Path PROJECT_ROOT = MiddlewareConfig.projectRoot();
 
-    private static final Path DATA_DIR    = PROJECT_ROOT.resolve("backend/data");
-    private static final Path ISSUES_FILE = DATA_DIR.resolve("all_issues.json");
+    private static final Path DATA_DIR    = MiddlewareConfig.configDir();
+    private static final Path ISSUES_FILE = MiddlewareConfig.dataFile("data.file.all_issues", "all_issues.json");
 
     /**
      * Files the settings UI is allowed to read or write.
@@ -343,13 +342,21 @@ public class SettingsMiddleware {
      */
     static String combineRegistryUrl(String baseUrl, String path) {
         String p = path == null ? "" : path.trim();
+        String b = baseUrl == null ? "" : baseUrl.trim();
+
+        // Endpoint path is now OPTIONAL: if it's blank, fetch straight from
+        // the server's Base URL (no path appended). Only an error if there's
+        // nothing at all to hit.
         if (p.isEmpty()) {
-            throw new IllegalArgumentException("Registry path is required");
+            if (b.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Enter a Base URL or a Tool Registry Endpoint path — at least one is required");
+            }
+            return b;
         }
         if (p.matches("(?i)^https?://.+")) {
             return p; // already absolute — back-compat with pre-existing records
         }
-        String b = baseUrl == null ? "" : baseUrl.trim();
         if (b.isEmpty()) {
             throw new IllegalArgumentException(
                     "Registry path is relative (\"" + p + "\") but this server has no Base URL set");

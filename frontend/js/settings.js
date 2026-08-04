@@ -124,9 +124,11 @@
   // combination — and the actual request — always happens server-side.
   function combineRegistryUrlForDisplay(baseUrl, path) {
     const p = String(path || "").trim();
-    if (!p) return "";
-    if (/^https?:\/\//i.test(p)) return p;
     const b = String(baseUrl || "").trim().replace(/\/+$/, "");
+    // Path is optional — an empty path just means "fetch from the Base URL
+    // itself", matching SettingsMiddleware's combineRegistryUrl().
+    if (!p) return b;
+    if (/^https?:\/\//i.test(p)) return p;
     if (!b) return p;
     return b + (p.startsWith("/") ? p : `/${p}`);
   }
@@ -178,19 +180,14 @@
   // Registry Endpoint URL has a value. Clearing the URL forces the
   // toggle back off and re-disables it, and hides the payload box.
   function updateRegistryPayloadToggleState(urlInputId, toggleId, payloadWrapId) {
-    const urlVal = ($(urlInputId)?.value || "").trim();
+    // The payload toggle no longer depends on the Endpoint path having a
+    // value — fetching from just the Base URL (no path) is valid too, so
+    // the toggle stays enabled regardless of what's in the path field.
     const toggle = $(toggleId);
     const wrap   = $(payloadWrapId);
     if (!toggle) return;
-    if (!urlVal) {
-      toggle.disabled = true;
-      toggle.dataset.on = "false";
-      toggle.classList.remove("on");
-      wrap?.classList.add("hidden");
-    } else {
-      toggle.disabled = false;
-    }
-    wrap?.classList.toggle("hidden", !(urlVal && toggle.dataset.on === "true"));
+    toggle.disabled = false;
+    wrap?.classList.toggle("hidden", !(toggle.dataset.on === "true"));
   }
 
   // Fetch a tool registry from an endpoint path (e.g. "/api/tools"). The
@@ -353,6 +350,155 @@
     const nav     = NAV.find(n => n.id === id);
     if (titleEl && nav) titleEl.textContent = nav.label;
     renderNav();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     4b. GENERAL / AI / RAG / PERFORMANCE / ADVANCED — LOAD ON PAGE OPEN
+     conf.properties, llm.ini, rag.ini, performance.ini, chat.ini were being
+     written correctly on Save, but nothing ever read them back into the form
+     on page load — every reload showed the static HTML defaults, which looked
+     exactly like settings "resetting" even though the files on disk were
+     fine. This parses each file back and pushes the values into the fields.
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  // Minimal INI reader: "[section]" headers + "key = value" lines, comments
+  // (#) and blank lines skipped. Good enough for our own build*Ini() output.
+  function parseIniSections(text) {
+    const out = {};
+    let section = "";
+    String(text || "").split(/\r?\n/).forEach(raw => {
+      const line = raw.trim();
+      if (!line || line.startsWith("#")) return;
+      const secMatch = line.match(/^\[(.+)\]$/);
+      if (secMatch) { section = secMatch[1]; out[section] = out[section] || {}; return; }
+      const eq = line.indexOf("=");
+      if (eq < 0) return;
+      const key = line.slice(0, eq).trim();
+      const val = line.slice(eq + 1).trim();
+      if (!section) return;
+      out[section][key] = val;
+    });
+    return out;
+  }
+
+  function setFieldValue(id, value) {
+    if (value === undefined || value === null) return;
+    const el = $(id);
+    if (el) el.value = value;
+  }
+
+  function setToggleValue(id, isOn) {
+    const el = $(id);
+    if (!el) return;
+    el.dataset.on = isOn ? "true" : "false";
+    el.classList.toggle("on", !!isOn);
+  }
+
+  function setSegValue(segId, value) {
+    const el = $(segId);
+    if (!el || value === undefined || value === null) return;
+    el.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("active", b.dataset.val === value));
+  }
+
+  function refreshRangeLabel(inputId, labelId) {
+    const input = $(inputId), label = $(labelId);
+    if (!input || !label) return;
+    const base = label.textContent.split(":")[0];
+    label.textContent = `${base}: ${input.value}`;
+  }
+
+  async function hydrateGeneralSettings() {
+    try {
+      const conf = parseIniSections(await API.getConfig("conf.properties"));
+      setFieldValue("log-level",     conf.logging?.log_level);
+      setFieldValue("log-file",      conf.logging?.log_file);
+      setFieldValue("log-max-size",  conf.logging?.log_max_size);
+      setFieldValue("log-backups",   conf.logging?.log_backups);
+      setFieldValue("dash-fetch-time",           conf.dashboard?.periodic_fetch_time);
+      setFieldValue("dash-check-time",           conf.dashboard?.periodic_check_time);
+      setFieldValue("dash-timestamp-format",     conf.dashboard?.timestamp_format);
+      setFieldValue("infra-fetch-time",          conf.infrastructure?.periodic_fetch_time);
+      setFieldValue("services-fetch-time",       conf.services?.periodic_fetch_time);
+      setFieldValue("network-devices-fetch-time", conf.network_devices?.periodic_fetch_time);
+      setFieldValue("processes-fetch-time",      conf.processes?.periodic_fetch_time);
+      setFieldValue("topology-fetch-time",       conf.topology?.periodic_fetch_time);
+    } catch (e) { console.warn("[settings] Could not hydrate conf.properties:", e); }
+
+    try {
+      const llm = parseIniSections(await API.getConfig("llm.ini"));
+      setFieldValue("ia-url",          llm.intent_agent?.url);
+      setFieldValue("llm-url",         llm.llm?.url);
+      setFieldValue("llm-model",       llm.llm?.model);
+      setFieldValue("llm-temp",        llm.llm?.temperature);
+      setFieldValue("llm-max-tokens",  llm.llm?.max_tokens);
+      setSegValue("seg-intent",        llm.llm?.intent_mode);
+      setFieldValue("llm-confidence",  llm.llm?.confidence);
+      setFieldValue("llm-timeout",     llm.llm?.timeout);
+      refreshRangeLabel("llm-temp", "temp-label");
+      refreshRangeLabel("llm-confidence", "conf-label");
+      // [keywords] section is already handled separately in loadMcpData().
+    } catch (e) { console.warn("[settings] Could not hydrate llm.ini:", e); }
+
+    try {
+      const rag = parseIniSections(await API.getConfig("rag.ini"));
+      setFieldValue("rag-base-url",  rag.server?.base_url);
+      setFieldValue("rag-data-ep",   rag.server?.data_endpoint);
+      setFieldValue("rag-ask-ep",    rag.server?.ask_endpoint);
+      setFieldValue("rag-meta",      rag.server?.metadata_file);
+      setFieldValue("rag-timeout",   rag.server?.timeout);
+      setFieldValue("rag-upload-folder", rag.storage?.upload_folder);
+      setFieldValue("rag-vector-store",  rag.storage?.vector_store);
+      setFieldValue("rag-bm25-store",    rag.storage?.bm25_store);
+      setFieldValue("rag-instructions-file", rag.config_paths?.instructions_file);
+      setFieldValue("rag-faq-file",          rag.config_paths?.faq_file);
+      setFieldValue("rag-settings-file",     rag.config_paths?.settings_file);
+      setFieldValue("embed-model",   rag.search?.embed_model);
+      setFieldValue("chunk-size",    rag.search?.chunk_size);
+      setFieldValue("chunk-overlap", rag.search?.chunk_overlap);
+      setFieldValue("top-k",         rag.search?.top_k);
+      setFieldValue("bm25-weight",   rag.search?.bm25_weight);
+      setFieldValue("sem-weight",    rag.search?.sem_weight);
+      setToggleValue("toggle-rerank", rag.search?.rerank_enabled === "true");
+      setFieldValue("rerank-model",  rag.search?.rerank_model);
+      setFieldValue("top-n",         rag.search?.top_n);
+      setToggleValue("toggle-cache", rag.cache?.enabled === "true");
+      setFieldValue("sim-threshold", rag.cache?.sim_threshold);
+      setFieldValue("cache-size",    rag.cache?.size);
+      setFieldValue("cache-ttl",     rag.cache?.ttl);
+
+      refreshRangeLabel("bm25-weight", "bm25-label");
+      refreshRangeLabel("sem-weight", "sem-label");
+      refreshRangeLabel("sim-threshold", "sim-label");
+      updateWeightTotal();
+      const rerankFields = $("rerank-fields");
+      const rerankToggle = $("toggle-rerank");
+      if (rerankFields && rerankToggle) rerankFields.style.display = rerankToggle.dataset.on === "true" ? "none" : "";
+      const cacheFields = $("cache-fields");
+      const cacheToggle = $("toggle-cache");
+      if (cacheFields && cacheToggle) cacheFields.style.display = cacheToggle.dataset.on === "true" ? "none" : "";
+    } catch (e) { console.warn("[settings] Could not hydrate rag.ini:", e); }
+
+    try {
+      const perf = parseIniSections(await API.getConfig("performance.ini"));
+      setFieldValue("gpu-threshold", perf.performance?.gpu_threshold);
+      const gpuThresh = $("gpu-threshold");
+      if (gpuThresh) {
+        const v = gpuThresh.value;
+        const gpuLabel = $("gpu-thresh-label"), gpuDisp = $("gpu-thresh-display");
+        if (gpuLabel) gpuLabel.textContent = `GPU Memory Threshold (%): ${v}`;
+        if (gpuDisp)  gpuDisp.textContent  = `Threshold ${v}%`;
+      }
+    } catch (e) { console.warn("[settings] Could not hydrate performance.ini:", e); }
+
+    try {
+      const chat = parseIniSections(await API.getConfig("chat.ini"));
+      setFieldValue("main-prompt", chat.prompts?.main_prompt_path);
+      setFieldValue("viz-prompt",  chat.prompts?.viz_prompt_path);
+    } catch (e) { console.warn("[settings] Could not hydrate chat.ini:", e); }
+
+    // Loading real saved values shouldn't itself flag the form dirty.
+    dirty = false;
+    updateFooter();
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -723,7 +869,7 @@ async function validateIntentAgent() {
     const registryUrlPreview = $("mcp-add-registry-url-preview"); if (registryUrlPreview) registryUrlPreview.textContent = "";
     const registryPayload = $("mcp-add-registry-payload"); if (registryPayload) registryPayload.value = "";
     const registryToggle = $("mcp-add-registry-payload-toggle");
-    if (registryToggle) { registryToggle.dataset.on = "false"; registryToggle.classList.remove("on"); registryToggle.disabled = true; }
+    if (registryToggle) { registryToggle.dataset.on = "false"; registryToggle.classList.remove("on"); registryToggle.disabled = false; }
     $("mcp-add-registry-payload-wrap")?.classList.add("hidden");
     const vendorSel = $("mcp-add-vendor"); if (vendorSel) vendorSel.value = "dynatrace";
     $("mcp-add-custom-type-wrap")?.classList.add("hidden");
@@ -892,7 +1038,7 @@ async function validateIntentAgent() {
           <p class="toggle-label">This fetch needs a payload</p>
           <p class="toggle-desc">Turn on if the endpoint requires a request body to return the registry. Enter a URL above to enable this.</p>
         </div>
-        <button class="toggle-switch${s.registry?.usesPayload ? " on" : ""}" id="edit-registry-payload-toggle" data-on="${s.registry?.usesPayload ? "true" : "false"}"${s.registry?.url ? "" : " disabled"}><span class="toggle-thumb"></span></button>
+        <button class="toggle-switch${s.registry?.usesPayload ? " on" : ""}" id="edit-registry-payload-toggle" data-on="${s.registry?.usesPayload ? "true" : "false"}"><span class="toggle-thumb"></span></button>
       </div>
       <div class="sfield mt-2${s.registry?.usesPayload && s.registry?.url ? "" : " hidden"}" id="edit-registry-payload-wrap">
         <span class="sfield-label">Payload</span>
@@ -1146,10 +1292,10 @@ async function validateIntentAgent() {
   // Network Devices / Services are required; Topology is optional.
   const DASHBOARD_FIELDS = [
     { key: "issuesPath",      label: "Issues Path / Registry", required: true  },
-    { key: "infrastructure",  label: "Infrastructure",         required: true  },
-    { key: "networkDevices",  label: "Network Devices",        required: true  },
-    { key: "services",        label: "Services",                required: true  },
-    { key: "processes",       label: "Processes",               required: true  },
+    { key: "infrastructure",  label: "Infrastructure",         required: false  },
+    { key: "networkDevices",  label: "Network Devices",        required: false  },
+    { key: "services",        label: "Services",                required: false  },
+    { key: "processes",       label: "Processes",               required: false  },
     { key: "topology",        label: "Topology",                required: false },
   ];
 
@@ -1227,7 +1373,10 @@ async function validateIntentAgent() {
         const btn = $("edit-registry-fetch");
         const status = $("edit-registry-fetch-status");
         const path = ($("edit-registry-url")?.value || "").trim();
-        if (!path) { if (status) status.textContent = "Enter a Tool Registry Endpoint path first."; return; }
+        if (!path && !val("edit-baseurl", s.baseUrl || "").trim()) {
+          if (status) status.textContent = "Enter a Base URL or a Tool Registry Endpoint path first.";
+          return;
+        }
         const payloadToggle = $("edit-registry-payload-toggle");
         const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
         const payload = usePayload ? ($("edit-registry-payload")?.value || "") : "";
@@ -1460,7 +1609,12 @@ async function validateIntentAgent() {
       const btn = $("mcp-add-registry-fetch");
       const status = $("mcp-add-registry-fetch-status");
       const path = ($("mcp-add-registry-url")?.value || "").trim();
-      if (!path) { if (status) status.textContent = "Enter a Tool Registry Endpoint path first."; return; }
+      // Endpoint path is optional now — an empty path just fetches from the
+      // server's Base URL directly. Only block if there's nothing to fetch at all.
+      if (!path && !val("mcp-add-baseurl", "").trim()) {
+        if (status) status.textContent = "Enter a Base URL or a Tool Registry Endpoint path first.";
+        return;
+      }
       const payloadToggle = $("mcp-add-registry-payload-toggle");
       const usePayload = payloadToggle && payloadToggle.dataset.on === "true";
       const payload = usePayload ? ($("mcp-add-registry-payload")?.value || "") : "";
@@ -1847,7 +2001,9 @@ function buildLlmIni() {
     updateFooter();
     refreshIcons();
 
-    // Load MCP Servers / Categorization / Keywords from backend (non-blocking)
+    // Load General/AI/RAG/Performance/Advanced fields + MCP Servers /
+    // Categorization / Keywords from backend (non-blocking)
+    hydrateGeneralSettings().catch(e => console.warn("[settings] hydrateGeneralSettings failed:", e));
     loadMcpData().catch(e => console.warn("[settings] loadMcpData failed:", e));
   });
 

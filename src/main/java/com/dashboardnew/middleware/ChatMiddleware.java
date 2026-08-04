@@ -47,8 +47,10 @@ import java.util.Properties;
  *   READ_TIMEOUT_MS    — outbound read timeout ms          (default: 120000)
  *
  * Precedence for CHAT_PORT/CONNECT_TIMEOUT_MS/READ_TIMEOUT_MS: llm.ini (Settings
- * UI managed) > backend/data/middleware.properties ("chat.port" etc.) > the env
- * var above > the hardcoded default. See MiddlewareConfig.
+ * UI managed) > config/middleware.properties ("chat.port" etc.) > the env
+ * var above > the hardcoded default. See MiddlewareConfig. llm.ini/rag.ini
+ * themselves are located via "data.file.llm_ini"/"data.file.rag_ini" +
+ * "config.dir" (default config/middleware.properties folder: backend/data).
  */
 public class ChatMiddleware {
 
@@ -56,8 +58,8 @@ public class ChatMiddleware {
 
     // ── Configuration ─────────────────────────────────────────────────────────
 
-    private static final Properties LLM_CONFIG = loadIni("data/llm.ini");
-    private static final Properties RAG_CONFIG  = loadIni("data/rag.ini");
+    private static final Properties LLM_CONFIG = loadIni(MiddlewareConfig.configFile("data.file.llm_ini", "llm.ini").toString());
+    private static final Properties RAG_CONFIG  = loadIni(MiddlewareConfig.configFile("data.file.rag_ini", "rag.ini").toString());
 
     // Precedence: llm.ini's own CHAT_PORT (Settings-UI managed, unchanged) >
     // backend/data/middleware.properties "chat.port" > CHAT_PORT env var > 5100.

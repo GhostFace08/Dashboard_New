@@ -60,9 +60,11 @@ import java.util.logging.*;
  * Set MCP_ROOT env var to point to the project root (default: working dir).
  * Set PERIODIC_CHECK_SECONDS env var to override poll interval (default: 300).
  *
- * All three of the above can also be set via backend/data/middleware.properties
+ * All three of the above can also be set via config/middleware.properties
  * ("observability.port", "mcp.root", "observability.periodic_check_seconds"),
- * which takes precedence over the env vars — see MiddlewareConfig.
+ * which takes precedence over the env vars — see MiddlewareConfig. Data file
+ * names/location are configurable too ("data.dir", "data.file.all_issues",
+ * "data.file.infrastructure", "data.file.services", "data.file.chatstats").
  */
 public class ObservabilityMiddleware {
 
@@ -71,18 +73,17 @@ public class ObservabilityMiddleware {
     private static final int PORT =
             MiddlewareConfig.getInt("observability.port", "OBSERVABILITY_PORT", 8081);
 
-    private static final Path PROJECT_ROOT = Paths.get(
-            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
+    private static final Path PROJECT_ROOT = MiddlewareConfig.projectRoot();
 
-    private static final Path DATA_DIR   = PROJECT_ROOT.resolve("backend/data");
-    private static final Path ISSUES_FILE = DATA_DIR.resolve("all_issues.json");
+    private static final Path DATA_DIR   = MiddlewareConfig.dataDir();
+    private static final Path ISSUES_FILE = MiddlewareConfig.dataFile("data.file.all_issues", "all_issues.json");
 
     /** Phase 6 — Infrastructure page data file */
-    private static final Path INFRASTRUCTURE_FILE = DATA_DIR.resolve("infrastructure.json");
+    private static final Path INFRASTRUCTURE_FILE = MiddlewareConfig.dataFile("data.file.infrastructure", "infrastructure.json");
 
     /** Phase 7 — Services page data file */
-    private static final Path SERVICES_FILE = DATA_DIR.resolve("services.json");
-    private static final Path CHATSTATS_FILE = DATA_DIR.resolve("chatstats.json");
+    private static final Path SERVICES_FILE = MiddlewareConfig.dataFile("data.file.services", "services.json");
+    private static final Path CHATSTATS_FILE = MiddlewareConfig.dataFile("data.file.chatstats", "chatstats.json");
 
     /**
      * Phase 15 — used only to serve a mocked "sample issue" for a given

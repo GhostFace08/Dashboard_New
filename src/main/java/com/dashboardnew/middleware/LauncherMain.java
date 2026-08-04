@@ -17,7 +17,8 @@ import java.util.Map;
  * BUILD:
  *   mvn package
  *
- * RUN (from the directory that contains backend/data, i.e. the repo root):
+ * RUN (from the repo root — the directory that contains backend/data AND
+ * config/middleware.properties):
  *   java -jar target/dashboard-middleware-1.0.0.jar
  *
  * To run a single middleware standalone instead (e.g. for debugging one

@@ -41,9 +41,10 @@ import java.util.logging.*;
  *   java  AdminMiddleware
  *
  * Config:
- *   Reads backend/data/middleware.properties first (keys "admin.port",
- *   "mcp.root"), then falls back to the environment variables below, then
- *   the hardcoded default. See MiddlewareConfig.
+ *   Reads config/middleware.properties first (keys "admin.port",
+ *   "mcp.root", "data.dir", "data.file.users", "data.file.network_devices",
+ *   "data.file.processes"), then falls back to the environment variables
+ *   below, then the hardcoded default. See MiddlewareConfig.
  *
  * Environment overrides:
  *   ADMIN_PORT — port to listen on (default: 8086)
@@ -54,13 +55,10 @@ public class AdminMiddleware {
     private static final int PORT =
             MiddlewareConfig.getInt("admin.port", "ADMIN_PORT", 8086);
 
-    private static final Path PROJECT_ROOT = Paths.get(
-            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
-
-    private static final Path DATA_DIR              = PROJECT_ROOT.resolve("backend/data");
-    private static final Path USERS_FILE            = DATA_DIR.resolve("users.json");
-    private static final Path NETWORK_DEVICES_FILE  = DATA_DIR.resolve("network-devices.json");
-    private static final Path PROCESSES_FILE        = DATA_DIR.resolve("processes.json");
+    private static final Path DATA_DIR              = MiddlewareConfig.dataDir();
+    private static final Path USERS_FILE            = MiddlewareConfig.dataFile("data.file.users", "users.json");
+    private static final Path NETWORK_DEVICES_FILE  = MiddlewareConfig.dataFile("data.file.network_devices", "network-devices.json");
+    private static final Path PROCESSES_FILE        = MiddlewareConfig.dataFile("data.file.processes", "processes.json");
 
     private static final Logger LOG = Logger.getLogger("AdminMiddleware");
 

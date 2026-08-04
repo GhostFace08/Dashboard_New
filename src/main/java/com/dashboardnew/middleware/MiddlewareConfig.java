@@ -15,38 +15,50 @@ import java.util.logging.Logger;
  * MiddlewareConfig — shared config-file loader for all 6 middleware services
  * (Observability, Settings, Chat, Capacity, Topology, Admin).
  *
- * Previously each service read only environment variables (with a hardcoded
- * fallback) for things like its listen port. This adds one properties file,
- * read once per JVM and shared by every service, that sits above the
- * environment as the preferred source:
+ * Reads one properties file, once per JVM, shared by every service. It is
+ * the preferred source for anything a service needs to know about itself —
+ * its listen port, timeouts, AND (as of this change) where its data files
+ * live on disk, so no service has a data filename or directory baked into
+ * its source:
  *
- *   backend/data/middleware.properties  >  environment variable  >  hardcoded default
+ *   config/middleware.properties  >  environment variable  >  hardcoded default
  *
  * FILE LOCATION
- *   backend/data/middleware.properties, resolved relative to MCP_ROOT (the
- *   same project-root env var the other middlewares already use for their
- *   data files). Override the path itself with MIDDLEWARE_CONFIG_FILE
- *   (absolute, or relative to the JVM's working directory).
+ *   <MCP_ROOT>/config/middleware.properties — i.e. a "config" folder at the
+ *   project root, sitting next to "backend". MCP_ROOT is the same
+ *   project-root env var the services already use for everything else
+ *   (default: the JVM's working directory). Override the properties file's
+ *   own path with MIDDLEWARE_CONFIG_FILE (absolute, or relative to the JVM's
+ *   working directory) if it needs to live somewhere else entirely.
  *
  * MISSING FILE
  *   Not an error — every lookup just falls through to the env var / default,
  *   exactly like before this file existed.
  *
  * KEY NAMING
- *   "<service>.<setting>", e.g. "admin.port", "chat.read_timeout_ms". See
- *   backend/data/middleware.properties for the full set this ships with.
+ *   Ports/timeouts/etc: "<service>.<setting>", e.g. "admin.port",
+ *   "chat.read_timeout_ms".
+ *   Data file locations: "data.dir" (the folder every service's data files
+ *   live under, default "backend/data") and "data.file.<name>" for each
+ *   individual file's name within that folder, e.g. "data.file.users" →
+ *   "users.json". See config/middleware.properties for the full set this
+ *   ships with.
  *
- * NOTE: ChatMiddleware and SettingsMiddleware already load their own
+ * NOTE: ChatMiddleware and SettingsMiddleware also load their own
  * per-feature *.ini files (llm.ini, rag.ini, etc.) that are auto-saved by the
- * Settings UI — those still take precedence where they apply. This class is
- * the one place added for the cross-cutting stuff (ports, roots, timeouts)
- * that every service needs but none of those UI-managed files owned.
+ * Settings UI — those still take precedence for the settings they own. This
+ * class is the one place for the cross-cutting stuff (ports, roots,
+ * timeouts, data file locations) that every service needs.
  */
 final class MiddlewareConfig {
 
     private static final Logger LOG = Logger.getLogger("MiddlewareConfig");
 
     private static final Properties PROPS = load();
+
+    /** The project root every relative path (config file, data dir, ...) is resolved against. */
+    private static final Path PROJECT_ROOT =
+            Paths.get(System.getenv().getOrDefault("MCP_ROOT", ".")).toAbsolutePath().normalize();
 
     private MiddlewareConfig() {
     }
@@ -58,7 +70,7 @@ final class MiddlewareConfig {
         String explicit = System.getenv("MIDDLEWARE_CONFIG_FILE");
         Path path = (explicit != null && !explicit.isBlank())
                 ? Paths.get(explicit)
-                : Paths.get(root, "backend", "data", "middleware.properties");
+                : Paths.get(root, "config", "middleware.properties");
 
         File file = path.toAbsolutePath().normalize().toFile();
         if (!file.exists()) {
@@ -88,11 +100,69 @@ final class MiddlewareConfig {
         return defaultValue;
     }
 
+    /**
+     * String lookup with NO environment-variable fallback: config file >
+     * default. Used for data file/dir names, which never had an env var of
+     * their own (they were hardcoded constants before this change).
+     */
+    static String getString(String configKey, String defaultValue) {
+        String fromFile = PROPS.getProperty(configKey);
+        if (fromFile != null && !fromFile.isBlank()) {
+            return fromFile.trim();
+        }
+        return defaultValue;
+    }
+
     static int getInt(String configKey, String envVar, int defaultValue) {
         return Integer.parseInt(getString(configKey, envVar, String.valueOf(defaultValue)).trim());
     }
 
     static long getLong(String configKey, String envVar, long defaultValue) {
         return Long.parseLong(getString(configKey, envVar, String.valueOf(defaultValue)).trim());
+    }
+
+    /** The project root every service resolves its relative paths against (MCP_ROOT, default "."). */
+    static Path projectRoot() {
+        return PROJECT_ROOT;
+    }
+
+    /**
+     * The directory all services' data files live under, resolved against
+     * projectRoot(). Configurable via "data.dir" (default "backend/data").
+     */
+    static Path dataDir() {
+        return projectRoot().resolve(getString("data.dir", "backend/data"));
+    }
+
+    /**
+     * Resolves a single data file's path: dataDir() + this file's configured
+     * name. `configKey` is looked up in middleware.properties (e.g.
+     * "data.file.users"); `defaultName` is used if the key isn't set (e.g.
+     * "users.json") — so an un-configured install behaves exactly as before.
+     */
+    static Path dataFile(String configKey, String defaultName) {
+        return dataDir().resolve(getString(configKey, defaultName));
+    }
+
+    /**
+     * Resolves a single settings/config file's path (llm.ini, rag.ini,
+     * conf.properties, etc.): configDir() + this file's configured name.
+     * Same shape as dataFile() but resolved against configDir() instead of
+     * dataDir(), since these are UI-managed settings files, not data files —
+     * they happen to share a default folder but are configurable separately.
+     */
+    static Path configFile(String configKey, String defaultName) {
+        return configDir().resolve(getString(configKey, defaultName));
+    }
+
+    /**
+     * The directory config-managed *.ini/*.properties/*.json "settings"
+     * files live under. Defaults to "config" (the same root-level folder
+     * middleware.properties itself lives in) — split out as its own key
+     * ("config.dir") in case an install wants settings files kept somewhere
+     * else, independent of data.dir.
+     */
+    static Path configDir() {
+        return projectRoot().resolve(getString("config.dir", "config"));
     }
 }

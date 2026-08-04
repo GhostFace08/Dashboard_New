@@ -1,0 +1,213 @@
+{
+  "unknownLabel": "Unknown",
+  "categories": [
+    {
+      "id": "performance",
+      "name": "Performance",
+      "priority": 1,
+      "keywordsBySource": {
+        "dynatrace": [
+          "latency",
+          "slow",
+          "response",
+          "throughput",
+          "timeouts"
+        ],
+        "opmanager": [
+          "latency",
+          "slow",
+          "response",
+          "throughput",
+          "timeouts"
+        ],
+        "appdynamics": [
+          "latency",
+          "slow",
+          "response",
+          "throughput",
+          "timeouts"
+        ],
+        "heal": [
+          "latency",
+          "slow",
+          "response",
+          "throughput",
+          "timeouts"
+        ],
+        "splunk": []
+      }
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure",
+      "priority": 2,
+      "keywordsBySource": {
+        "dynatrace": [
+          "cpu",
+          "memory",
+          "disk",
+          "network",
+          "server",
+          "interface",
+          "process",
+          "kubernetes",
+          "k8s",
+          "cluster"
+        ],
+        "opmanager": [
+          "cpu",
+          "memory",
+          "disk",
+          "network",
+          "server",
+          "interface",
+          "process",
+          "kubernetes",
+          "k8s",
+          "cluster"
+        ],
+        "appdynamics": [
+          "cpu",
+          "memory",
+          "disk",
+          "network",
+          "server",
+          "interface",
+          "process",
+          "kubernetes",
+          "k8s",
+          "cluster"
+        ],
+        "heal": [
+          "cpu",
+          "memory",
+          "disk",
+          "network",
+          "server",
+          "interface",
+          "process",
+          "kubernetes",
+          "k8s",
+          "cluster"
+        ],
+        "splunk": []
+      }
+    },
+    {
+      "id": "application-error",
+      "name": "Application Error",
+      "priority": 3,
+      "keywordsBySource": {
+        "dynatrace": [
+          "error",
+          "exception",
+          "5xx",
+          "fault",
+          "failure",
+          "crash"
+        ],
+        "opmanager": [
+          "error",
+          "exception",
+          "5xx",
+          "fault",
+          "failure",
+          "crash"
+        ],
+        "appdynamics": [
+          "error",
+          "exception",
+          "5xx",
+          "fault",
+          "failure",
+          "crash"
+        ],
+        "heal": [
+          "error",
+          "exception",
+          "5xx",
+          "fault",
+          "failure",
+          "crash"
+        ],
+        "splunk": []
+      }
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "priority": 4,
+      "keywordsBySource": {
+        "dynatrace": [
+          "ssl",
+          "auth",
+          "unauthorized",
+          "intrusion",
+          "certificate"
+        ],
+        "opmanager": [
+          "ssl",
+          "auth",
+          "unauthorized",
+          "intrusion",
+          "certificate"
+        ],
+        "appdynamics": [
+          "ssl",
+          "auth",
+          "unauthorized",
+          "intrusion",
+          "certificate"
+        ],
+        "heal": [
+          "ssl",
+          "auth",
+          "unauthorized",
+          "intrusion",
+          "certificate"
+        ],
+        "splunk": []
+      }
+    },
+    {
+      "id": "tesssss",
+      "name": "tesssss",
+      "priority": 5,
+      "keywordsBySource": {
+        "dynatrace": [
+          "unavailable",
+          "not available",
+          "down",
+          "outage",
+          "unreachable",
+          "timeout"
+        ],
+        "opmanager": [
+          "unavailable",
+          "not available",
+          "down",
+          "outage",
+          "unreachable",
+          "timeout"
+        ],
+        "appdynamics": [
+          "unavailable",
+          "not available",
+          "down",
+          "outage",
+          "unreachable",
+          "timeout"
+        ],
+        "heal": [
+          "unavailable",
+          "not available",
+          "down",
+          "outage",
+          "unreachable",
+          "timeout"
+        ],
+        "splunk": []
+      }
+    }
+  ]
+}

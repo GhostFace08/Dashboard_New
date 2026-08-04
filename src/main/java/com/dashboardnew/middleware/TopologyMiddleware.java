@@ -44,10 +44,11 @@ import java.util.logging.*;
  *   java  TopologyMiddleware
  *
  * Config:
- *   Reads backend/data/middleware.properties first (keys "topology.port",
+ *   Reads config/middleware.properties first (keys "topology.port",
  *   "topology.settings_url", "mcp.root", "topology.connect_timeout_ms",
- *   "topology.read_timeout_ms"), then falls back to the environment
- *   variables below, then the hardcoded defaults. See MiddlewareConfig.
+ *   "topology.read_timeout_ms", "data.dir", "data.file.topology"), then
+ *   falls back to the environment variables below, then the hardcoded
+ *   defaults. See MiddlewareConfig.
  *
  * Environment overrides:
  *   TOPOLOGY_PORT — port to listen on            (default: 8083)
@@ -62,11 +63,8 @@ public class TopologyMiddleware {
     private static final String SETTINGS_URL =
             MiddlewareConfig.getString("topology.settings_url", "SETTINGS_URL", "http://localhost:5200");
 
-    private static final Path PROJECT_ROOT = Paths.get(
-            MiddlewareConfig.getString("mcp.root", "MCP_ROOT", ".")).toAbsolutePath();
-
-    private static final Path DATA_DIR       = PROJECT_ROOT.resolve("backend/data");
-    private static final Path TOPOLOGY_FILE  = DATA_DIR.resolve("topology.json");
+    private static final Path DATA_DIR       = MiddlewareConfig.dataDir();
+    private static final Path TOPOLOGY_FILE  = MiddlewareConfig.dataFile("data.file.topology", "topology.json");
 
     private static final int CONNECT_TIMEOUT_MS =
             MiddlewareConfig.getInt("topology.connect_timeout_ms", "TOPOLOGY_CONNECT_TIMEOUT_MS", 5000);
